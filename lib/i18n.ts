@@ -55,6 +55,19 @@ export type Dictionary = {
       description: string;
     }[];
   };
+  docsPage: {
+    metadata: {
+      title: string;
+      description: string;
+    };
+    hero: {
+      badge: string;
+      title: string;
+      description: string;
+      primaryCta: string;
+      secondaryCta: string;
+    };
+  };
   techStack: {
     title: string;
     subtitle: string;
@@ -200,7 +213,7 @@ export const dictionaries: Record<Language, Dictionary> = {
       links: [
         { href: "#about", label: "About" },
         { href: "#vision", label: "Vision" },
-        { href: "#contracts", label: "Contracts" },
+        { href: "/docs", label: "Contracts" },
         { href: "#stack", label: "Stack" },
         { href: "/whitepaper", label: "Whitepaper" }
       ],
@@ -329,6 +342,21 @@ export const dictionaries: Record<Language, Dictionary> = {
             "Holds liquidity, accounts for pool balances, and releases capital for payouts."
         }
       ]
+    },
+    docsPage: {
+      metadata: {
+        title: "Riska protocol docs",
+        description:
+          "Review deployed contracts, integration entry points, and links to the canonical Riska documentation."
+      },
+      hero: {
+        badge: "Documentation",
+        title: "Build with the Riska protocol",
+        description:
+          "Explore contract addresses, integration resources, and references for partners shipping on World Chain.",
+        primaryCta: "View contract addresses",
+        secondaryCta: "Open full documentation"
+      }
     },
     techStack: {
       title: "Operational safeguards",
@@ -607,7 +635,7 @@ export const dictionaries: Record<Language, Dictionary> = {
       links: [
         { href: "#about", label: "Quiénes somos" },
         { href: "#vision", label: "Visión" },
-        { href: "#contracts", label: "Contratos" },
+        { href: "/docs", label: "Contratos" },
         { href: "#stack", label: "Stack" },
         { href: "/whitepaper", label: "Libro blanco" }
       ],
@@ -736,6 +764,21 @@ export const dictionaries: Record<Language, Dictionary> = {
             "Resguarda la liquidez, lleva los saldos de los pools y libera capital para pagos."
         }
       ]
+    },
+    docsPage: {
+      metadata: {
+        title: "Documentación del protocolo Riska",
+        description:
+          "Consulta direcciones de contratos, puntos de integración y enlaces a la documentación oficial de Riska."
+      },
+      hero: {
+        badge: "Documentación",
+        title: "Construye con el protocolo Riska",
+        description:
+          "Explora direcciones de contratos, recursos de integración y referencias para socios en World Chain.",
+        primaryCta: "Ver direcciones de contratos",
+        secondaryCta: "Abrir documentación completa"
+      }
     },
     techStack: {
       title: "Salvaguardas operativas",
