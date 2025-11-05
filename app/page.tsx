@@ -1,5 +1,6 @@
 import { AboutSections } from "@/components/AboutSections";
 import { CallToAction } from "@/components/CallToAction";
+import { ContractsSection } from "@/components/ContractsSection";
 import { Footer } from "@/components/Footer";
 import { Hero } from "@/components/Hero";
 import { ImpactMetrics } from "@/components/ImpactMetrics";
@@ -16,6 +17,7 @@ export default function Page() {
         <ImpactMetrics />
         <AboutSections />
         <ValueGrid />
+        <ContractsSection />
         <TechStack />
         <CallToAction />
       </div>
