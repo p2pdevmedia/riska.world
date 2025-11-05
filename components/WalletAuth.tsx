@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { getAddress } from "viem";
+
 import { connectWallet, disconnectWallet, onWalletChange } from "@/lib/web3/metamask";
 
 function truncateAddress(address: string) {
@@ -38,23 +40,24 @@ export function WalletAuth() {
 
   useEffect(() => {
     return onWalletChange(({ accounts, chainId }) => {
-      if (accounts && accounts.length === 0) {
-        setState({ status: "disconnected" });
-      } else if (accounts && accounts.length > 0) {
-        setState((prev) =>
-          prev.status === "connected"
-            ? { status: "connected", address: accounts[0], chainId: prev.chainId }
-            : { status: "connected", address: accounts[0], chainId: parseInt(chainId ?? "0", 16) }
-        );
-      }
+      setState((prev) => {
+        if (accounts?.length === 0) {
+          return { status: "disconnected" };
+        }
 
-      if (chainId) {
-        setState((prev) =>
-          prev.status === "connected"
-            ? { ...prev, chainId: parseInt(chainId, 16) }
-            : { status: "connected", address: accounts?.[0] ?? "", chainId: parseInt(chainId, 16) }
-        );
-      }
+        const fallbackAddress = prev.status === "connected" ? prev.address : undefined;
+        const fallbackChainId = prev.status === "connected" ? prev.chainId : 0;
+
+        const nextAddress = accounts && accounts.length > 0 ? getAddress(accounts[0]) : fallbackAddress;
+        const nextChainId =
+          typeof chainId === "string" ? parseInt(chainId, 16) : fallbackChainId;
+
+        if (!nextAddress) {
+          return prev;
+        }
+
+        return { status: "connected", address: nextAddress, chainId: nextChainId };
+      });
     });
   }, []);
 

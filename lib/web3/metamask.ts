@@ -55,7 +55,7 @@ export async function disconnectWallet(): Promise<void> {
   try {
     await ethereum.request({
       method: "wallet_requestPermissions",
-      params: [[{ eth_accounts: {} }]]
+      params: [{ eth_accounts: {} }]
     });
   } catch (error) {
     console.warn("No se pudo cerrar la sesión de MetaMask:", error);
