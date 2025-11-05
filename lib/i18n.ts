@@ -86,16 +86,17 @@ export type Dictionary = {
 export const dictionaries: Record<Language, Dictionary> = {
   en: {
     metadata: {
-      title: "Riska.world – On-Chain Insurance for Verified Humans",
+      title: "Riska.world – A Peer-to-Peer Insurance System",
       description:
-        "Riska.world protects verified humans with NFT policies, automated claims, and instant payouts on World Chain."
+        "Riska presents peer-to-peer insurance where transparent contracts, oracle reports, and the RSK token align incentives for reliable, auditable protection."
     },
     navbar: {
       brand: "riska.world",
       links: [
         { href: "#about", label: "About" },
         { href: "#vision", label: "Vision" },
-        { href: "#stack", label: "Stack" }
+        { href: "#stack", label: "Stack" },
+        { href: "/whitepaper", label: "Whitepaper" }
       ],
       cta: "Log in",
       languageToggle: {
@@ -104,156 +105,157 @@ export const dictionaries: Record<Language, Dictionary> = {
       }
     },
     hero: {
-      badge: "Intelligent coverage on World Chain",
-      title: "On-chain insurance for verified humans.",
+      badge: "Riska Foundation · November 2025",
+      title: "Peer-to-peer insurance with verifiable triggers.",
       description:
-        "NFT policies, automated claims, and instant payouts powered by oracles. No paperwork, no friction—just transparent protection for World ID communities.",
-      chips: ["NFT Policies", "Decentralized oracles", "DAO Governance"]
+        "Policies, premiums, and payouts execute through deterministic contracts, while independent oracle reports confirm events. Riska makes everyday coverage reliable, auditable, and globally accessible.",
+      chips: ["Transparent contracts", "Oracle verification", "RSK incentives"]
     },
     impactMetrics: {
-      title: "Measurable impact, radical trust",
+      title: "Design goals",
       subtitle:
-        "Climate risks, community micro-insurance, and protection for creators: our protocols let you design tailored products and release payouts almost in real time.",
+        "Riska removes discretionary bottlenecks by expressing coverage as code and confirming truth via verifiable data feeds.",
       body:
-        "Every interaction is recorded on-chain, from issuing NFT policies to resolving claims automatically. Metrics refresh via oracles, keeping policyholders and DAO delegates aligned.",
+        "Every pool publishes what it covers, how payouts are computed, and which reports confirm events. Participation is open, execution is deterministic, and incentives stay aligned through the RSK economy.",
       metrics: [
-        { label: "Active policies", value: "4,200+" },
-        { label: "Payout time", value: "< 15 min" },
-        { label: "Human community", value: "38 countries" },
-        { label: "Capital insured", value: "$12.5M" }
+        { label: "Capital & coverage", value: "Open participation" },
+        { label: "Execution", value: "Deterministic" },
+        { label: "Event truth", value: "Objective oracles" },
+        { label: "Governance", value: "Transparent" }
       ]
     },
     aboutSections: {
       sections: [
         {
-          title: "Who we are",
+          title: "Public risk pools",
           description:
-            "We are a collective of actuaries, devs, and World ID community guardians reimagining insurance for a frictionless future.",
+            "Pools hold capital, publish what they cover, and express policy terms as transparent rules anyone can audit.",
           points: [
-            "Remote team with DeFi and parametric coverage expertise",
-            "Ongoing external audits and radical transparency",
-            "Commitment to protecting verified human identities"
+            "Policies specify insured sum, coverage window, and trigger",
+            "Examples span auto, home, electronics, travel, and logistics",
+            "Everyday intuition: a ticket with a clear rule that pays when triggered"
           ]
         },
         {
-          title: "What we build",
+          title: "User lifecycle",
           description:
-            "We craft on-chain policies represented as NFTs, where every coverage is governed by auditable smart contracts.",
+            "From selecting a product to automatic settlement, each step follows deterministic logic enforced by oracles.",
           points: [
-            "Automated claims via climate and social data oracles",
-            "Instant payouts in stablecoins overseen by the community vault",
-            "Friendly interfaces to issue, renew, or transfer policies"
+            "Select product with published terms",
+            "Pay premium and receive a timestamped policy",
+            "Oracles monitor triggers and execute payouts automatically"
           ]
         },
         {
-          title: "Why choose Riska.world",
+          title: "Capital discipline",
           description:
-            "Because insurance should be open, programmable, and centered on real humans. Every decision and reserve is auditable on-chain here.",
+            "Premiums cover expected loss, risk margin, and operating fees, while solvency buffers keep pools resilient.",
           points: [
-            "Gas optimised thanks to World Chain (OP Stack)",
-            "Risk DAO that adjusts premiums and reserves in real time",
-            "Incentives for verifiers and mutual-aid communities"
+            "Expected loss: E[Li] = qiSi",
+            "Premium formula: πi = qiSi + ρi + κi",
+            "Capital rule: P ≥ μ + z1−ασ"
           ]
         }
       ]
     },
     valueGrid: {
-      title: "Modular coverage for a programmable world",
+      title: "System components",
       subtitle:
-        "Built for teams operating on-chain that need reliable guarantees for verified humans. We make every step of the lifecycle transparent.",
+        "Deterministic contracts, oracle proofs, and token incentives combine to deliver fast, transparent settlements.",
       values: [
         {
-          title: "Tokenised policies",
+          title: "Deterministic contracts",
           description:
-            "Each coverage lives as a unique NFT with immutable, transferable history—ideal for communities and DAO treasury managers."
+            "Policies execute as written, eliminating discretionary approval and keeping rules auditable."
         },
         {
-          title: "Verifiable oracles",
+          title: "Oracle reports",
           description:
-            "Integrations with climate, health, and identity oracles validate events without manual steps, accelerating fund releases."
+            "Independent data providers submit signed evidence; matching reports finalize events, disagreements trigger bounded disputes."
         },
         {
-          title: "Community vault",
+          title: "Instant claims",
           description:
-            "Publicly audited stablecoin reserves finance automated payouts and rewards for risk guardians."
+            "Once an event is confirmed, payouts settle immediately and disputes rely on published routines."
         },
         {
-          title: "Open governance",
+          title: "RSK economy",
           description:
-            "The risk DAO tunes premiums, limits, and triggers to stay resilient as new scenarios emerge."
+            "Liquidity providers, data operators, and users align through staking, fees, and deflationary token retirements."
         }
       ]
     },
     techStack: {
-      title: "A stack built for programmable trust",
+      title: "Operational safeguards",
       subtitle:
-        "Every technology layer reinforces the transparency, auditability, and speed required for on-chain insurance.",
+        "Security practices minimize trust, limit data exposure, and keep every decision auditable on-chain.",
       stack: [
         {
-          title: "Next.js 14",
-          description: "Hybrid rendering, server actions, and optimal performance for real-time risk dashboards."
+          title: "Minimize trust",
+          description: "Contracts remain minimal, contain no backdoors, and rely on diverse, bonded oracle sets."
         },
         {
-          title: "Tailwind CSS",
-          description: "Adaptable design with glassmorphism components that reinforce riska.world's futuristic identity."
+          title: "Data minimization",
+          description: "Only necessary references live on-chain while evidence stays off-chain with cryptographic links."
         },
         {
-          title: "Prisma + PostgreSQL",
-          description: "Secure management of policies, claim history, and risk metrics without duplicating client instances."
+          title: "Auditability",
+          description: "Every claim decision—accept, deny, dispute—is recorded for public review and governance oversight."
         },
         {
-          title: "viem + MetaMask",
-          description: "Direct connectivity to World Chain and compatible wallets, enabling decentralised login and signup."
+          title: "Governance",
+          description: "RSK holders propose parameter changes with transparent quorums, dispute windows, and fee settings."
         }
       ]
     },
     callToAction: {
-      title: "Start protecting your community today",
+      title: "Read the whitepaper",
       subtitle:
-        "Integrate our protocol via SDK or GraphQL API and design custom products for cooperatives, DAOs, or local economies.",
-      primary: "Log in with MetaMask",
-      secondary: "Talk with the team"
+        "Explore how capital pools, oracle proofs, and the RSK incentive model deliver reliable, auditable protection.",
+      primary: "Open whitepaper",
+      secondary: "Contact Riska Foundation"
     },
     footer: {
-      note: "© {year} riska.world · Decentralised coverage for verified humans.",
+      note: "© {year} riska.world · Peer-to-peer insurance with verifiable data.",
       worldChain: "World Chain",
       email: "hey@riska.world"
     },
     walletAuth: {
-      heading: "Secure access",
+      heading: "Policy console",
       description:
-        "Authenticate with MetaMask to manage policies, file claims, and unlock benefits for verified humans.",
+        "Connect a wallet to review policies, monitor oracle events, and track deterministic settlements in real time.",
       statusLabel: "Status",
       status: {
-        connected: (address: string) => `Active session on ${address}`,
+        connected: (address: string) => `Session connected: ${address}`,
         connecting: "Connecting…",
         disconnected: "Not connected"
       },
       chainId: (chainId: number) => `Chain ID: ${chainId}`,
       actions: {
-        connect: "Connect with MetaMask",
+        connect: "Connect wallet",
         connecting: "Connecting…",
-        disconnect: "Log out"
+        disconnect: "Disconnect"
       },
       messages: {
-        welcome: "Welcome to intelligent coverage for real humans!",
-        disconnected: "Session closed. You can reconnect anytime.",
+        welcome: "Welcome to Riska: peer-to-peer insurance enforced by transparent rules.",
+        disconnected: "Session closed. Reconnect to manage policies and claims.",
         error: "Unable to connect the wallet."
       }
     }
   },
   es: {
     metadata: {
-      title: "Riska.world – On-Chain Insurance for Verified Humans",
+      title: "Riska.world – Un sistema de seguros peer-to-peer",
       description:
-        "Riska.world protege a humanos verificados con pólizas NFT, reclamos automatizados y pagos instantáneos sobre World Chain."
+        "Riska presenta seguros peer-to-peer donde contratos transparentes, reportes de oráculos y el token RSK alinean incentivos para una protección confiable y auditable."
     },
     navbar: {
       brand: "riska.world",
       links: [
         { href: "#about", label: "Quiénes somos" },
         { href: "#vision", label: "Visión" },
-        { href: "#stack", label: "Stack" }
+        { href: "#stack", label: "Stack" },
+        { href: "/whitepaper", label: "Libro blanco" }
       ],
       cta: "Acceder",
       languageToggle: {
@@ -262,140 +264,140 @@ export const dictionaries: Record<Language, Dictionary> = {
       }
     },
     hero: {
-      badge: "Cobertura inteligente en World Chain",
-      title: "Seguro on-chain para humanos verificados.",
+      badge: "Fundación Riska · Noviembre 2025",
+      title: "Seguros peer-to-peer con disparadores verificables.",
       description:
-        "Pólizas NFT, reclamos automatizados y pagos instantáneos impulsados por oráculos. Sin papeleo, sin fricción: solo protección transparente para comunidades de World ID.",
-      chips: ["Pólizas NFT", "Oráculos descentralizados", "Governanza DAO"]
+        "Pólizas, primas y pagos se ejecutan mediante contratos deterministas, mientras reportes independientes de oráculos confirman los eventos. Riska hace que la protección diaria sea confiable, auditable y accesible globalmente.",
+      chips: ["Contratos transparentes", "Verificación con oráculos", "Incentivos RSK"]
     },
     impactMetrics: {
-      title: "Impacto medible, confianza radical",
+      title: "Objetivos de diseño",
       subtitle:
-        "Riesgos climáticos, microseguros comunitarios y protección para creadores: nuestros protocolos permiten diseñar productos a medida y liberar pagos casi en tiempo real.",
+        "Riska elimina cuellos de botella discrecionales expresando la cobertura como código y confirmando la verdad con datos verificables.",
       body:
-        "Cada interacción queda registrada on-chain, desde la emisión de la póliza NFT hasta la resolución automática de reclamos. Las métricas se actualizan vía oráculos, manteniendo al día a asegurados y delegados DAO.",
+        "Cada pool publica qué cubre, cómo calcula los pagos y qué reportes confirman los eventos. La participación es abierta, la ejecución es determinista y los incentivos se alinean mediante la economía de RSK.",
       metrics: [
-        { label: "Pólizas activas", value: "4,200+" },
-        { label: "Tiempo de payout", value: "< 15 min" },
-        { label: "Comunidad humana", value: "38 países" },
-        { label: "Capital asegurado", value: "$12.5M" }
+        { label: "Capital y cobertura", value: "Participación abierta" },
+        { label: "Ejecución", value: "Determinista" },
+        { label: "Verdad del evento", value: "Oráculos objetivos" },
+        { label: "Gobernanza", value: "Transparente" }
       ]
     },
     aboutSections: {
       sections: [
         {
-          title: "Quiénes somos",
+          title: "Pools de riesgo públicos",
           description:
-            "Somos un colectivo de actuarios, devs y guardianes de la comunidad World ID que reimaginan los seguros para un futuro sin fricción.",
+            "Los pools mantienen capital, publican qué cubren y expresan las pólizas como reglas transparentes auditables por cualquiera.",
           points: [
-            "Equipo remoto con experiencia en DeFi y cobertura paramétrica",
-            "Auditorías externas continuas y transparencia radical",
-            "Compromiso con la protección de identidades humanas verificadas"
+            "Las pólizas especifican suma asegurada, ventana de cobertura y disparador",
+            "Ejemplos incluyen auto, hogar, electrónica, viajes y logística",
+            "Intuición diaria: un ticket con una regla clara que paga cuando se activa"
           ]
         },
         {
-          title: "Qué hacemos",
+          title: "Ciclo de vida del usuario",
           description:
-            "Construimos pólizas on-chain representadas como NFTs, donde cada cobertura se administra con smart contracts auditables.",
+            "Desde elegir un producto hasta el asentamiento automático, cada paso sigue lógica determinista reforzada por oráculos.",
           points: [
-            "Reclamos automatizados mediante oráculos de datos climáticos y sociales",
-            "Payouts instantáneos en stablecoins supervisados por el vault comunitario",
-            "Interfaces amigables para emitir, renovar o transferir pólizas"
+            "Selecciona un producto con términos publicados",
+            "Paga la prima y recibe una póliza con timestamp",
+            "Los oráculos monitorean disparadores y ejecutan pagos automáticamente"
           ]
         },
         {
-          title: "Por qué usar Riska.world",
+          title: "Disciplina de capital",
           description:
-            "Porque el seguro debe ser abierto, programable y centrado en humanos reales. Aquí cada decisión y reserva es auditable en cadena.",
+            "Las primas cubren pérdida esperada, margen de riesgo y fees operativos, mientras los buffers de solvencia mantienen resiliencia.",
           points: [
-            "Gas optimizado gracias a World Chain (OP Stack)",
-            "DAO de riesgo que ajusta primas y reservas en tiempo real",
-            "Incentivos para agentes verificadores y comunidades solidarias"
+            "Pérdida esperada: E[Li] = qiSi",
+            "Prima: πi = qiSi + ρi + κi",
+            "Regla de capital: P ≥ μ + z1−ασ"
           ]
         }
       ]
     },
     valueGrid: {
-      title: "Cobertura modular para un mundo programable",
+      title: "Componentes del sistema",
       subtitle:
-        "Diseñado para equipos que operan on-chain y necesitan garantías confiables para humanos verificados. Transparentamos cada paso del ciclo de vida.",
+        "Contratos deterministas, pruebas de oráculos e incentivos del token trabajan juntos para liquidaciones rápidas y transparentes.",
       values: [
         {
-          title: "Pólizas tokenizadas",
+          title: "Contratos deterministas",
           description:
-            "Cada cobertura vive como un NFT único con historial inmutable y transferible, ideal para comunidades y DAO treasury managers."
+            "Las pólizas se ejecutan tal como están escritas, eliminando la aprobación discrecional y manteniendo reglas auditables."
         },
         {
-          title: "Oráculos verificables",
+          title: "Reportes de oráculos",
           description:
-            "Integraciones con oráculos climáticos, de salud y de identidad validan eventos sin intervención manual, acelerando la liberación de fondos."
+            "Proveedores independientes envían evidencia firmada; los reportes coincidentes finalizan eventos y los desacuerdos abren disputas acotadas."
         },
         {
-          title: "Vault comunitario",
+          title: "Reclamos instantáneos",
           description:
-            "Reservas en stablecoins auditadas públicamente financian pagos automáticos y recompensas para guardianes de riesgo."
+            "Una vez confirmado el evento, los pagos se liquidan al instante y las disputas siguen rutinas publicadas."
         },
         {
-          title: "Governanza abierta",
+          title: "Economía RSK",
           description:
-            "La DAO de riesgo ajusta primas, límites y triggers, garantizando resiliencia ante nuevos escenarios."
+            "Proveedores de liquidez, operadores de datos y usuarios se alinean mediante staking, fees y retiro deflacionario del token."
         }
       ]
     },
     techStack: {
-      title: "Un stack diseñado para confianza programable",
+      title: "Salvaguardas operativas",
       subtitle:
-        "Cada capa tecnológica refuerza la transparencia, auditabilidad y velocidad necesarias para seguros on-chain.",
+        "Las prácticas de seguridad minimizan la confianza, limitan la exposición de datos y dejan cada decisión auditable en cadena.",
       stack: [
         {
-          title: "Next.js 14",
-          description: "Render híbrido, server actions y performance óptima para dashboards de riesgo en tiempo real."
+          title: "Minimizar confianza",
+          description: "Los contratos son mínimos, no tienen backdoors y dependen de oráculos diversos con bonos en stake."
         },
         {
-          title: "Tailwind CSS",
-          description: "Diseño adaptable con componentes glassmorphism que refuerzan la identidad futurista de riska.world."
+          title: "Minimización de datos",
+          description: "Solo las referencias necesarias viven on-chain mientras la evidencia permanece off-chain con enlaces criptográficos."
         },
         {
-          title: "Prisma + PostgreSQL",
-          description: "Gestión segura de pólizas, historial de reclamos y métricas de riesgo sin duplicar instancias del cliente."
+          title: "Auditabilidad",
+          description: "Cada decisión de reclamo—aceptar, negar, disputar—se registra para revisión pública y gobernanza."
         },
         {
-          title: "viem + MetaMask",
-          description: "Conectividad directa a World Chain y carteras compatibles, habilitando login/signup descentralizado."
+          title: "Gobernanza",
+          description: "Los tenedores de RSK proponen cambios de parámetros con quórums transparentes, ventanas de disputa y ajustes de fees."
         }
       ]
     },
     callToAction: {
-      title: "Comienza a asegurar tu comunidad hoy",
+      title: "Lee el whitepaper",
       subtitle:
-        "Integra nuestro protocolo via SDK o API GraphQL y diseña productos personalizados para cooperativas, DAOs o economías locales.",
-      primary: "Acceder con MetaMask",
-      secondary: "Hablar con el equipo"
+        "Explora cómo los pools de capital, las pruebas de oráculos y el modelo de incentivos RSK brindan protección confiable y auditable.",
+      primary: "Abrir whitepaper",
+      secondary: "Contactar a Fundación Riska"
     },
     footer: {
-      note: "© {year} riska.world · Cobertura descentralizada para humanos verificados.",
+      note: "© {year} riska.world · Seguros peer-to-peer con datos verificables.",
       worldChain: "World Chain",
       email: "hey@riska.world"
     },
     walletAuth: {
-      heading: "Acceso seguro",
+      heading: "Consola de pólizas",
       description:
-        "Autentícate con MetaMask para gestionar pólizas, presentar reclamos y acceder a beneficios para humanos verificados.",
+        "Conecta una wallet para revisar pólizas, monitorear eventos de oráculos y seguir asentamientos deterministas en tiempo real.",
       statusLabel: "Estado",
       status: {
-        connected: (address: string) => `Sesión activa en ${address}`,
+        connected: (address: string) => `Sesión conectada: ${address}`,
         connecting: "Conectando…",
         disconnected: "No conectado"
       },
       chainId: (chainId: number) => `Chain ID: ${chainId}`,
       actions: {
-        connect: "Conectar con MetaMask",
+        connect: "Conectar wallet",
         connecting: "Conectando…",
-        disconnect: "Cerrar sesión"
+        disconnect: "Desconectar"
       },
       messages: {
-        welcome: "¡Bienvenido a la cobertura inteligente para humanos reales!",
-        disconnected: "Sesión cerrada. Puedes volver a conectar cuando quieras.",
+        welcome: "Bienvenido a Riska: seguros peer-to-peer reforzados por reglas transparentes.",
+        disconnected: "Sesión cerrada. Vuelve a conectar para gestionar pólizas y reclamos.",
         error: "No se pudo conectar la wallet."
       }
     }
