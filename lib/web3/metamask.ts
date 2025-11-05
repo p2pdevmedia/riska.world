@@ -71,8 +71,17 @@ export function onWalletChange(
     return () => undefined;
   }
 
-  const accountsHandler = (accounts: string[]) => handler({ accounts });
-  const chainHandler = (chainId: string) => handler({ chainId });
+  const accountsHandler: (...args: unknown[]) => void = (accounts) => {
+    if (Array.isArray(accounts)) {
+      handler({ accounts: accounts as string[] });
+    }
+  };
+
+  const chainHandler: (...args: unknown[]) => void = (chainId) => {
+    if (typeof chainId === "string") {
+      handler({ chainId });
+    }
+  };
 
   ethereum.on("accountsChanged", accountsHandler);
   ethereum.on("chainChanged", chainHandler);
