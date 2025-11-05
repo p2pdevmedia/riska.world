@@ -40,7 +40,7 @@ export async function connectWallet(): Promise<WalletConnection> {
   });
 
   const address = getAddress(account);
-  const { id: chainId } = await walletClient.getChainId();
+  const chainId = await walletClient.getChainId();
 
   return { address, chainId };
 }
