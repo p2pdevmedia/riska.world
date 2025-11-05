@@ -320,6 +320,7 @@ export const dictionaries: Record<Language, Dictionary> = {
       subtitle:
         "Riska's on-chain modules live on World Chain. Edit lib/contracts.ts and this list refreshes instantly.",
       addressLabel: "Contract address",
+      sourceLabel: "Source code",
       explorerLabel: "View on explorer",
       docsLabel: "Read docs",
       items: [
@@ -742,6 +743,7 @@ export const dictionaries: Record<Language, Dictionary> = {
       subtitle:
         "Los módulos on-chain de Riska viven en World Chain. Edita lib/contracts.ts y la lista se actualiza al instante.",
       addressLabel: "Dirección del contrato",
+      sourceLabel: "Código fuente",
       explorerLabel: "Ver en el explorador",
       docsLabel: "Documentación",
       items: [
