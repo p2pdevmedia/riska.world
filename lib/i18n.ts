@@ -199,8 +199,13 @@ export const dictionaries: Record<Language, Dictionary> = {
       badge: "Riska Foundation · November 2025",
       title: "Peer-to-peer insurance with verifiable triggers.",
       description:
-        "Policies, premiums, and payouts execute through deterministic contracts, while independent oracle reports confirm events. Riska makes everyday coverage reliable, auditable, and globally accessible.",
-      chips: ["Transparent contracts", "Oracle verification", "RSK incentives"]
+        "Policies, premiums, and payouts execute through deterministic contracts, while independent oracle reports confirm events. Riska makes everyday coverage reliable, auditable, and globally accessible for World Chain verified users with sybil-resistant access.",
+      chips: [
+        "Transparent contracts",
+        "Oracle verification",
+        "RSK incentives",
+        "World Chain verified users"
+      ]
     },
     impactMetrics: {
       title: "Design goals",
@@ -212,7 +217,8 @@ export const dictionaries: Record<Language, Dictionary> = {
         { label: "Capital & coverage", value: "Open participation" },
         { label: "Execution", value: "Deterministic" },
         { label: "Event truth", value: "Objective oracles" },
-        { label: "Governance", value: "Transparent" }
+        { label: "Governance", value: "Transparent" },
+        { label: "User identity", value: "World Chain verified" }
       ]
     },
     aboutSections: {
@@ -273,6 +279,11 @@ export const dictionaries: Record<Language, Dictionary> = {
           title: "RSK economy",
           description:
             "Liquidity providers, data operators, and users align through staking, fees, and deflationary token retirements."
+        },
+        {
+          title: "World Chain verified access",
+          description:
+            "Users prove they are unique humans through World Chain verification, keeping coverage open while deterring sybil abuse."
         }
       ]
     },
@@ -347,13 +358,15 @@ export const dictionaries: Record<Language, Dictionary> = {
       abstract: {
         title: "Abstract",
         paragraphs: [
-          "We present a peer-to-peer insurance protocol where everyday risks—car accidents, home damage, electronics failure, travel disruptions—are covered by public rules and verifiable data instead of discretionary processes. Policies, premiums, and payouts are handled by transparent contracts; events are confirmed by independent reports. A native token (RSK) aligns incentives across users, liquidity providers, and data operators with a deflationary fee design, staking for oracle honesty, and on-chain governance. The goal is simple: make protection reliable, auditable, and globally accessible."
+          "We present a peer-to-peer insurance protocol where everyday risks—car accidents, home damage, electronics failure, travel disruptions—are covered by public rules and verifiable data instead of discretionary processes. Policies, premiums, and payouts are handled by transparent contracts; events are confirmed by independent reports. A native token (RSK) aligns incentives across users, liquidity providers, and data operators with a deflationary fee design, staking for oracle honesty, and on-chain governance. The goal is simple: make protection reliable, auditable, and globally accessible.",
+          "Riska integrates World Chain to anchor participation to human-verified accounts. World Chain’s proof-of-personhood brings sybil resistance, lets capital pools price risk knowing each user is unique, and gives regulators a familiar compliance surface while keeping biometric data off-chain."
         ]
       },
       introduction: {
         title: "1. Introduction",
         paragraphs: [
-          "Insurance helps when it is easy to buy and reliable to settle. Legacy systems rely on opaque steps and discretionary approval. Riska removes those bottlenecks by expressing coverage as code and event truth as verifiable data feeds. Anyone can read the rules and audit settlements. This mirrors the ethos of electronic cash systems: replace institution-led discretion with transparent, predictable mechanics."
+          "Insurance helps when it is easy to buy and reliable to settle. Legacy systems rely on opaque steps and discretionary approval. Riska removes those bottlenecks by expressing coverage as code and event truth as verifiable data feeds. Anyone can read the rules and audit settlements. This mirrors the ethos of electronic cash systems: replace institution-led discretion with transparent, predictable mechanics.",
+          "World Chain extends that ethos to identity. By authenticating with a World Chain verified credential, each participant proves they are a unique human without surrendering personal data to the protocol. Pools can open onboarding globally, reduce fraud, and concentrate underwriting capital on genuine households instead of bots."
         ],
         goalsTitle: "Design Goals",
         goals: [
@@ -368,6 +381,7 @@ export const dictionaries: Record<Language, Dictionary> = {
         title: "2. System Overview",
         paragraphs: [
           "Participants interact through public risk pools. A pool holds capital and publishes what it covers and how payouts are computed. A policy specifies the insured sum S (amount paid on trigger), coverage window T (validity period), and trigger θ (a condition defined by data).",
+          "Access is anchored to World Chain verified users. Each policyholder signs transactions with a proof-of-personhood credential, giving pools confidence that incentives target unique humans while preserving pseudonymity on-chain.",
           "Examples include auto collision (police or telematics report), home flood (certified water-level data), electronics failure (service center logs), and travel delay (airline feeds)."
         ],
         everydayIntuition: {
@@ -378,6 +392,10 @@ export const dictionaries: Record<Language, Dictionary> = {
       userLifecycle: {
         title: "3. How It Works (User Lifecycle)",
         steps: [
+          {
+            label: "Verify identity.",
+            description: "Authenticate with World Chain to confirm you are a unique human before interacting with pools."
+          },
           { label: "Select product.", description: "Choose auto, home, electronics, or travel coverage with published terms." },
           { label: "Pay premium.", description: "The contract issues a timestamped policy for window T." },
           { label: "Data monitoring.", description: "Oracles watch for the trigger θ." },
@@ -475,6 +493,10 @@ export const dictionaries: Record<Language, Dictionary> = {
             description: "Only necessary policy and claim references live on-chain while evidence remains off-chain with cryptographic proofs."
           },
           {
+            label: "Human verification:",
+            description: "World Chain proof-of-personhood enforces one-policy-per-person, deterring sybil fraud and mass-claim bots without storing raw biometrics on Riska."
+          },
+          {
             label: "Auditability:",
             description: "Every decision—accept, deny, dispute—is stored on-chain for public review."
           }
@@ -484,7 +506,8 @@ export const dictionaries: Record<Language, Dictionary> = {
         title: "10. Practical Applications",
         paragraphs: [
           "The protocol supports coverage for cars, homes, electronics, travel, and logistics. Each product pays when predefined data sources confirm the qualifying event, enabling fast, transparent protection.",
-          "People choose Riska for simple rules, few steps, and fast results. Products disclose triggers and data sources up front so buyers know exactly what is covered."
+          "People choose Riska for simple rules, few steps, and fast results. Products disclose triggers and data sources up front so buyers know exactly what is covered.",
+          "World Chain verification lets community programs or employers sponsor coverage knowing that subsidies reach unique humans, reducing leakage from bots and duplicate identities."
         ]
       },
       faq: {
@@ -554,8 +577,13 @@ export const dictionaries: Record<Language, Dictionary> = {
       badge: "Fundación Riska · Noviembre 2025",
       title: "Seguros peer-to-peer con disparadores verificables.",
       description:
-        "Pólizas, primas y pagos se ejecutan mediante contratos deterministas, mientras reportes independientes de oráculos confirman los eventos. Riska hace que la protección diaria sea confiable, auditable y accesible globalmente.",
-      chips: ["Contratos transparentes", "Verificación con oráculos", "Incentivos RSK"]
+        "Pólizas, primas y pagos se ejecutan mediante contratos deterministas, mientras reportes independientes de oráculos confirman los eventos. Riska hace que la protección diaria sea confiable, auditable y accesible globalmente para usuarios verificados en World Chain con acceso resistente a sibilas.",
+      chips: [
+        "Contratos transparentes",
+        "Verificación con oráculos",
+        "Incentivos RSK",
+        "Usuarios verificados en World Chain"
+      ]
     },
     impactMetrics: {
       title: "Objetivos de diseño",
@@ -567,7 +595,8 @@ export const dictionaries: Record<Language, Dictionary> = {
         { label: "Capital y cobertura", value: "Participación abierta" },
         { label: "Ejecución", value: "Determinista" },
         { label: "Verdad del evento", value: "Oráculos objetivos" },
-        { label: "Gobernanza", value: "Transparente" }
+        { label: "Gobernanza", value: "Transparente" },
+        { label: "Identidad de usuario", value: "Verificación en World Chain" }
       ]
     },
     aboutSections: {
@@ -628,6 +657,11 @@ export const dictionaries: Record<Language, Dictionary> = {
           title: "Economía RSK",
           description:
             "Proveedores de liquidez, operadores de datos y usuarios se alinean mediante staking, fees y retiro deflacionario del token."
+        },
+        {
+          title: "Acceso verificado en World Chain",
+          description:
+            "Los usuarios prueban que son humanos únicos mediante la verificación en World Chain, manteniendo la apertura del sistema y frenando el abuso sibila."
         }
       ]
     },
@@ -702,13 +736,15 @@ export const dictionaries: Record<Language, Dictionary> = {
       abstract: {
         title: "Resumen",
         paragraphs: [
-          "Presentamos un protocolo de seguros peer-to-peer en el que los riesgos cotidianos—accidentes automovilísticos, daños en el hogar, fallas de electrónicos, interrupciones de viaje—se cubren con reglas públicas y datos verificables en lugar de procesos discrecionales. Las pólizas, primas y pagos se gestionan con contratos transparentes; los eventos se confirman con reportes independientes. Un token nativo (RSK) alinea incentivos entre usuarios, proveedores de liquidez y operadores de datos mediante un diseño deflacionario de comisiones, staking para la honestidad de los oráculos y gobernanza on-chain. El objetivo es simple: hacer que la protección sea confiable, auditable y accesible globalmente."
+          "Presentamos un protocolo de seguros peer-to-peer en el que los riesgos cotidianos—accidentes automovilísticos, daños en el hogar, fallas de electrónicos, interrupciones de viaje—se cubren con reglas públicas y datos verificables en lugar de procesos discrecionales. Las pólizas, primas y pagos se gestionan con contratos transparentes; los eventos se confirman con reportes independientes. Un token nativo (RSK) alinea incentivos entre usuarios, proveedores de liquidez y operadores de datos mediante un diseño deflacionario de comisiones, staking para la honestidad de los oráculos y gobernanza on-chain. El objetivo es simple: hacer que la protección sea confiable, auditable y accesible globalmente.",
+          "Riska se integra con World Chain para anclar la participación a cuentas verificadas como humanas. La prueba de humanidad de World Chain aporta resistencia a sibilas, permite que los pools valoren el riesgo sabiendo que cada usuario es único y ofrece a los reguladores una superficie de cumplimiento familiar mientras mantiene los datos biométricos fuera de la cadena."
         ]
       },
       introduction: {
         title: "1. Introducción",
         paragraphs: [
-          "El seguro funciona cuando es sencillo comprarlo y confiable al momento de liquidar. Los sistemas heredados dependen de pasos opacos y aprobación discrecional. Riska elimina esos cuellos de botella al expresar la cobertura como código y la verdad de los eventos como datos verificables. Cualquiera puede leer las reglas y auditar las liquidaciones. Esto refleja la filosofía del dinero electrónico: reemplazar la discreción institucional por mecánicas transparentes y predecibles."
+          "El seguro funciona cuando es sencillo comprarlo y confiable al momento de liquidar. Los sistemas heredados dependen de pasos opacos y aprobación discrecional. Riska elimina esos cuellos de botella al expresar la cobertura como código y la verdad de los eventos como datos verificables. Cualquiera puede leer las reglas y auditar las liquidaciones. Esto refleja la filosofía del dinero electrónico: reemplazar la discreción institucional por mecánicas transparentes y predecibles.",
+          "World Chain extiende esa filosofía a la identidad. Al autenticarse con una credencial verificada de World Chain, cada participante demuestra que es un humano único sin entregar datos personales al protocolo. Los pools pueden abrir el onboarding global, reducir el fraude y enfocar el capital de suscripción en hogares genuinos en lugar de bots."
         ],
         goalsTitle: "Objetivos de diseño",
         goals: [
@@ -723,6 +759,7 @@ export const dictionaries: Record<Language, Dictionary> = {
         title: "2. Visión general del sistema",
         paragraphs: [
           "Los participantes interactúan mediante pools de riesgo públicos. Un pool mantiene capital y publica qué cubre y cómo calcula los pagos. Una póliza especifica la suma asegurada S (monto pagado cuando se activa), la ventana de cobertura T (período de vigencia) y el disparador θ (una condición definida por datos).",
+          "El acceso se ancla a usuarios verificados en World Chain. Cada titular firma transacciones con una credencial de prueba de humanidad, lo que brinda a los pools confianza en que los incentivos llegan a humanos únicos mientras se preserva la seudonimia on-chain.",
           "Los ejemplos incluyen choques automovilísticos (reporte policial o telemático), inundaciones en el hogar (datos certificados de nivel de agua), fallas de electrónicos (registros de centros de servicio) y demoras en viajes (feeds de aerolíneas)."
         ],
         everydayIntuition: {
@@ -733,6 +770,10 @@ export const dictionaries: Record<Language, Dictionary> = {
       userLifecycle: {
         title: "3. Cómo funciona (ciclo de vida del usuario)",
         steps: [
+          {
+            label: "Verifica identidad.",
+            description: "Autentícate con World Chain para confirmar que eres un humano único antes de interactuar con los pools."
+          },
           { label: "Selecciona producto.", description: "Elige cobertura de auto, hogar, electrónica o viajes con términos publicados." },
           { label: "Paga la prima.", description: "El contrato emite una póliza con marca de tiempo para la ventana T." },
           { label: "Monitoreo de datos.", description: "Los oráculos vigilan el disparador θ." },
@@ -830,6 +871,10 @@ export const dictionaries: Record<Language, Dictionary> = {
             description: "Solo las referencias necesarias de pólizas y reclamos viven on-chain mientras la evidencia permanece off-chain con pruebas criptográficas."
           },
           {
+            label: "Verificación humana:",
+            description: "La prueba de humanidad de World Chain aplica una política de una persona por póliza, frenando fraudes sibilinos y bots de reclamos masivos sin almacenar biometría cruda en Riska."
+          },
+          {
             label: "Auditabilidad:",
             description: "Cada decisión—aceptar, negar, disputar—se almacena on-chain para revisión pública."
           }
@@ -839,7 +884,8 @@ export const dictionaries: Record<Language, Dictionary> = {
         title: "10. Aplicaciones prácticas",
         paragraphs: [
           "El protocolo admite coberturas para autos, hogares, electrónicos, viajes y logística. Cada producto paga cuando las fuentes de datos predefinidas confirman el evento habilitante, permitiendo protección rápida y transparente.",
-          "Las personas eligen Riska por reglas simples, pocos pasos y resultados rápidos. Los productos revelan disparadores y fuentes de datos desde el inicio para que los compradores sepan exactamente qué está cubierto."
+          "Las personas eligen Riska por reglas simples, pocos pasos y resultados rápidos. Los productos revelan disparadores y fuentes de datos desde el inicio para que los compradores sepan exactamente qué está cubierto.",
+          "La verificación en World Chain permite que programas comunitarios o empleadores patrocinen coberturas sabiendo que los subsidios llegan a humanos únicos, reduciendo fugas por bots o identidades duplicadas."
         ]
       },
       faq: {
