@@ -1,3 +1,5 @@
+import type { ContractId } from "./contracts";
+
 export type Language = "en" | "es";
 
 export type Dictionary = {
@@ -38,6 +40,18 @@ export type Dictionary = {
     subtitle: string;
     values: {
       title: string;
+      description: string;
+    }[];
+  };
+  contracts: {
+    title: string;
+    subtitle: string;
+    addressLabel: string;
+    explorerLabel: string;
+    docsLabel: string;
+    items: {
+      id: ContractId;
+      name: string;
       description: string;
     }[];
   };
@@ -186,6 +200,7 @@ export const dictionaries: Record<Language, Dictionary> = {
       links: [
         { href: "#about", label: "About" },
         { href: "#vision", label: "Vision" },
+        { href: "#contracts", label: "Contracts" },
         { href: "#stack", label: "Stack" },
         { href: "/whitepaper", label: "Whitepaper" }
       ],
@@ -284,6 +299,34 @@ export const dictionaries: Record<Language, Dictionary> = {
           title: "World Chain verified access",
           description:
             "Users prove they are unique humans through World Chain verification, keeping coverage open while deterring sybil abuse."
+        }
+      ]
+    },
+    contracts: {
+      title: "Deployed contracts",
+      subtitle:
+        "Riska's on-chain modules live on World Chain. Edit lib/contracts.ts and this list refreshes instantly.",
+      addressLabel: "Contract address",
+      explorerLabel: "View on explorer",
+      docsLabel: "Read docs",
+      items: [
+        {
+          id: "policyManager",
+          name: "PolicyManager",
+          description:
+            "Issues coverage NFTs, enforces policy lifecycles, and exposes underwriting controls."
+        },
+        {
+          id: "claimsBridge",
+          name: "ClaimsBridge",
+          description:
+            "Receives oracle attestations, validates reports, and routes approved claims to the vault."
+        },
+        {
+          id: "premiumVault",
+          name: "PremiumVault",
+          description:
+            "Holds liquidity, accounts for pool balances, and releases capital for payouts."
         }
       ]
     },
@@ -564,6 +607,7 @@ export const dictionaries: Record<Language, Dictionary> = {
       links: [
         { href: "#about", label: "Quiénes somos" },
         { href: "#vision", label: "Visión" },
+        { href: "#contracts", label: "Contratos" },
         { href: "#stack", label: "Stack" },
         { href: "/whitepaper", label: "Libro blanco" }
       ],
@@ -662,6 +706,34 @@ export const dictionaries: Record<Language, Dictionary> = {
           title: "Acceso verificado en World Chain",
           description:
             "Los usuarios prueban que son humanos únicos mediante la verificación en World Chain, manteniendo la apertura del sistema y frenando el abuso sibila."
+        }
+      ]
+    },
+    contracts: {
+      title: "Contratos desplegados",
+      subtitle:
+        "Los módulos on-chain de Riska viven en World Chain. Edita lib/contracts.ts y la lista se actualiza al instante.",
+      addressLabel: "Dirección del contrato",
+      explorerLabel: "Ver en el explorador",
+      docsLabel: "Documentación",
+      items: [
+        {
+          id: "policyManager",
+          name: "PolicyManager",
+          description:
+            "Emite NFTs de cobertura, gestiona el ciclo de vida de las pólizas y expone controles de suscripción."
+        },
+        {
+          id: "claimsBridge",
+          name: "ClaimsBridge",
+          description:
+            "Recibe atestaciones de oráculos, valida reportes y envía reclamos aprobados al vault."
+        },
+        {
+          id: "premiumVault",
+          name: "PremiumVault",
+          description:
+            "Resguarda la liquidez, lleva los saldos de los pools y libera capital para pagos."
         }
       ]
     },
