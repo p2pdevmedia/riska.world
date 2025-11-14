@@ -204,9 +204,9 @@ export type Dictionary = {
 export const dictionaries: Record<Language, Dictionary> = {
   en: {
     metadata: {
-      title: "Riska.world – A Peer-to-Peer Insurance System",
+      title: "Riska.world – Peer-to-Peer Life Insurance",
       description:
-        "Riska presents peer-to-peer insurance where transparent contracts, oracle reports, and the RSK token align incentives for reliable, auditable protection."
+        "Riska delivers peer-to-peer life insurance where transparent contracts, oracle reports, and the RSK token align incentives for dependable, auditable family protection."
     },
     navbar: {
       brand: "riska.world",
@@ -225,22 +225,22 @@ export const dictionaries: Record<Language, Dictionary> = {
     },
     hero: {
       badge: "Riska Foundation · November 2025",
-      title: "Peer-to-peer insurance with verifiable triggers.",
+      title: "Peer-to-peer life insurance with verifiable triggers.",
       description:
-        "Policies, premiums, and payouts execute through deterministic contracts, while independent oracle reports confirm events. Riska makes everyday coverage reliable, auditable, and globally accessible for World Chain verified users with sybil-resistant access.",
+        "Life policies, premiums, and beneficiary payouts execute through deterministic contracts, while independent oracle reports confirm vital events. Riska keeps family protection reliable, auditable, and globally accessible for World Chain verified users with sybil-resistant access.",
       chips: [
-        "Transparent contracts",
-        "Oracle verification",
-        "RSK incentives",
-        "World Chain verified users"
+        "Transparent life contracts",
+        "Oracle-confirmed events",
+        "RSK-backed reserves",
+        "World Chain verified families"
       ]
     },
     impactMetrics: {
       title: "Design goals",
       subtitle:
-        "Riska removes discretionary bottlenecks by expressing coverage as code and confirming truth via verifiable data feeds.",
+        "Riska removes discretionary bottlenecks by expressing life coverage as code and confirming truth via verifiable data feeds.",
       body:
-        "Every pool publishes what it covers, how payouts are computed, and which reports confirm events. Participation is open, execution is deterministic, and incentives stay aligned through the RSK economy.",
+        "Each life pool publishes the guarantees it provides, how beneficiary payouts are computed, and which reports confirm protected events. Participation is open, execution is deterministic, and incentives stay aligned through the RSK economy.",
       metrics: [
         { label: "Capital & coverage", value: "Open participation" },
         { label: "Execution", value: "Deterministic" },
@@ -256,9 +256,9 @@ export const dictionaries: Record<Language, Dictionary> = {
           description:
             "Pools hold capital, publish what they cover, and express policy terms as transparent rules anyone can audit.",
           points: [
-            "Policies specify insured sum, coverage window, and trigger",
-            "Examples span auto, home, electronics, travel, and logistics",
-            "Everyday intuition: a ticket with a clear rule that pays when triggered"
+            "Life policies specify insured sum, coverage window, and qualifying event",
+            "Examples include term life, income protection, mortgage payoff, and funeral coverage",
+            "Everyday intuition: a promise to your family with a clear rule that pays when verified"
           ]
         },
         {
@@ -266,7 +266,7 @@ export const dictionaries: Record<Language, Dictionary> = {
           description:
             "From selecting a product to automatic settlement, each step follows deterministic logic enforced by oracles.",
           points: [
-            "Select product with published terms",
+            "Select a life product with published terms",
             "Pay premium and receive a timestamped policy",
             "Oracles monitor triggers and execute payouts automatically"
           ]
@@ -384,19 +384,19 @@ export const dictionaries: Record<Language, Dictionary> = {
     callToAction: {
       title: "Read the whitepaper",
       subtitle:
-        "Explore how capital pools, oracle proofs, and the RSK incentive model deliver reliable, auditable protection.",
+        "Explore how life capital pools, oracle proofs, and the RSK incentive model deliver reliable, auditable protection for families.",
       primary: "Open whitepaper",
       secondary: "Contact Riska Foundation"
     },
     footer: {
-      note: "© {year} riska.world · Peer-to-peer insurance with verifiable data.",
+      note: "© {year} riska.world · Peer-to-peer life insurance with verifiable data.",
       worldChain: "World Chain",
       email: "hey@riska.world"
     },
     walletAuth: {
       heading: "Policy console",
       description:
-        "Connect a wallet to review policies, monitor oracle events, and track deterministic settlements in real time.",
+        "Connect a wallet to review life policies, monitor oracle-confirmed vital events, and track deterministic beneficiary settlements in real time.",
       statusLabel: "Status",
       status: {
         connected: (address: string) => `Session connected: ${address}`,
@@ -410,33 +410,33 @@ export const dictionaries: Record<Language, Dictionary> = {
         disconnect: "Disconnect"
       },
       messages: {
-        welcome: "Welcome to Riska: peer-to-peer insurance enforced by transparent rules.",
-        disconnected: "Session closed. Reconnect to manage policies and claims.",
+        welcome: "Welcome to Riska: peer-to-peer life insurance enforced by transparent rules.",
+        disconnected: "Session closed. Reconnect to manage life policies and beneficiary claims.",
         error: "Unable to connect the wallet."
       }
     },
     whitepaper: {
       metadata: {
-        title: "Riska Whitepaper — A Peer-to-Peer Insurance System",
+        title: "Riska Whitepaper — A Peer-to-Peer Life Insurance System",
         description:
-          "Explore how riska.world delivers transparent, automated coverage with peer-to-peer capital pools, oracle verified events, and the RSK token economy."
+          "Explore how riska.world delivers transparent, automated life coverage with peer-to-peer capital pools, oracle verified events, and the RSK token economy."
       },
       header: {
         badge: "Riska Foundation",
-        title: "Riska: A Peer-to-Peer Insurance System",
+        title: "Riska: A Peer-to-Peer Life Insurance System",
         date: "November 2025"
       },
       abstract: {
         title: "Abstract",
         paragraphs: [
-          "We present a peer-to-peer insurance protocol where everyday risks—car accidents, home damage, electronics failure, travel disruptions—are covered by public rules and verifiable data instead of discretionary processes. Policies, premiums, and payouts are handled by transparent contracts; events are confirmed by independent reports. A native token (RSK) aligns incentives across users, liquidity providers, and data operators with a deflationary fee design, staking for oracle honesty, and on-chain governance. The goal is simple: make protection reliable, auditable, and globally accessible.",
-          "Riska integrates World Chain to anchor participation to human-verified accounts. World Chain’s proof-of-personhood brings sybil resistance, lets capital pools price risk knowing each user is unique, and gives regulators a familiar compliance surface while keeping biometric data off-chain."
+          "We present a peer-to-peer life insurance protocol where family risks—premature death, terminal illness, income interruption, and funeral costs—are protected by public rules and verifiable data instead of discretionary processes. Policies, premiums, and beneficiary payouts are handled by transparent contracts; vital events are confirmed by independent reports. A native token (RSK) aligns incentives across families, liquidity providers, and data operators with a deflationary fee design, staking for oracle honesty, and on-chain governance. The goal is simple: make life protection reliable, auditable, and globally accessible.",
+          "Riska integrates World Chain to anchor participation to human-verified accounts. World Chain’s proof-of-personhood brings sybil resistance, lets capital pools price life risk knowing each policyholder is unique, and gives regulators a familiar compliance surface while keeping biometric data off-chain."
         ]
       },
       introduction: {
         title: "1. Introduction",
         paragraphs: [
-          "Insurance helps when it is easy to buy and reliable to settle. Legacy systems rely on opaque steps and discretionary approval. Riska removes those bottlenecks by expressing coverage as code and event truth as verifiable data feeds. Anyone can read the rules and audit settlements. This mirrors the ethos of electronic cash systems: replace institution-led discretion with transparent, predictable mechanics.",
+          "Life insurance helps when it is easy to buy and reliable to settle. Legacy systems rely on opaque steps and discretionary approval. Riska removes those bottlenecks by expressing coverage as code and event truth as verifiable data feeds. Anyone can read the rules and audit settlements. This mirrors the ethos of electronic cash systems: replace institution-led discretion with transparent, predictable mechanics.",
           "World Chain extends that ethos to identity. By authenticating with a World Chain verified credential, each participant proves they are a unique human without surrendering personal data to the protocol. Pools can open onboarding globally, reduce fraud, and concentrate underwriting capital on genuine households instead of bots."
         ],
         goalsTitle: "Design Goals",
@@ -451,13 +451,13 @@ export const dictionaries: Record<Language, Dictionary> = {
       systemOverview: {
         title: "2. System Overview",
         paragraphs: [
-          "Participants interact through public risk pools. A pool holds capital and publishes what it covers and how payouts are computed. A policy specifies the insured sum S (amount paid on trigger), coverage window T (validity period), and trigger θ (a condition defined by data).",
+          "Participants interact through public life pools. A pool holds capital and publishes what it covers and how beneficiary payouts are computed. A policy specifies the insured sum S (amount paid on trigger), coverage window T (validity period), and trigger θ (a condition defined by data).",
           "Access is anchored to World Chain verified users. Each policyholder signs transactions with a proof-of-personhood credential, giving pools confidence that incentives target unique humans while preserving pseudonymity on-chain.",
-          "Examples include auto collision (police or telematics report), home flood (certified water-level data), electronics failure (service center logs), and travel delay (airline feeds)."
+          "Examples include term life (civil registry death notice), mortgage protection (notary certificate plus death record), final expense (hospital-issued proof-of-death), and critical illness (specialist diagnosis attested by medical networks)."
         ],
         everydayIntuition: {
           title: "Everyday Intuition",
-          body: "A policy is like a ticket with a clear rule. If the condition happens, it pays. Everyone can see the rule and verify how it is enforced."
+          body: "A life policy is a promise with a clear rule. When the qualifying event is verified, it pays. Everyone can see the rule and verify how it is enforced."
         }
       },
       userLifecycle: {
@@ -467,7 +467,7 @@ export const dictionaries: Record<Language, Dictionary> = {
             label: "Verify identity.",
             description: "Authenticate with World Chain to confirm you are a unique human before interacting with pools."
           },
-          { label: "Select product.", description: "Choose auto, home, electronics, or travel coverage with published terms." },
+          { label: "Select product.", description: "Choose term life, income protection, mortgage payoff, or final expense coverage with published terms." },
           { label: "Pay premium.", description: "The contract issues a timestamped policy for window T." },
           { label: "Data monitoring.", description: "Oracles watch for the trigger θ." },
           { label: "Settlement.", description: "If θ is confirmed within T, payout executes automatically." }
@@ -476,20 +476,20 @@ export const dictionaries: Record<Language, Dictionary> = {
           title: "Concrete Examples",
           items: [
             {
-              label: "Auto:",
-              description: "Alice buys collision coverage. If an official accident report is filed in T, the oracle reports it and the policy pays a fixed amount."
+              label: "Term life:",
+              description: "Alice selects $250k coverage. When the civil registry posts a verified death record within T, oracles attest it and the policy pays her beneficiaries."
             },
             {
-              label: "Home:",
-              description: "A registered address is paid if certified flood data surpasses a threshold."
+              label: "Mortgage protection:",
+              description: "A lender receives funds when a notary confirms the outstanding mortgage and the linked death record is verified."
             },
             {
-              label: "Electronics:",
-              description: "A device is paid if sensor or service logs confirm failure within T."
+              label: "Final expense:",
+              description: "A family wallet receives a fixed stipend when hospital-issued proof-of-death is confirmed."
             },
             {
-              label: "Travel:",
-              description: "A flight policy pays a flat sum when an airline feed confirms a 3h+ delay."
+              label: "Income protection:",
+              description: "If a medical network attests to a critical illness that meets the published criteria, monthly benefits stream to the beneficiary wallet."
             }
           ]
         }
@@ -502,17 +502,17 @@ export const dictionaries: Record<Language, Dictionary> = {
         ],
         example: {
           title: "Illustrative Mini-Example",
-          body: "A home-flood product pays $2,000 with q = 2%. Expected payout per policy is $40. If fees and margin total $10, premium is $50. Selling 10,000 policies implies expected payouts of $400k; capital and buffers absorb rare spikes."
+          body: "A term-life pool pays $100,000 with q = 0.2%. Expected payout per policy is $200. If fees and margin total $40, premium is $240. Selling 10,000 policies implies expected payouts of $2M; capital and buffers absorb rare mortality spikes."
         }
       },
       eventVerification: {
         title: "5. Event Verification",
         paragraphs: [
-          "Reliable data is essential in parametric insurance. Oracles submit signed reports with event type e, timestamp t, and evidence hash h. The contract waits a short window Δ for multiple reports; if a quorum agrees, the event is confirmed. Conflicts open a bounded dispute."
+          "Reliable data is essential in parametric life insurance. Oracles submit signed reports with event type e, timestamp t, and evidence hash h—death certificates, registry entries, or medical attestations. The contract waits a short window Δ for multiple reports; if a quorum agrees, the event is confirmed. Conflicts open a bounded dispute."
         ],
         plainLanguage: {
           title: "Plain-Language View",
-          body: "Several independent observers describe the same event. When they agree, the claim is paid. When they disagree, the system pauses briefly and resolves it using published rules."
+          body: "Several independent observers confirm the same life event. When they agree, the beneficiaries are paid. When they disagree, the system pauses briefly and resolves it using published rules."
         }
       },
       claims: {
@@ -534,8 +534,8 @@ export const dictionaries: Record<Language, Dictionary> = {
             description: "Stake RSK as bond. Honest reporting earns fees; misconduct risks slashing."
           },
           {
-            label: "Users:",
-            description: "Pay posted premiums and receive automatic payouts when triggers occur."
+            label: "Families:",
+            description: "Pay posted life premiums and receive automatic beneficiary payouts when qualifying events are verified."
           }
         ],
         feeParagraph:
@@ -576,9 +576,9 @@ export const dictionaries: Record<Language, Dictionary> = {
       applications: {
         title: "10. Practical Applications",
         paragraphs: [
-          "The protocol supports coverage for cars, homes, electronics, travel, and logistics. Each product pays when predefined data sources confirm the qualifying event, enabling fast, transparent protection.",
-          "People choose Riska for simple rules, few steps, and fast results. Products disclose triggers and data sources up front so buyers know exactly what is covered.",
-          "World Chain verification lets community programs or employers sponsor coverage knowing that subsidies reach unique humans, reducing leakage from bots and duplicate identities."
+          "The protocol supports term life, mortgage payoff, income protection, and funeral coverage. Each product pays when predefined vital data confirms the qualifying event, enabling fast, transparent family protection.",
+          "Families choose Riska for simple rules, few steps, and fast results. Products disclose triggers and data sources up front so buyers know exactly what is covered.",
+          "World Chain verification lets community programs or employers sponsor coverage knowing that subsidies reach unique households, reducing leakage from bots and duplicate identities."
         ]
       },
       faq: {
@@ -609,7 +609,7 @@ export const dictionaries: Record<Language, Dictionary> = {
       conclusion: {
         title: "12. Conclusion",
         paragraphs: [
-          "Riska replaces friction and discretion with transparent rules and verifiable data. By combining capital pools, objective event proofs, and the RSK incentive model, the protocol aims to make everyday protection reliable, auditable, and open-access."
+          "Riska replaces friction and discretion with transparent rules and verifiable life-event data. By combining capital pools, objective vital proofs, and the RSK incentive model, the protocol aims to make family protection reliable, auditable, and open-access."
         ]
       },
       references: {
@@ -626,9 +626,9 @@ export const dictionaries: Record<Language, Dictionary> = {
   },
   es: {
     metadata: {
-      title: "Riska.world – Un sistema de seguros peer-to-peer",
+      title: "Riska.world – Seguros de vida peer-to-peer",
       description:
-        "Riska presenta seguros peer-to-peer donde contratos transparentes, reportes de oráculos y el token RSK alinean incentivos para una protección confiable y auditable."
+        "Riska presenta seguros de vida peer-to-peer donde contratos transparentes, reportes de oráculos y el token RSK alinean incentivos para una protección familiar confiable y auditable."
     },
     navbar: {
       brand: "riska.world",
@@ -647,22 +647,22 @@ export const dictionaries: Record<Language, Dictionary> = {
     },
     hero: {
       badge: "Fundación Riska · Noviembre 2025",
-      title: "Seguros peer-to-peer con disparadores verificables.",
+      title: "Seguros de vida peer-to-peer con disparadores verificables.",
       description:
-        "Pólizas, primas y pagos se ejecutan mediante contratos deterministas, mientras reportes independientes de oráculos confirman los eventos. Riska hace que la protección diaria sea confiable, auditable y accesible globalmente para usuarios verificados en World Chain con acceso resistente a sibilas.",
+        "Las pólizas de vida, las primas y los pagos a beneficiarios se ejecutan mediante contratos deterministas, mientras reportes independientes de oráculos confirman eventos vitales. Riska hace que la protección familiar sea confiable, auditable y accesible globalmente para usuarios verificados en World Chain con acceso resistente a sibilas.",
       chips: [
-        "Contratos transparentes",
-        "Verificación con oráculos",
-        "Incentivos RSK",
-        "Usuarios verificados en World Chain"
+        "Contratos de vida transparentes",
+        "Eventos verificados por oráculos",
+        "Reservas respaldadas por RSK",
+        "Familias verificadas en World Chain"
       ]
     },
     impactMetrics: {
       title: "Objetivos de diseño",
       subtitle:
-        "Riska elimina cuellos de botella discrecionales expresando la cobertura como código y confirmando la verdad con datos verificables.",
+        "Riska elimina cuellos de botella discrecionales al expresar la cobertura de vida como código y confirmar la verdad con datos verificables.",
       body:
-        "Cada pool publica qué cubre, cómo calcula los pagos y qué reportes confirman los eventos. La participación es abierta, la ejecución es determinista y los incentivos se alinean mediante la economía de RSK.",
+        "Cada pool de vida publica qué garantiza, cómo calcula los pagos a beneficiarios y qué reportes confirman los eventos protegidos. La participación es abierta, la ejecución es determinista y los incentivos se alinean mediante la economía de RSK.",
       metrics: [
         { label: "Capital y cobertura", value: "Participación abierta" },
         { label: "Ejecución", value: "Determinista" },
@@ -678,9 +678,9 @@ export const dictionaries: Record<Language, Dictionary> = {
           description:
             "Los pools mantienen capital, publican qué cubren y expresan las pólizas como reglas transparentes auditables por cualquiera.",
           points: [
-            "Las pólizas especifican suma asegurada, ventana de cobertura y disparador",
-            "Ejemplos incluyen auto, hogar, electrónica, viajes y logística",
-            "Intuición diaria: un ticket con una regla clara que paga cuando se activa"
+            "Las pólizas de vida especifican suma asegurada, ventana de cobertura y evento habilitante",
+            "Ejemplos incluyen vida a término, protección de ingresos, cancelación de hipoteca y gastos funerarios",
+            "Intuición diaria: una promesa a tu familia con una regla clara que paga cuando se verifica"
           ]
         },
         {
@@ -688,7 +688,7 @@ export const dictionaries: Record<Language, Dictionary> = {
           description:
             "Desde elegir un producto hasta el asentamiento automático, cada paso sigue lógica determinista reforzada por oráculos.",
           points: [
-            "Selecciona un producto con términos publicados",
+            "Selecciona un producto de vida con términos publicados",
             "Paga la prima y recibe una póliza con timestamp",
             "Los oráculos monitorean disparadores y ejecutan pagos automáticamente"
           ]
@@ -806,19 +806,19 @@ export const dictionaries: Record<Language, Dictionary> = {
     callToAction: {
       title: "Lee el whitepaper",
       subtitle:
-        "Explora cómo los pools de capital, las pruebas de oráculos y el modelo de incentivos RSK brindan protección confiable y auditable.",
+        "Explora cómo los pools de capital de vida, las pruebas de oráculos y el modelo de incentivos RSK brindan protección familiar confiable y auditable.",
       primary: "Abrir whitepaper",
       secondary: "Contactar a Fundación Riska"
     },
     footer: {
-      note: "© {year} riska.world · Seguros peer-to-peer con datos verificables.",
+      note: "© {year} riska.world · Seguros de vida peer-to-peer con datos verificables.",
       worldChain: "World Chain",
       email: "hey@riska.world"
     },
     walletAuth: {
       heading: "Consola de pólizas",
       description:
-        "Conecta una wallet para revisar pólizas, monitorear eventos de oráculos y seguir asentamientos deterministas en tiempo real.",
+        "Conecta una wallet para revisar pólizas de vida, monitorear eventos vitales confirmados por oráculos y seguir asentamientos deterministas en tiempo real.",
       statusLabel: "Estado",
       status: {
         connected: (address: string) => `Sesión conectada: ${address}`,
@@ -832,33 +832,33 @@ export const dictionaries: Record<Language, Dictionary> = {
         disconnect: "Desconectar"
       },
       messages: {
-        welcome: "Bienvenido a Riska: seguros peer-to-peer reforzados por reglas transparentes.",
-        disconnected: "Sesión cerrada. Vuelve a conectar para gestionar pólizas y reclamos.",
+        welcome: "Bienvenido a Riska: seguros de vida peer-to-peer reforzados por reglas transparentes.",
+        disconnected: "Sesión cerrada. Vuelve a conectar para gestionar pólizas de vida y reclamos de beneficiarios.",
         error: "No se pudo conectar la wallet."
       }
     },
     whitepaper: {
       metadata: {
-        title: "Libro blanco de Riska — Un sistema de seguros peer-to-peer",
+        title: "Libro blanco de Riska — Un sistema de seguros de vida peer-to-peer",
         description:
-          "Explora cómo riska.world ofrece cobertura transparente y automatizada con pools de capital peer-to-peer, eventos verificados por oráculos y la economía del token RSK."
+          "Explora cómo riska.world ofrece cobertura de vida transparente y automatizada con pools de capital peer-to-peer, eventos verificados por oráculos y la economía del token RSK."
       },
       header: {
         badge: "Fundación Riska",
-        title: "Riska: Un sistema de seguros peer-to-peer",
+        title: "Riska: Un sistema de seguros de vida peer-to-peer",
         date: "Noviembre 2025"
       },
       abstract: {
         title: "Resumen",
         paragraphs: [
-          "Presentamos un protocolo de seguros peer-to-peer en el que los riesgos cotidianos—accidentes automovilísticos, daños en el hogar, fallas de electrónicos, interrupciones de viaje—se cubren con reglas públicas y datos verificables en lugar de procesos discrecionales. Las pólizas, primas y pagos se gestionan con contratos transparentes; los eventos se confirman con reportes independientes. Un token nativo (RSK) alinea incentivos entre usuarios, proveedores de liquidez y operadores de datos mediante un diseño deflacionario de comisiones, staking para la honestidad de los oráculos y gobernanza on-chain. El objetivo es simple: hacer que la protección sea confiable, auditable y accesible globalmente.",
-          "Riska se integra con World Chain para anclar la participación a cuentas verificadas como humanas. La prueba de humanidad de World Chain aporta resistencia a sibilas, permite que los pools valoren el riesgo sabiendo que cada usuario es único y ofrece a los reguladores una superficie de cumplimiento familiar mientras mantiene los datos biométricos fuera de la cadena."
+          "Presentamos un protocolo de seguros de vida peer-to-peer en el que los riesgos familiares—fallecimiento prematuro, enfermedad terminal, interrupción de ingresos y gastos funerarios—se cubren con reglas públicas y datos verificables en lugar de procesos discrecionales. Las pólizas, primas y pagos a beneficiarios se gestionan con contratos transparentes; los eventos vitales se confirman con reportes independientes. Un token nativo (RSK) alinea incentivos entre familias, proveedores de liquidez y operadores de datos mediante un diseño deflacionario de comisiones, staking para la honestidad de los oráculos y gobernanza on-chain. El objetivo es simple: hacer que la protección de vida sea confiable, auditable y accesible globalmente.",
+          "Riska se integra con World Chain para anclar la participación a cuentas verificadas como humanas. La prueba de humanidad de World Chain aporta resistencia a sibilas, permite que los pools valoren el riesgo de vida sabiendo que cada titular es único y ofrece a los reguladores una superficie de cumplimiento familiar mientras mantiene los datos biométricos fuera de la cadena."
         ]
       },
       introduction: {
         title: "1. Introducción",
         paragraphs: [
-          "El seguro funciona cuando es sencillo comprarlo y confiable al momento de liquidar. Los sistemas heredados dependen de pasos opacos y aprobación discrecional. Riska elimina esos cuellos de botella al expresar la cobertura como código y la verdad de los eventos como datos verificables. Cualquiera puede leer las reglas y auditar las liquidaciones. Esto refleja la filosofía del dinero electrónico: reemplazar la discreción institucional por mecánicas transparentes y predecibles.",
+          "El seguro de vida funciona cuando es sencillo comprarlo y confiable al momento de liquidar. Los sistemas heredados dependen de pasos opacos y aprobación discrecional. Riska elimina esos cuellos de botella al expresar la cobertura como código y la verdad de los eventos como datos verificables. Cualquiera puede leer las reglas y auditar las liquidaciones. Esto refleja la filosofía del dinero electrónico: reemplazar la discreción institucional por mecánicas transparentes y predecibles.",
           "World Chain extiende esa filosofía a la identidad. Al autenticarse con una credencial verificada de World Chain, cada participante demuestra que es un humano único sin entregar datos personales al protocolo. Los pools pueden abrir el onboarding global, reducir el fraude y enfocar el capital de suscripción en hogares genuinos en lugar de bots."
         ],
         goalsTitle: "Objetivos de diseño",
@@ -873,13 +873,13 @@ export const dictionaries: Record<Language, Dictionary> = {
       systemOverview: {
         title: "2. Visión general del sistema",
         paragraphs: [
-          "Los participantes interactúan mediante pools de riesgo públicos. Un pool mantiene capital y publica qué cubre y cómo calcula los pagos. Una póliza especifica la suma asegurada S (monto pagado cuando se activa), la ventana de cobertura T (período de vigencia) y el disparador θ (una condición definida por datos).",
+          "Los participantes interactúan mediante pools públicos de vida. Un pool mantiene capital y publica qué cubre y cómo calcula los pagos a beneficiarios. Una póliza especifica la suma asegurada S (monto pagado cuando se activa), la ventana de cobertura T (período de vigencia) y el disparador θ (una condición definida por datos).",
           "El acceso se ancla a usuarios verificados en World Chain. Cada titular firma transacciones con una credencial de prueba de humanidad, lo que brinda a los pools confianza en que los incentivos llegan a humanos únicos mientras se preserva la seudonimia on-chain.",
-          "Los ejemplos incluyen choques automovilísticos (reporte policial o telemático), inundaciones en el hogar (datos certificados de nivel de agua), fallas de electrónicos (registros de centros de servicio) y demoras en viajes (feeds de aerolíneas)."
+          "Los ejemplos incluyen vida a término (aviso de defunción del registro civil), protección hipotecaria (certificación notarial más registro de defunción), gastos funerarios (constancia hospitalaria) y enfermedades críticas (diagnóstico de especialistas atestiguado por redes médicas)."
         ],
         everydayIntuition: {
           title: "Intuición cotidiana",
-          body: "Una póliza es como un boleto con una regla clara. Si ocurre la condición, paga. Todos pueden ver la regla y verificar cómo se aplica."
+          body: "Una póliza de vida es una promesa con una regla clara. Cuando se verifica el evento, paga. Todos pueden ver la regla y revisar cómo se aplica."
         }
       },
       userLifecycle: {
@@ -889,7 +889,10 @@ export const dictionaries: Record<Language, Dictionary> = {
             label: "Verifica identidad.",
             description: "Autentícate con World Chain para confirmar que eres un humano único antes de interactuar con los pools."
           },
-          { label: "Selecciona producto.", description: "Elige cobertura de auto, hogar, electrónica o viajes con términos publicados." },
+          {
+            label: "Selecciona producto.",
+            description: "Elige vida a término, protección de ingresos, cancelación de hipoteca o cobertura de gastos finales con términos publicados."
+          },
           { label: "Paga la prima.", description: "El contrato emite una póliza con marca de tiempo para la ventana T." },
           { label: "Monitoreo de datos.", description: "Los oráculos vigilan el disparador θ." },
           { label: "Liquidación.", description: "Si θ se confirma dentro de T, el pago se ejecuta automáticamente." }
@@ -898,20 +901,20 @@ export const dictionaries: Record<Language, Dictionary> = {
           title: "Ejemplos concretos",
           items: [
             {
-              label: "Auto:",
-              description: "Alicia compra cobertura de colisión. Si se registra un informe oficial de accidente dentro de T, el oráculo lo reporta y la póliza paga un monto fijo."
+              label: "Vida a término:",
+              description: "Alicia contrata $250 mil. Cuando el registro civil publica una defunción verificada dentro de T, los oráculos la certifican y la póliza paga a sus beneficiarios."
             },
             {
-              label: "Hogar:",
-              description: "Un domicilio registrado cobra si los datos certificados de inundación superan un umbral."
+              label: "Protección hipotecaria:",
+              description: "Un acreedor recibe fondos cuando un notario confirma el saldo pendiente y se verifica el registro de defunción vinculado."
             },
             {
-              label: "Electrónica:",
-              description: "Un dispositivo cobra si los sensores o registros de servicio confirman la falla dentro de T."
+              label: "Gastos funerarios:",
+              description: "Una wallet familiar recibe un estipendio fijo cuando se confirma la constancia hospitalaria de fallecimiento."
             },
             {
-              label: "Viajes:",
-              description: "Una póliza de vuelo paga una suma fija cuando un feed de aerolínea confirma una demora de 3+ horas."
+              label: "Protección de ingresos:",
+              description: "Si una red médica certifica una enfermedad crítica que cumple los criterios publicados, los beneficios mensuales se envían a la wallet beneficiaria."
             }
           ]
         }
@@ -924,17 +927,17 @@ export const dictionaries: Record<Language, Dictionary> = {
         ],
         example: {
           title: "Mini ejemplo ilustrativo",
-          body: "Un producto contra inundaciones en el hogar paga 2.000 dólares con q = 2%. El pago esperado por póliza es 40 dólares. Si fees y margen suman 10 dólares, la prima es 50 dólares. Vender 10.000 pólizas implica pagos esperados de 400 mil dólares; el capital y los buffers absorben picos infrecuentes."
+          body: "Un pool de vida a término paga 100.000 dólares con q = 0,2 %. El pago esperado por póliza es 200 dólares. Si fees y margen suman 40 dólares, la prima es 240 dólares. Vender 10.000 pólizas implica pagos esperados de 2 millones; el capital y los buffers absorben picos de mortalidad infrecuentes."
         }
       },
       eventVerification: {
         title: "5. Verificación de eventos",
         paragraphs: [
-          "Los datos confiables son esenciales en seguros paramétricos. Los oráculos envían reportes firmados con tipo de evento e, timestamp t y hash de evidencia h. El contrato espera una ventana corta Δ para múltiples reportes; si un quórum coincide, el evento se confirma. Los conflictos abren una disputa acotada."
+          "Los datos confiables son esenciales en seguros de vida paramétricos. Los oráculos envían reportes firmados con tipo de evento e, timestamp t y hash de evidencia h—certificados de defunción, registros civiles o constancias médicas. El contrato espera una ventana corta Δ para múltiples reportes; si un quórum coincide, el evento se confirma. Los conflictos abren una disputa acotada."
         ],
         plainLanguage: {
           title: "Vista en lenguaje sencillo",
-          body: "Varios observadores independientes describen el mismo evento. Cuando concuerdan, el reclamo se paga. Cuando discrepan, el sistema se pausa brevemente y lo resuelve siguiendo reglas publicadas."
+          body: "Varios observadores independientes confirman el mismo evento de vida. Cuando concuerdan, el reclamo se paga a los beneficiarios. Cuando discrepan, el sistema se pausa brevemente y lo resuelve siguiendo reglas publicadas."
         }
       },
       claims: {
@@ -945,7 +948,7 @@ export const dictionaries: Record<Language, Dictionary> = {
       },
       incentives: {
         title: "7. Incentivos económicos y flujo de capital (RSK)",
-        intro: "El token RSK alinea incentivos entre proveedores de liquidez, operadores de datos y usuarios.",
+        intro: "El token RSK alinea incentivos entre proveedores de liquidez, operadores de datos y familias.",
         points: [
           {
             label: "Proveedores de liquidez:",
@@ -956,8 +959,8 @@ export const dictionaries: Record<Language, Dictionary> = {
             description: "Hacen staking de RSK como bono. Reportar con honestidad genera fees; la mala conducta puede ser castigada."
           },
           {
-            label: "Usuarios:",
-            description: "Pagan las primas publicadas y reciben pagos automáticos cuando se activan los disparadores."
+            label: "Familias:",
+            description: "Pagan primas de vida publicadas y reciben pagos automáticos a beneficiarios cuando se verifican los eventos."
           }
         ],
         feeParagraph:
@@ -998,9 +1001,9 @@ export const dictionaries: Record<Language, Dictionary> = {
       applications: {
         title: "10. Aplicaciones prácticas",
         paragraphs: [
-          "El protocolo admite coberturas para autos, hogares, electrónicos, viajes y logística. Cada producto paga cuando las fuentes de datos predefinidas confirman el evento habilitante, permitiendo protección rápida y transparente.",
-          "Las personas eligen Riska por reglas simples, pocos pasos y resultados rápidos. Los productos revelan disparadores y fuentes de datos desde el inicio para que los compradores sepan exactamente qué está cubierto.",
-          "La verificación en World Chain permite que programas comunitarios o empleadores patrocinen coberturas sabiendo que los subsidios llegan a humanos únicos, reduciendo fugas por bots o identidades duplicadas."
+          "El protocolo admite vida a término, cancelación hipotecaria, protección de ingresos y gastos funerarios. Cada producto paga cuando los datos vitales predefinidos confirman el evento habilitante, permitiendo protección familiar rápida y transparente.",
+          "Las familias eligen Riska por reglas simples, pocos pasos y resultados rápidos. Los productos revelan disparadores y fuentes de datos desde el inicio para que los compradores sepan exactamente qué está cubierto.",
+          "La verificación en World Chain permite que programas comunitarios o empleadores patrocinen coberturas sabiendo que los subsidios llegan a hogares únicos, reduciendo fugas por bots o identidades duplicadas."
         ]
       },
       faq: {
@@ -1031,7 +1034,7 @@ export const dictionaries: Record<Language, Dictionary> = {
       conclusion: {
         title: "12. Conclusión",
         paragraphs: [
-          "Riska reemplaza la fricción y la discreción con reglas transparentes y datos verificables. Al combinar pools de capital, pruebas objetivas de eventos y el modelo de incentivos RSK, el protocolo busca que la protección cotidiana sea confiable, auditable y de acceso abierto."
+          "Riska reemplaza la fricción y la discreción con reglas transparentes y datos verificables de eventos de vida. Al combinar pools de capital, pruebas vitales objetivas y el modelo de incentivos RSK, el protocolo busca que la protección familiar sea confiable, auditable y de acceso abierto."
         ]
       },
       references: {
