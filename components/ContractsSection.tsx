@@ -2,6 +2,7 @@
 
 import { useLanguage } from "@/components/LanguageProvider";
 import { contracts } from "@/lib/contracts";
+import { contractSources } from "@/lib/contractSources";
 
 export function ContractsSection() {
   const { t } = useLanguage();
@@ -17,6 +18,7 @@ export function ContractsSection() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {contracts.map((contract) => {
           const content = contentById.get(contract.id);
+          const source = contractSources[contract.id];
 
           return (
             <article key={contract.id} className="glass-panel flex flex-col justify-between gap-6 p-6">
@@ -38,6 +40,19 @@ export function ContractsSection() {
                     {contract.address}
                   </code>
                 </div>
+                {source ? (
+                  <div className="space-y-2">
+                    <span className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                      {contractsText.sourceLabel}
+                    </span>
+                    <pre
+                      className="max-h-80 overflow-auto rounded border border-white/5 bg-black/50 p-4 text-left font-mono text-xs leading-relaxed text-emerald-100 shadow-inner"
+                      data-language={source.language}
+                    >
+                      <code className="whitespace-pre">{source.code}</code>
+                    </pre>
+                  </div>
+                ) : null}
               </div>
               <div className="flex flex-wrap gap-3">
                 {contract.explorerUrl ? (
