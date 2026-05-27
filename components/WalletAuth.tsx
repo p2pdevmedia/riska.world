@@ -19,13 +19,23 @@ type AuthState =
   | { status: "connecting" }
   | { status: "connected"; address: string; chainId: number; method: "world-app" | "browser" };
 
+export type WalletAuthSession = Extract<AuthState, { status: "connected" }>;
+
 type MessageState =
   | { type: "welcome" }
   | { type: "disconnected" }
   | { type: "error" }
   | { type: "custom"; text: string };
 
-export function WalletAuth({ variant = "dark" }: { variant?: "dark" | "light" }) {
+export function WalletAuth({
+  onHumanReservationChange,
+  onSessionChange,
+  variant = "dark"
+}: {
+  onHumanReservationChange?: Parameters<typeof WorldIdGate>[0]["onReservationChange"];
+  onSessionChange?: (session: WalletAuthSession | null) => void;
+  variant?: "dark" | "light";
+}) {
   const { t } = useLanguage();
   const { isInstalled } = useMiniKit();
   const walletText = t.walletAuth;
@@ -145,6 +155,10 @@ export function WalletAuth({ variant = "dark" }: { variant?: "dark" | "light" })
     });
   }, []);
 
+  useEffect(() => {
+    onSessionChange?.(state.status === "connected" ? state : null);
+  }, [onSessionChange, state]);
+
   const statusText =
     state.status === "connected"
       ? walletText.status.connected(truncateAddress(state.address))
@@ -248,6 +262,7 @@ export function WalletAuth({ variant = "dark" }: { variant?: "dark" | "light" })
       )}
 
       <WorldIdGate
+        onReservationChange={onHumanReservationChange}
         variant={variant}
         walletAddress={state.status === "connected" ? state.address : undefined}
       />

@@ -291,15 +291,14 @@ export const dictionaries: Record<Language, Dictionary> = {
         "Riska combines life protection with a 30-year USDC policy: after the 12-month waiting period, beneficiaries receive a formula payout; at maturity, the holder receives 100% principal over 10 years."
     },
     navbar: {
-      brand: "riska.world",
+      brand: "RISKA",
       links: [
-        { href: "/#product", label: "Product" },
-        { href: "/#vision", label: "Vision" },
-        { href: "/docs", label: "Contracts" },
-        { href: "/#stack", label: "Stack" },
-        { href: "/whitepaper", label: "Whitepaper" }
+        { href: "/#enroll", label: "Enroll" },
+        { href: "/#rules", label: "Policy rules" },
+        { href: "/whitepaper", label: "White paper" },
+        { href: "/docs", label: "Contracts" }
       ],
-      cta: "Log in",
+      cta: "Start",
       languageToggle: {
         label: "ES",
         ariaLabel: "Switch to Spanish"
@@ -986,15 +985,14 @@ export const dictionaries: Record<Language, Dictionary> = {
         "Riska combina protección de vida con una póliza USDC a 30 años: después de 12 meses, los beneficiarios cobran por fórmula; al madurar, el titular cobra 100% del principal en 10 años."
     },
     navbar: {
-      brand: "riska.world",
+      brand: "RISKA",
       links: [
-        { href: "/#product", label: "Producto" },
-        { href: "/#vision", label: "Visión" },
-        { href: "/docs", label: "Contratos" },
-        { href: "/#stack", label: "Stack" },
-        { href: "/whitepaper", label: "Libro blanco" }
+        { href: "/#enroll", label: "Inscripcion" },
+        { href: "/#rules", label: "Reglas" },
+        { href: "/whitepaper", label: "White paper" },
+        { href: "/docs", label: "Contratos" }
       ],
-      cta: "Acceder",
+      cta: "Empezar",
       languageToggle: {
         label: "EN",
         ariaLabel: "Cambiar a inglés"

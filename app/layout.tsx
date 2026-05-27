@@ -22,7 +22,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.15),_transparent_55%)]">
+      <body className="min-h-screen bg-[#f5f7f2] text-[#18211d]">
         <MiniAppProvider>
           <LanguageProvider>{children}</LanguageProvider>
         </MiniAppProvider>

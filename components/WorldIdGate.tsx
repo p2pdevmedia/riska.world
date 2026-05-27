@@ -31,7 +31,7 @@ type VerifyPolicyHumanResponse = {
   };
 };
 
-type PolicyHumanReservationView = NonNullable<VerifyPolicyHumanResponse["reservation"]>;
+export type PolicyHumanReservationView = NonNullable<VerifyPolicyHumanResponse["reservation"]>;
 
 type RpSignatureResponse = {
   configured: boolean;
@@ -45,9 +45,11 @@ function shortProofId(nullifier: string) {
 }
 
 export function WorldIdGate({
+  onReservationChange,
   variant = "dark",
   walletAddress
 }: {
+  onReservationChange?: (reservation: PolicyHumanReservationView | null) => void;
   variant?: "dark" | "light";
   walletAddress?: string;
 }) {
@@ -69,7 +71,8 @@ export function WorldIdGate({
     setRpContext(null);
     setReservation(null);
     verificationRef.current = null;
-  }, [walletAddress]);
+    onReservationChange?.(null);
+  }, [onReservationChange, walletAddress]);
 
   const startVerification = useCallback(async () => {
     if (!walletAddress) {
@@ -130,19 +133,21 @@ export function WorldIdGate({
       }
 
       setReservation(payload.reservation);
+      onReservationChange?.(payload.reservation);
       setStatus("verified");
     },
-    [copy.duplicateError, copy.verifyError, walletAddress]
+    [copy.duplicateError, copy.verifyError, onReservationChange, walletAddress]
   );
 
   const handleSuccess = useCallback(() => {
     const verifiedReservation = verificationRef.current?.reservation;
     if (verifiedReservation) {
       setReservation(verifiedReservation);
+      onReservationChange?.(verifiedReservation);
     }
     setStatus("verified");
     setError(null);
-  }, []);
+  }, [onReservationChange]);
 
   const handleError = useCallback(
     (errorCode: string) => {

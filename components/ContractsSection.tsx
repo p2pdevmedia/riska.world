@@ -24,24 +24,24 @@ export function ContractsSection() {
             <article key={contract.id} className="glass-panel flex flex-col justify-between gap-6 p-6">
               <div className="space-y-4">
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-aurora-400">
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">
                     {contract.network}
                   </p>
-                  <h3 className="text-lg font-semibold text-white">{content?.name ?? contract.id}</h3>
+                  <h3 className="text-lg font-semibold text-[#18211d]">{content?.name ?? contract.id}</h3>
                 </div>
                 {content?.description ? (
-                  <p className="text-sm text-slate-300/80">{content.description}</p>
+                  <p className="text-sm leading-6 text-[#516159]">{content.description}</p>
                 ) : null}
                 <div>
-                  <span className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                  <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[#66746e]">
                     {contractsText.addressLabel}
                   </span>
                   {contract.address ? (
-                    <code className="mt-2 block break-words rounded bg-black/40 px-3 py-2 font-mono text-sm text-aurora-200">
+                    <code className="mt-2 block break-words border border-[#e3e8df] bg-[#fbfcf8] px-3 py-2 font-mono text-sm text-emerald-800">
                       {contract.address}
                     </code>
                   ) : (
-                    <p className="mt-2 rounded bg-black/40 px-3 py-2 text-sm text-slate-300">
+                    <p className="mt-2 border border-[#e3e8df] bg-[#fbfcf8] px-3 py-2 text-sm text-[#66746e]">
                       {contractsText.pendingLabel}
                     </p>
                   )}
@@ -71,4 +71,4 @@ export function ContractsSection() {
 }
 
 const linkClassName =
-  "rounded-full border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-200 transition hover:border-aurora-400/60 hover:text-white";
+  "border border-[#cbd7cf] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-[#26342d] transition hover:border-[#17231e] hover:text-[#18211d]";

@@ -1,17 +1,16 @@
 "use client";
 
-import Link from "next/link";
 import {
   BadgeCheck,
   Camera,
   Check,
+  ChevronLeft,
   ChevronRight,
   CircleDollarSign,
   FileCheck2,
   Fingerprint,
   HeartHandshake,
   IdCard,
-  LockKeyhole,
   Percent,
   ShieldCheck,
   Trash2,
@@ -20,11 +19,20 @@ import {
   Users,
   WalletCards
 } from "lucide-react";
-import { useState, type ComponentType, type Dispatch, type SetStateAction } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  type ComponentType,
+  type Dispatch,
+  type SetStateAction
+} from "react";
 
+import { Footer } from "@/components/Footer";
 import { useLanguage } from "@/components/LanguageProvider";
-import { LanguageToggle } from "@/components/LanguageToggle";
-import { WalletAuth } from "@/components/WalletAuth";
+import { Navbar } from "@/components/Navbar";
+import { WalletAuth, type WalletAuthSession } from "@/components/WalletAuth";
+import type { PolicyHumanReservationView } from "@/components/WorldIdGate";
 import type { Language } from "@/lib/i18n";
 
 type StepId = "identity" | "kyc" | "beneficiaries" | "quote" | "confirm";
@@ -33,8 +41,6 @@ type WizardStep = {
   accent: string;
   icon: ComponentType<{ className?: string }>;
   id: StepId;
-  meta: string;
-  title: string;
 };
 
 type Beneficiary = {
@@ -46,121 +52,145 @@ type Beneficiary = {
 };
 
 type KycFiles = {
-  face: boolean;
+  faceCapture: string;
   passportFront: string;
   passportSecond: string;
 };
 
 type EnrollmentState = {
+  applicationId: string | null;
   beneficiaries: Beneficiary[];
-  identityReserved: boolean;
+  humanReservation: PolicyHumanReservationView | null;
   kyc: KycFiles;
   paymentReady: boolean;
   quoteReviewed: boolean;
   riskAccepted: boolean;
   submitted: boolean;
+  submittedAt: string | null;
   termsAccepted: boolean;
-  walletReady: boolean;
+  walletSession: WalletAuthSession | null;
 };
 
 type CompletionMap = Record<StepId, boolean>;
 
+const storageKey = "riska.enrollment.v1";
 const beneficiaryColors = ["bg-rose-500", "bg-amber-500", "bg-emerald-500", "bg-cyan-500", "bg-violet-500"];
 
-const initialBeneficiaries: Beneficiary[] = [
-  { id: "beneficiary-1", name: "Mama", wallet: "", percent: 50, color: beneficiaryColors[0] },
-  { id: "beneficiary-2", name: "Hermana", wallet: "", percent: 30, color: beneficiaryColors[1] },
-  { id: "beneficiary-3", name: "Hijo", wallet: "", percent: 20, color: beneficiaryColors[2] }
-];
-
 const steps: WizardStep[] = [
-  { accent: "bg-emerald-500", icon: Fingerprint, id: "identity", meta: "Wallet + World ID", title: "Identidad" },
-  { accent: "bg-cyan-500", icon: IdCard, id: "kyc", meta: "KYC simple", title: "Documento" },
-  { accent: "bg-rose-500", icon: Users, id: "beneficiaries", meta: "Beneficiarios", title: "Familia" },
-  { accent: "bg-amber-500", icon: CircleDollarSign, id: "quote", meta: "30 USDC / mes", title: "Poliza" },
-  { accent: "bg-violet-500", icon: FileCheck2, id: "confirm", meta: "World Chain", title: "Firma" }
+  { accent: "bg-emerald-500", icon: Fingerprint, id: "identity" },
+  { accent: "bg-cyan-500", icon: IdCard, id: "kyc" },
+  { accent: "bg-rose-500", icon: Users, id: "beneficiaries" },
+  { accent: "bg-amber-500", icon: CircleDollarSign, id: "quote" },
+  { accent: "bg-violet-500", icon: FileCheck2, id: "confirm" }
 ];
 
 const copy = {
   en: {
-    nav: {
-      brand: "RISKA",
-      links: [
-        { href: "#enroll", label: "Enroll" },
-        { href: "#rules", label: "Policy rules" },
-        { href: "/whitepaper", label: "White paper" },
-        { href: "/docs", label: "Contracts" }
+    welcome: {
+      badge: "Riska 30",
+      title: "Life protection that becomes programmed income.",
+      body:
+        "Riska is a 30-year USDC policy on World Chain. During the contribution phase it protects your family; after maturity it turns into scheduled payments for the holder.",
+      primary: "Start application",
+      secondary: "Read policy rules",
+      cards: [
+        {
+          icon: HeartHandshake,
+          title: "Family protection",
+          body: "After 12 paid months, verified beneficiaries can receive the published payout formula if the holder dies before maturity."
+        },
+        {
+          icon: CircleDollarSign,
+          title: "30-year income",
+          body: "If the holder reaches maturity, 100% of scheduled principal is paid over 10 years."
+        },
+        {
+          icon: Fingerprint,
+          title: "One human, one policy",
+          body: "World ID and wallet authentication reserve one policy slot for each verified human."
+        }
       ],
-      cta: "Start"
+      facts: [
+        ["Premium", "30 USDC / month"],
+        ["Waiting period", "12 months"],
+        ["Maturity", "30 years"],
+        ["Network", "World Chain"]
+      ]
     },
     hero: {
-      badge: "World App Mini App",
-      title: "Riska 30 enrollment in five calm steps.",
+      badge: "World Chain policy application",
+      title: "Enroll in Riska 30.",
       body:
-        "A mobile-first flow for verified humans: wallet, World ID, KYC, beneficiaries, quote, and signed terms before any real policy payment.",
+        "Complete the real policy application flow: wallet, World ID, KYC, beneficiaries, policy quote, and signed consent before issuance.",
       metrics: [
         ["Monthly premium", "30 USDC"],
         ["Waiting period", "12 months"],
         ["Maturity", "30 years"]
       ]
     },
-    access: {
-      eyebrow: "Live gate",
-      title: "Connect and reserve eligibility",
-      body:
-        "This panel uses the real MiniKit Wallet Auth and IDKit gate. The wizard stores demo state locally until the backend persistence and contracts are wired."
-    },
     rules: {
       eyebrow: "Riska 30 rules",
-      title: "The user sees the promise before signing.",
+      title: "The promise is visible before the user signs.",
       body:
-        "The flow keeps the product explicit: no payout before 12 paid months, 80% beneficiary formula before maturity, 100% scheduled principal to the holder at maturity, and 90% to beneficiaries after maturity.",
+        "No payout before 12 paid months, beneficiaries receive 80% before maturity, the holder receives 100% at maturity, and beneficiaries receive 90% after maturity.",
       items: [
-        "No real policy before KYC approval",
+        "No policy issuance before KYC approval",
         "Beneficiaries must total 100%",
         "Terms hash shown before payment",
-        "Contract audit required before production funds"
+        "Audited contracts required before user funds"
       ]
     },
     wizard: {
-      step: (index: number) => `Step ${index + 1} of 5`,
+      back: "Back",
+      blocked: "Complete the required fields to continue.",
       complete: "Complete",
-      pending: "Pending",
       continue: "Continue",
-      done: "Application ready",
-      demoNotice: "Demo state",
-      demoBody: "Final activation stays disabled until audited contracts, KYC storage, and payment rails are production-ready.",
+      pending: "Pending",
+      ready: "Ready",
+      required: "Required",
+      step: (index: number) => `Step ${index + 1} of 5`,
+      submit: "Submit application",
+      submitted: "Application submitted",
+      steps: {
+        beneficiaries: { meta: "Beneficiaries", title: "Beneficiary allocation" },
+        confirm: { meta: "World Chain", title: "Review and consent" },
+        identity: { meta: "Wallet + World ID", title: "Verified human" },
+        kyc: { meta: "Passport + face", title: "Identity documents" },
+        quote: { meta: "30 USDC / month", title: "Policy quote" }
+      },
       identity: {
-        wallet: "Wallet Auth ready",
-        walletDetail: "Signed session that binds this enrollment to one wallet.",
-        worldId: "One human, one policy",
-        worldIdDetail: "World ID reserves a unique nullifier before KYC starts.",
-        realGate: "Use the live gate below for a real Wallet Auth and IDKit proof.",
-        connectDemo: "Mark wallet ready",
-        reserveDemo: "Reserve human"
+        instruction:
+          "Connect your wallet and complete World ID. The wizard unlocks the next step only after one verified human is reserved for this wallet.",
+        wallet: "Wallet connected",
+        walletDetail: "Wallet Auth binds this application to a World Chain address.",
+        worldId: "Human reserved",
+        worldIdDetail: "World ID reserves one policy slot for one verified human."
       },
       kyc: {
+        checks: ["Encrypted off-chain storage target", "Riska Team review queue", "No premium payment before approval"],
+        face: "Face capture",
+        faceDetail: "Use a live front-facing image for the passport match.",
         passportFront: "Passport front",
         passportSecond: "Second page",
-        pending: "Pending",
-        uploaded: "Uploaded",
-        face: "FaceID + liveness",
-        faceDetail: "Match against the passport photo.",
-        captureFace: "Capture face",
-        checks: ["Encrypted off-chain data", "Riska Team review", "No payment before KYC approval"]
+        pending: "Required",
+        uploaded: "Selected"
       },
       beneficiaries: {
-        total: (value: number) => `Total allocation: ${value}%`,
         add: "Add beneficiary",
-        wallet: "Wallet",
+        invalid: "Shares must total exactly 100%.",
         name: "Name",
+        namePlaceholder: "Full name",
+        remove: "Remove beneficiary",
         share: "Share",
-        invalid: "Beneficiary shares must total exactly 100%."
+        total: (value: number) => `Total allocation: ${value}%`,
+        wallet: "Wallet",
+        walletInvalid: "Each beneficiary needs a valid 0x wallet address.",
+        walletPlaceholder: "0x..."
       },
       quote: {
+        payout: "Maturity payout",
         premium: "Monthly premium",
         principal: "Scheduled principal",
-        payout: "Maturity payout",
         reviewed: "I reviewed the policy formula.",
         rules: [
           ["Before 12 months", "0%"],
@@ -170,96 +200,127 @@ const copy = {
         ]
       },
       confirm: {
-        termsHash: "Terms hash",
+        application: "Application",
+        checklist: ["World ID", "KYC", "Beneficiaries", "Quote"],
         firstPayment: "First payment",
         network: "Network",
-        terms: "I accept the policy terms.",
-        risk: "I understand this is not a production policy until audits and legal clearance are complete.",
-        payment: "I am ready to authorize the first 30 USDC payment when production opens.",
-        checklist: ["World ID", "KYC", "Beneficiaries", "Quote"],
-        submitted: "Demo enrollment complete. Next production step: persist the application and open policy creation."
+        proof: "Human proof",
+        submitted:
+          "Application is ready for review. The next backend step is storing it, approving KYC, and opening policy issuance.",
+        terms: "I accept the Riska 30 policy terms.",
+        termsHash: "Terms hash",
+        risk: "I understand the payout rules, KYC review, and smart-contract audit requirement before user funds are activated.",
+        payment: "I authorize preparing the first 30 USDC payment for the issuance step.",
+        wallet: "Wallet"
       }
     }
   },
   es: {
-    nav: {
-      brand: "RISKA",
-      links: [
-        { href: "#enroll", label: "Inscripcion" },
-        { href: "#rules", label: "Reglas" },
-        { href: "/whitepaper", label: "White paper" },
-        { href: "/docs", label: "Contratos" }
+    welcome: {
+      badge: "Riska 30",
+      title: "Proteccion de vida que se convierte en renta programada.",
+      body:
+        "Riska es una poliza USDC a 30 anios en World Chain. Durante la etapa de aporte protege a tu familia; al madurar se convierte en pagos programados para el titular.",
+      primary: "Empezar solicitud",
+      secondary: "Ver reglas",
+      cards: [
+        {
+          icon: HeartHandshake,
+          title: "Proteccion familiar",
+          body: "Despues de 12 meses pagos, los beneficiarios verificados pueden cobrar la formula publicada si el titular fallece antes de madurar."
+        },
+        {
+          icon: CircleDollarSign,
+          title: "Renta a 30 anios",
+          body: "Si el titular llega a madurez, cobra 100% del principal programado durante 10 anios."
+        },
+        {
+          icon: Fingerprint,
+          title: "Un humano, una poliza",
+          body: "World ID y la wallet reservan un cupo de poliza para cada humano verificado."
+        }
       ],
-      cta: "Empezar"
+      facts: [
+        ["Prima", "30 USDC / mes"],
+        ["Espera", "12 meses"],
+        ["Madurez", "30 anios"],
+        ["Red", "World Chain"]
+      ]
     },
     hero: {
-      badge: "World App Mini App",
-      title: "Inscripcion Riska 30 en cinco pasos claros.",
+      badge: "Solicitud de poliza en World Chain",
+      title: "Inscribite en Riska 30.",
       body:
-        "Un flujo mobile-first para humanos verificados: wallet, World ID, KYC, beneficiarios, cotizacion y terminos firmados antes de cualquier pago real.",
+        "Completa el flujo real de solicitud: wallet, World ID, KYC, beneficiarios, cotizacion de poliza y consentimiento firmado antes de emitir.",
       metrics: [
         ["Prima mensual", "30 USDC"],
         ["Espera inicial", "12 meses"],
         ["Madurez", "30 anios"]
       ]
     },
-    access: {
-      eyebrow: "Gate real",
-      title: "Conecta y reserva elegibilidad",
-      body:
-        "Este panel usa el Wallet Auth real de MiniKit y el gate IDKit. El wizard guarda estado demo local hasta conectar persistencia backend y contratos."
-    },
     rules: {
       eyebrow: "Reglas Riska 30",
-      title: "El usuario ve la promesa antes de firmar.",
+      title: "La promesa queda visible antes de firmar.",
       body:
-        "El flujo mantiene el producto explicito: no hay payout antes de 12 meses pagos, beneficiarios cobran 80% antes de madurez, el titular cobra 100% al madurar y beneficiarios cobran 90% despues de madurez.",
+        "No hay pago antes de 12 meses pagos, beneficiarios cobran 80% antes de madurez, el titular cobra 100% al madurar y beneficiarios cobran 90% despues de madurez.",
       items: [
-        "No hay poliza real antes de KYC",
-        "Beneficiarios suman 100%",
+        "No se emite poliza antes de aprobar KYC",
+        "Los beneficiarios deben sumar 100%",
         "Hash de terminos antes del pago",
-        "Auditoria obligatoria antes de fondos productivos"
+        "Contratos auditados antes de fondos de usuarios"
       ]
     },
     wizard: {
-      step: (index: number) => `Paso ${index + 1} de 5`,
+      back: "Atras",
+      blocked: "Completa los campos requeridos para continuar.",
       complete: "Completo",
-      pending: "Pendiente",
       continue: "Continuar",
-      done: "Solicitud lista",
-      demoNotice: "Estado demo",
-      demoBody: "La activacion final queda bloqueada hasta tener contratos auditados, KYC persistente y pagos productivos.",
+      pending: "Pendiente",
+      ready: "Listo",
+      required: "Requerido",
+      step: (index: number) => `Paso ${index + 1} de 5`,
+      submit: "Enviar solicitud",
+      submitted: "Solicitud enviada",
+      steps: {
+        beneficiaries: { meta: "Beneficiarios", title: "Asignacion de beneficiarios" },
+        confirm: { meta: "World Chain", title: "Revision y consentimiento" },
+        identity: { meta: "Wallet + World ID", title: "Humano verificado" },
+        kyc: { meta: "Pasaporte + rostro", title: "Documentos de identidad" },
+        quote: { meta: "30 USDC / mes", title: "Cotizacion de poliza" }
+      },
       identity: {
-        wallet: "Wallet Auth listo",
-        walletDetail: "Sesion firmada que ata esta inscripcion a una wallet.",
-        worldId: "Un humano, una poliza",
-        worldIdDetail: "World ID reserva un nullifier unico antes de empezar KYC.",
-        realGate: "Usa el gate real de abajo para Wallet Auth e IDKit.",
-        connectDemo: "Marcar wallet lista",
-        reserveDemo: "Reservar humano"
+        instruction:
+          "Conecta tu wallet y completa World ID. El wizard habilita el siguiente paso solo cuando queda reservado un humano verificado para esta wallet.",
+        wallet: "Wallet conectada",
+        walletDetail: "Wallet Auth ata esta solicitud a una direccion de World Chain.",
+        worldId: "Humano reservado",
+        worldIdDetail: "World ID reserva un cupo de poliza para un humano verificado."
       },
       kyc: {
+        checks: ["Destino de datos cifrado off-chain", "Cola de revision Riska Team", "Sin pago de prima antes de aprobar"],
+        face: "Captura facial",
+        faceDetail: "Usa una imagen frontal viva para matchear contra el pasaporte.",
         passportFront: "Pasaporte frente",
         passportSecond: "Segunda hoja",
-        pending: "Pendiente",
-        uploaded: "Cargado",
-        face: "FaceID + vida",
-        faceDetail: "Match contra foto del pasaporte.",
-        captureFace: "Capturar rostro",
-        checks: ["Datos cifrados off-chain", "Revision del Riska Team", "Sin pago hasta aprobar KYC"]
+        pending: "Requerido",
+        uploaded: "Seleccionado"
       },
       beneficiaries: {
-        total: (value: number) => `Asignacion total: ${value}%`,
         add: "Agregar beneficiario",
-        wallet: "Wallet",
+        invalid: "Los porcentajes deben sumar exactamente 100%.",
         name: "Nombre",
+        namePlaceholder: "Nombre completo",
+        remove: "Quitar beneficiario",
         share: "Porcentaje",
-        invalid: "Los porcentajes deben sumar exactamente 100%."
+        total: (value: number) => `Asignacion total: ${value}%`,
+        wallet: "Wallet",
+        walletInvalid: "Cada beneficiario necesita una wallet 0x valida.",
+        walletPlaceholder: "0x..."
       },
       quote: {
+        payout: "Pago al madurar",
         premium: "Prima mensual",
         principal: "Principal programado",
-        payout: "Pago al madurar",
         reviewed: "Revise la formula de la poliza.",
         rules: [
           ["Antes de 12 meses", "0%"],
@@ -269,24 +330,29 @@ const copy = {
         ]
       },
       confirm: {
-        termsHash: "Hash de terminos",
+        application: "Solicitud",
+        checklist: ["World ID", "KYC", "Beneficiarios", "Cotizacion"],
         firstPayment: "Primer pago",
         network: "Red",
-        terms: "Acepto los terminos de la poliza.",
-        risk: "Entiendo que no es una poliza productiva hasta auditoria y aprobacion legal.",
-        payment: "Estoy listo para autorizar el primer pago de 30 USDC cuando produccion abra.",
-        checklist: ["World ID", "KYC", "Beneficiarios", "Cotizacion"],
-        submitted: "Inscripcion demo completa. Proximo paso productivo: persistir solicitud y crear poliza."
+        proof: "Prueba humana",
+        submitted:
+          "La solicitud queda lista para revision. El proximo paso backend es guardarla, aprobar KYC y abrir emision de poliza.",
+        terms: "Acepto los terminos de la poliza Riska 30.",
+        termsHash: "Hash de terminos",
+        risk: "Entiendo las reglas de pago, la revision KYC y el requisito de auditoria de contratos antes de activar fondos de usuarios.",
+        payment: "Autorizo preparar el primer pago de 30 USDC para el paso de emision.",
+        wallet: "Wallet"
       }
     }
   }
 };
 
 const initialState: EnrollmentState = {
-  beneficiaries: initialBeneficiaries,
-  identityReserved: false,
+  applicationId: null,
+  beneficiaries: [createEmptyBeneficiary(1, 100)],
+  humanReservation: null,
   kyc: {
-    face: false,
+    faceCapture: "",
     passportFront: "",
     passportSecond: ""
   },
@@ -294,25 +360,76 @@ const initialState: EnrollmentState = {
   quoteReviewed: false,
   riskAccepted: false,
   submitted: false,
+  submittedAt: null,
   termsAccepted: false,
-  walletReady: false
+  walletSession: null
 };
 
 export function RiskaEnrollmentHome() {
   const { language } = useLanguage();
   const content = copy[language];
   const [activeStepId, setActiveStepId] = useState<StepId>("identity");
+  const [hydrated, setHydrated] = useState(false);
   const [state, setState] = useState<EnrollmentState>(initialState);
+
+  useEffect(() => {
+    try {
+      const storedState = window.localStorage.getItem(storageKey);
+      if (storedState) {
+        setState(restoreEnrollmentState(JSON.parse(storedState)));
+      }
+    } catch {
+      window.localStorage.removeItem(storageKey);
+    } finally {
+      setHydrated(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) {
+      return;
+    }
+
+    window.localStorage.setItem(storageKey, JSON.stringify(state));
+  }, [hydrated, state]);
 
   const activeStepIndex = steps.findIndex((step) => step.id === activeStepId);
   const activeStep = steps[activeStepIndex] ?? steps[0];
   const beneficiaryTotal = state.beneficiaries.reduce((total, beneficiary) => total + beneficiary.percent, 0);
   const completion = getCompletion(state, beneficiaryTotal);
   const canSubmit = completion.identity && completion.kyc && completion.beneficiaries && completion.quote;
+  const readyToSubmit = canSubmit && state.termsAccepted && state.riskAccepted && state.paymentReady;
 
-  function setKycFile(field: keyof Pick<KycFiles, "passportFront" | "passportSecond">, fileName: string) {
+  const handleWalletSessionChange = useCallback((walletSession: WalletAuthSession | null) => {
+    setState((current) => {
+      if (sameWalletSession(current.walletSession, walletSession)) {
+        return current;
+      }
+
+      return {
+        ...clearSubmission(current),
+        humanReservation: walletSession ? current.humanReservation : null,
+        walletSession
+      };
+    });
+  }, []);
+
+  const handleHumanReservationChange = useCallback((humanReservation: PolicyHumanReservationView | null) => {
+    setState((current) => {
+      if (sameHumanReservation(current.humanReservation, humanReservation)) {
+        return current;
+      }
+
+      return {
+        ...clearSubmission(current),
+        humanReservation
+      };
+    });
+  }, []);
+
+  function setKycFile(field: keyof KycFiles, fileName: string) {
     setState((current) => ({
-      ...current,
+      ...clearSubmission(current),
       kyc: {
         ...current.kyc,
         [field]: fileName
@@ -322,7 +439,7 @@ export function RiskaEnrollmentHome() {
 
   function updateBeneficiary(id: string, field: keyof Pick<Beneficiary, "name" | "percent" | "wallet">, value: string) {
     setState((current) => ({
-      ...current,
+      ...clearSubmission(current),
       beneficiaries: current.beneficiaries.map((beneficiary) =>
         beneficiary.id === id
           ? {
@@ -340,64 +457,48 @@ export function RiskaEnrollmentHome() {
         return current;
       }
 
-      const nextIndex = current.beneficiaries.length + 1;
       return {
-        ...current,
+        ...clearSubmission(current),
         beneficiaries: [
           ...current.beneficiaries,
-          {
-            id: `beneficiary-${Date.now()}`,
-            name: language === "es" ? `Beneficiario ${nextIndex}` : `Beneficiary ${nextIndex}`,
-            wallet: "",
-            percent: 0,
-            color: beneficiaryColors[current.beneficiaries.length % beneficiaryColors.length]
-          }
+          createEmptyBeneficiary(current.beneficiaries.length + 1, 0)
         ]
       };
     });
   }
 
   function removeBeneficiary(id: string) {
-    setState((current) => ({
-      ...current,
-      beneficiaries: current.beneficiaries.filter((beneficiary) => beneficiary.id !== id)
-    }));
+    setState((current) => {
+      if (current.beneficiaries.length <= 1) {
+        return current;
+      }
+
+      return {
+        ...clearSubmission(current),
+        beneficiaries: current.beneficiaries.filter((beneficiary) => beneficiary.id !== id)
+      };
+    });
   }
 
-  function completeCurrentStep() {
-    if (activeStep.id === "identity") {
-      if (!state.walletReady) {
-        setState((current) => ({ ...current, walletReady: true }));
-        return;
-      }
+  function goBack() {
+    const previousStep = steps[Math.max(activeStepIndex - 1, 0)];
+    setActiveStepId(previousStep.id);
+  }
 
-      if (!state.identityReserved) {
-        setState((current) => ({ ...current, identityReserved: true }));
-        return;
-      }
-    }
-
-    if (activeStep.id === "kyc" && !completion.kyc) {
-      setState((current) => ({
-        ...current,
-        kyc: {
-          face: true,
-          passportFront: current.kyc.passportFront || "passport-front.jpg",
-          passportSecond: current.kyc.passportSecond || "passport-second.jpg"
-        }
-      }));
-      return;
-    }
-
-    if (activeStep.id === "quote" && !state.quoteReviewed) {
-      setState((current) => ({ ...current, quoteReviewed: true }));
-      return;
-    }
-
+  function continueEnrollment() {
     if (activeStep.id === "confirm") {
-      if (canSubmit && state.termsAccepted && state.riskAccepted && state.paymentReady) {
-        setState((current) => ({ ...current, submitted: true }));
+      if (readyToSubmit) {
+        setState((current) => ({
+          ...current,
+          applicationId: current.applicationId ?? `RISKA-${Date.now().toString(36).toUpperCase()}`,
+          submitted: true,
+          submittedAt: current.submittedAt ?? new Date().toISOString()
+        }));
       }
+      return;
+    }
+
+    if (!completion[activeStep.id]) {
       return;
     }
 
@@ -406,206 +507,280 @@ export function RiskaEnrollmentHome() {
   }
 
   const primaryDisabled =
-    activeStep.id === "beneficiaries" && !completion.beneficiaries
-      ? true
-      : activeStep.id === "confirm" && !(canSubmit && state.termsAccepted && state.riskAccepted && state.paymentReady);
+    activeStep.id === "confirm"
+      ? !readyToSubmit || state.submitted
+      : !completion[activeStep.id];
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#f5f7f2] text-[#18211d]">
-      <header className="sticky top-0 z-40 border-b border-[#dce4d8] bg-[#f5f7f2]/90 backdrop-blur">
-        <nav className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 md:px-8">
-          <Link href="/" className="text-lg font-semibold tracking-[0.18em] text-emerald-800">
-            {content.nav.brand}
-          </Link>
-          <div className="hidden items-center gap-7 text-sm text-[#56665d] md:flex">
-            {content.nav.links.map((link) => (
-              <Link key={link.href} href={link.href} className="text-[#56665d] hover:text-[#18211d]">
-                {link.label}
-              </Link>
-            ))}
+    <div className="min-h-screen overflow-x-hidden bg-[#f5f7f2] text-[#18211d]">
+      <Navbar />
+      <main>
+        <WelcomeScreen content={content} />
+
+        <section id="enroll" className="mx-auto max-w-7xl px-5 py-8 md:px-8 lg:py-12">
+          <div className="grid gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-start">
+            <aside className="space-y-6">
+              <div>
+                <p className="text-sm font-semibold text-emerald-700">{content.hero.badge}</p>
+                <h1 className="mt-3 max-w-2xl text-4xl font-semibold leading-tight md:text-6xl">
+                  {content.hero.title}
+                </h1>
+                <p className="mt-5 max-w-xl text-base leading-7 text-[#516159]">{content.hero.body}</p>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                {content.hero.metrics.map(([label, value]) => (
+                  <div key={label} className="border border-[#d9ded5] bg-white px-3 py-3">
+                    <p className="text-xs text-[#6b766f]">{label}</p>
+                    <p className="mt-1 text-lg font-semibold">{value}</p>
+                  </div>
+                ))}
+              </div>
+
+              <StepRail
+                activeStepId={activeStepId}
+                completion={completion}
+                content={content}
+                onStepSelect={setActiveStepId}
+              />
+            </aside>
+
+            <EnrollmentWizard
+              activeStepIndex={activeStepIndex}
+              beneficiaryTotal={beneficiaryTotal}
+              canSubmit={canSubmit}
+              completion={completion}
+              content={content}
+              onAddBeneficiary={addBeneficiary}
+              onBack={goBack}
+              onHumanReservationChange={handleHumanReservationChange}
+              onKycFile={setKycFile}
+              onPrimary={continueEnrollment}
+              onRemoveBeneficiary={removeBeneficiary}
+              onSetState={setState}
+              onUpdateBeneficiary={updateBeneficiary}
+              onWalletSessionChange={handleWalletSessionChange}
+              primaryDisabled={primaryDisabled}
+              readyToSubmit={readyToSubmit}
+              state={state}
+              step={activeStep}
+            />
           </div>
-          <div className="flex items-center gap-3">
-            <LanguageToggle variant="light" />
+        </section>
+
+        <section id="rules" className="border-y border-[#dce4d8] bg-white">
+          <div className="mx-auto grid max-w-7xl gap-8 px-5 py-12 md:px-8 lg:grid-cols-[0.9fr_1.1fr]">
+            <div>
+              <p className="text-sm font-semibold text-emerald-700">{content.rules.eyebrow}</p>
+              <h2 className="mt-2 text-3xl font-semibold leading-tight md:text-4xl">
+                {content.rules.title}
+              </h2>
+              <p className="mt-4 text-base leading-7 text-[#516159]">{content.rules.body}</p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {content.rules.items.map((item) => (
+                <div key={item} className="flex gap-3 border border-[#dce4d8] bg-[#f8faf6] p-4">
+                  <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center bg-emerald-100 text-emerald-700">
+                    <Check className="h-4 w-4" />
+                  </span>
+                  <p className="text-sm leading-6 text-[#405047]">{item}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+function WelcomeScreen({ content }: { content: (typeof copy)[Language] }) {
+  const welcome = content.welcome;
+
+  return (
+    <section className="border-b border-[#dce4d8] bg-[#f5f7f2]">
+      <div className="mx-auto grid min-h-[calc(100vh-69px)] max-w-7xl gap-10 px-5 py-10 md:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:py-14">
+        <div className="max-w-3xl">
+          <p className="text-sm font-semibold text-emerald-700">{welcome.badge}</p>
+          <h1 className="mt-4 text-4xl font-semibold leading-tight md:text-6xl">
+            {welcome.title}
+          </h1>
+          <p className="mt-5 max-w-2xl text-lg leading-8 text-[#516159]">{welcome.body}</p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <a
+              className="flex h-12 items-center justify-center bg-[#17231e] px-5 text-sm font-semibold text-white transition hover:bg-[#26342d] hover:text-white"
               href="#enroll"
-              className="border border-[#17231e] bg-[#17231e] px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-white"
             >
-              {content.nav.cta}
+              {welcome.primary}
+            </a>
+            <a
+              className="flex h-12 items-center justify-center border border-[#cbd7cf] bg-white px-5 text-sm font-semibold text-[#26342d] transition hover:border-[#17231e] hover:text-[#18211d]"
+              href="#rules"
+            >
+              {welcome.secondary}
             </a>
           </div>
-        </nav>
-      </header>
+        </div>
 
-      <section id="enroll" className="mx-auto grid max-w-7xl gap-8 px-5 py-8 md:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:py-12">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-emerald-700">{content.hero.badge}</p>
-          <h1 className="mt-3 max-w-3xl text-4xl font-semibold leading-tight md:text-6xl">
-            {content.hero.title}
-          </h1>
-          <p className="mt-5 max-w-2xl text-base leading-7 text-[#516159]">{content.hero.body}</p>
-
-          <div className="mt-6 grid grid-cols-3 gap-2">
-            {content.hero.metrics.map(([label, value]) => (
-              <div key={label} className="border border-[#d9ded5] bg-white px-3 py-3">
-                <p className="text-xs text-[#6b766f]">{label}</p>
-                <p className="mt-1 text-lg font-semibold">{value}</p>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            {welcome.facts.map(([label, value]) => (
+              <div className="border border-[#d9ded5] bg-white p-4" key={label}>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#66746e]">{label}</p>
+                <p className="mt-2 text-xl font-semibold">{value}</p>
               </div>
             ))}
           </div>
+          <div className="grid gap-3">
+            {welcome.cards.map((card) => {
+              const Icon = card.icon;
 
-          <div className="mt-7 flex gap-3 overflow-x-auto pb-2 sm:grid sm:grid-cols-5 sm:overflow-visible sm:pb-0">
-            {steps.map((step, index) => {
-              const Icon = step.icon;
-              const selected = step.id === activeStepId;
-              const complete = completion[step.id];
               return (
-                <button
-                  key={step.id}
-                  type="button"
-                  onClick={() => setActiveStepId(step.id)}
-                  className={`min-w-[150px] border px-3 py-3 text-left transition sm:min-w-0 ${
-                    selected ? "border-[#17231e] bg-white" : "border-[#d9ded5] bg-[#fbfcf8] hover:bg-white"
-                  }`}
-                >
-                  <span className={`flex h-9 w-9 items-center justify-center ${step.accent}`}>
-                    {complete ? <Check className="h-5 w-5 text-white" /> : <Icon className="h-5 w-5 text-white" />}
+                <article className="flex gap-4 border border-[#d9ded5] bg-white p-4" key={card.title}>
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center bg-emerald-50 text-emerald-700">
+                    <Icon className="h-5 w-5" />
                   </span>
-                  <span className="mt-3 block text-xs text-[#66746e]">{content.wizard.step(index)}</span>
-                  <span className="mt-1 block text-sm font-semibold">{step.meta}</span>
-                  <span className={`mt-2 block text-xs ${complete ? "text-emerald-700" : "text-[#7a867e]"}`}>
-                    {complete ? content.wizard.complete : content.wizard.pending}
-                  </span>
-                </button>
+                  <div>
+                    <h2 className="font-semibold">{card.title}</h2>
+                    <p className="mt-1 text-sm leading-6 text-[#516159]">{card.body}</p>
+                  </div>
+                </article>
               );
             })}
           </div>
         </div>
-
-        <EnrollmentPhone
-          activeStepIndex={activeStepIndex}
-          beneficiaryTotal={beneficiaryTotal}
-          canSubmit={canSubmit}
-          completion={completion}
-          content={content}
-          language={language}
-          onAddBeneficiary={addBeneficiary}
-          onKycFile={setKycFile}
-          onPrimary={completeCurrentStep}
-          onRemoveBeneficiary={removeBeneficiary}
-          onSetState={setState}
-          onUpdateBeneficiary={updateBeneficiary}
-          primaryDisabled={primaryDisabled}
-          state={state}
-          step={activeStep}
-        />
-      </section>
-
-      <section className="mx-auto grid max-w-7xl gap-5 px-5 pb-12 md:px-8 lg:grid-cols-[0.95fr_1.05fr]">
-        <div className="border border-[#d9ded5] bg-white p-5 md:p-7">
-          <p className="text-sm font-semibold text-emerald-700">{content.access.eyebrow}</p>
-          <h2 className="mt-2 text-2xl font-semibold">{content.access.title}</h2>
-          <p className="mt-3 text-sm leading-6 text-[#516159]">{content.access.body}</p>
-        </div>
-        <WalletAuth variant="light" />
-      </section>
-
-      <section id="rules" className="border-y border-[#dce4d8] bg-white">
-        <div className="mx-auto grid max-w-7xl gap-8 px-5 py-12 md:px-8 lg:grid-cols-[0.9fr_1.1fr]">
-          <div>
-            <p className="text-sm font-semibold text-emerald-700">{content.rules.eyebrow}</p>
-            <h2 className="mt-2 text-3xl font-semibold leading-tight md:text-4xl">
-              {content.rules.title}
-            </h2>
-            <p className="mt-4 text-base leading-7 text-[#516159]">{content.rules.body}</p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {content.rules.items.map((item) => (
-              <div key={item} className="flex gap-3 border border-[#dce4d8] bg-[#f8faf6] p-4">
-                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center bg-emerald-100 text-emerald-700">
-                  <Check className="h-4 w-4" />
-                </span>
-                <p className="text-sm leading-6 text-[#405047]">{item}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <footer className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-8 text-sm text-[#647268] md:flex-row md:items-center md:justify-between md:px-8">
-        <p>© 2026 RISKA · World Chain Mini App</p>
-        <div className="flex gap-4">
-          <Link href="/onboarding-mockups" className="text-[#56665d] hover:text-[#18211d]">
-            Mockups
-          </Link>
-          <Link href="/whitepaper" className="text-[#56665d] hover:text-[#18211d]">
-            White paper
-          </Link>
-        </div>
-      </footer>
-    </main>
+      </div>
+    </section>
   );
 }
 
-type EnrollmentPhoneProps = {
+type EnrollmentWizardProps = {
   activeStepIndex: number;
   beneficiaryTotal: number;
   canSubmit: boolean;
   completion: CompletionMap;
   content: (typeof copy)[Language];
-  language: Language;
   onAddBeneficiary: () => void;
-  onKycFile: (field: keyof Pick<KycFiles, "passportFront" | "passportSecond">, fileName: string) => void;
+  onBack: () => void;
+  onHumanReservationChange: (reservation: PolicyHumanReservationView | null) => void;
+  onKycFile: (field: keyof KycFiles, fileName: string) => void;
   onPrimary: () => void;
   onRemoveBeneficiary: (id: string) => void;
   onSetState: Dispatch<SetStateAction<EnrollmentState>>;
   onUpdateBeneficiary: (id: string, field: keyof Pick<Beneficiary, "name" | "percent" | "wallet">, value: string) => void;
+  onWalletSessionChange: (session: WalletAuthSession | null) => void;
   primaryDisabled: boolean;
+  readyToSubmit: boolean;
   state: EnrollmentState;
   step: WizardStep;
 };
 
-function EnrollmentPhone(props: EnrollmentPhoneProps) {
+function StepRail({
+  activeStepId,
+  completion,
+  content,
+  onStepSelect
+}: {
+  activeStepId: StepId;
+  completion: CompletionMap;
+  content: (typeof copy)[Language];
+  onStepSelect: (stepId: StepId) => void;
+}) {
+  return (
+    <div className="border border-[#d9ded5] bg-white p-4">
+      <div className="space-y-2">
+        {steps.map((step, index) => {
+          const Icon = step.icon;
+          const selected = step.id === activeStepId;
+          const complete = completion[step.id];
+          const stepCopy = content.wizard.steps[step.id];
+
+          return (
+            <button
+              aria-current={selected ? "step" : undefined}
+              className={`flex w-full items-center gap-3 border px-3 py-3 text-left transition ${
+                selected ? "border-[#17231e] bg-[#f8faf6]" : "border-transparent hover:border-[#d9ded5] hover:bg-[#fbfcf8]"
+              }`}
+              key={step.id}
+              onClick={() => onStepSelect(step.id)}
+              type="button"
+            >
+              <span className={`flex h-10 w-10 shrink-0 items-center justify-center ${step.accent}`}>
+                {complete ? <Check className="h-5 w-5 text-white" /> : <Icon className="h-5 w-5 text-white" />}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-xs text-[#66746e]">{content.wizard.step(index)}</span>
+                <span className="block truncate text-sm font-semibold">{stepCopy.meta}</span>
+              </span>
+              <span className={`text-xs ${complete ? "text-emerald-700" : "text-[#7a867e]"}`}>
+                {complete ? content.wizard.complete : content.wizard.pending}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function EnrollmentWizard(props: EnrollmentWizardProps) {
   const { activeStepIndex, content, primaryDisabled, state, step } = props;
   const Icon = step.icon;
+  const stepCopy = content.wizard.steps[step.id];
   const primaryLabel = getPrimaryLabel(props);
 
   return (
-    <article className="mx-auto w-full max-w-[390px] rounded-[34px] border-[10px] border-[#111816] bg-[#111816] shadow-2xl shadow-[#22332a]/20 lg:ml-auto">
-      <div className="min-h-[680px] overflow-hidden rounded-[22px] bg-[#fbfcf8]">
-        <div className="flex items-center justify-between border-b border-[#e7ebe2] px-5 py-4">
-          <div className="flex items-center gap-2">
-            <div className={`flex h-9 w-9 items-center justify-center rounded-full ${step.accent}`}>
-              <Icon className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <p className="text-xs text-[#6b766f]">{content.wizard.step(activeStepIndex)}</p>
-              <p className="text-sm font-semibold">{step.meta}</p>
-            </div>
+    <article className="border border-[#d9ded5] bg-white shadow-2xl shadow-[#22332a]/10">
+      <header className="flex flex-col gap-4 border-b border-[#e7ebe2] px-5 py-5 md:flex-row md:items-center md:justify-between md:px-7">
+        <div className="flex items-center gap-3">
+          <div className={`flex h-12 w-12 items-center justify-center ${step.accent}`}>
+            <Icon className="h-6 w-6 text-white" />
           </div>
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#eef3ec]">
-            <LockKeyhole className="h-4 w-4 text-[#526258]" />
+          <div>
+            <p className="text-xs text-[#6b766f]">{content.wizard.step(activeStepIndex)}</p>
+            <h2 className="text-2xl font-semibold leading-tight">{stepCopy.title}</h2>
           </div>
         </div>
+        <StatusPill
+          complete={step.id === "confirm" ? props.readyToSubmit || state.submitted : props.completion[step.id]}
+          label={step.id === "confirm" && state.submitted ? content.wizard.submitted : stepCopy.meta}
+        />
+      </header>
 
-        <div className="h-1 bg-[#e4eae1]">
-          <div className={`h-full ${step.accent}`} style={{ width: `${(activeStepIndex + 1) * 20}%` }} />
-        </div>
+      <div className="h-1 bg-[#e4eae1]">
+        <div className={`h-full ${step.accent}`} style={{ width: `${(activeStepIndex + 1) * 20}%` }} />
+      </div>
 
-        <div className="flex min-h-[620px] flex-col px-5 pb-5 pt-6">
-          <h2 className="text-2xl font-semibold leading-tight">{step.title}</h2>
-          <div className="mt-5 flex-1">
-            {renderScreen(props)}
+      <div className="px-5 py-6 md:px-7">
+        {renderScreen(props)}
+
+        {state.submitted && (
+          <div className="mt-6 border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-900">
+            <p className="font-semibold">{content.wizard.confirm.submitted}</p>
+            <p className="mt-1 font-mono text-xs">{state.applicationId}</p>
           </div>
+        )}
 
-          {state.submitted && (
-            <p className="mb-3 border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs leading-5 text-emerald-800">
-              {content.wizard.confirm.submitted}
-            </p>
-          )}
+        {!props.completion[step.id] && step.id !== "confirm" && (
+          <p className="mt-5 border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            {content.wizard.blocked}
+          </p>
+        )}
 
+        <div className="mt-7 flex flex-col-reverse gap-3 border-t border-[#e7ebe2] pt-5 sm:flex-row sm:items-center sm:justify-between">
           <button
-            className="mt-5 flex h-12 w-full items-center justify-center gap-2 bg-[#17231e] px-4 text-sm font-semibold text-white transition hover:bg-[#26342d] disabled:cursor-not-allowed disabled:bg-[#cbd6cf] disabled:text-[#728078]"
-            disabled={primaryDisabled || state.submitted}
+            className="flex h-12 items-center justify-center gap-2 border border-[#cbd7cf] bg-white px-5 text-sm font-semibold text-[#26342d] transition hover:border-[#17231e] disabled:cursor-not-allowed disabled:opacity-40"
+            disabled={activeStepIndex === 0}
+            onClick={props.onBack}
+            type="button"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            {content.wizard.back}
+          </button>
+          <button
+            className="flex h-12 items-center justify-center gap-2 bg-[#17231e] px-5 text-sm font-semibold text-white transition hover:bg-[#26342d] disabled:cursor-not-allowed disabled:bg-[#cbd6cf] disabled:text-[#728078]"
+            disabled={primaryDisabled}
             onClick={props.onPrimary}
             type="button"
           >
@@ -618,7 +793,7 @@ function EnrollmentPhone(props: EnrollmentPhoneProps) {
   );
 }
 
-function renderScreen(props: EnrollmentPhoneProps) {
+function renderScreen(props: EnrollmentWizardProps) {
   switch (props.step.id) {
     case "identity":
       return <IdentityScreen {...props} />;
@@ -633,82 +808,82 @@ function renderScreen(props: EnrollmentPhoneProps) {
   }
 }
 
-function IdentityScreen({ content, onSetState, state }: EnrollmentPhoneProps) {
+function IdentityScreen({
+  content,
+  onHumanReservationChange,
+  onWalletSessionChange,
+  state
+}: EnrollmentWizardProps) {
   const text = content.wizard.identity;
+
   return (
-    <div className="space-y-4">
-      <InteractiveInfoBlock
-        checked={state.walletReady}
-        detail={text.walletDetail}
-        icon={WalletCards}
-        title={text.wallet}
-      />
-      <InteractiveInfoBlock
-        checked={state.identityReserved}
-        detail={text.worldIdDetail}
-        icon={ShieldCheck}
-        title={text.worldId}
-      />
-      <div className="grid grid-cols-2 gap-2">
-        <button
-          className="border border-[#dce4d8] bg-white px-3 py-3 text-sm font-semibold text-[#17231e]"
-          onClick={() => onSetState((current) => ({ ...current, walletReady: true }))}
-          type="button"
-        >
-          {text.connectDemo}
-        </button>
-        <button
-          className="border border-[#dce4d8] bg-white px-3 py-3 text-sm font-semibold text-[#17231e] disabled:text-[#9aa69f]"
-          disabled={!state.walletReady}
-          onClick={() => onSetState((current) => ({ ...current, identityReserved: true }))}
-          type="button"
-        >
-          {text.reserveDemo}
-        </button>
+    <div className="space-y-5">
+      <p className="max-w-3xl text-sm leading-6 text-[#516159]">{text.instruction}</p>
+      <div className="grid gap-3 md:grid-cols-2">
+        <InteractiveInfoBlock
+          checked={Boolean(state.walletSession)}
+          detail={state.walletSession ? shortAddress(state.walletSession.address) : text.walletDetail}
+          icon={WalletCards}
+          title={text.wallet}
+        />
+        <InteractiveInfoBlock
+          checked={Boolean(state.humanReservation)}
+          detail={state.humanReservation ? shortProofId(state.humanReservation.nullifier) : text.worldIdDetail}
+          icon={ShieldCheck}
+          title={text.worldId}
+        />
       </div>
-      <div className="border border-[#dae3d8] bg-[#f2f6ee] p-4">
-        <p className="text-xs text-[#6b766f]">{content.wizard.demoNotice}</p>
-        <p className="mt-1 text-sm leading-6">{text.realGate}</p>
-      </div>
+      <WalletAuth
+        onHumanReservationChange={onHumanReservationChange}
+        onSessionChange={onWalletSessionChange}
+        variant="light"
+      />
     </div>
   );
 }
 
-function KycScreen({ content, onKycFile, onSetState, state }: EnrollmentPhoneProps) {
+function KycScreen({ content, onKycFile, state }: EnrollmentWizardProps) {
   const text = content.wizard.kyc;
+
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
+    <div className="space-y-5">
+      <div className="grid gap-3 md:grid-cols-3">
         <KycTile
+          accept="image/*,.pdf"
           field="passportFront"
+          fileName={state.kyc.passportFront}
           icon={Upload}
           label={text.passportFront}
           onKycFile={onKycFile}
-          state={state.kyc.passportFront ? text.uploaded : text.pending}
+          pendingLabel={text.pending}
+          uploadedLabel={text.uploaded}
         />
         <KycTile
+          accept="image/*,.pdf"
           field="passportSecond"
+          fileName={state.kyc.passportSecond}
           icon={Upload}
           label={text.passportSecond}
           onKycFile={onKycFile}
-          state={state.kyc.passportSecond ? text.uploaded : text.pending}
+          pendingLabel={text.pending}
+          uploadedLabel={text.uploaded}
+        />
+        <KycTile
+          accept="image/*"
+          capture="user"
+          field="faceCapture"
+          fileName={state.kyc.faceCapture}
+          icon={Camera}
+          label={text.face}
+          onKycFile={onKycFile}
+          pendingLabel={text.pending}
+          uploadedLabel={text.uploaded}
         />
       </div>
-      <button
-        className="w-full border border-[#d9e2df] bg-white p-4 text-left"
-        onClick={() => onSetState((current) => ({ ...current, kyc: { ...current.kyc, face: true } }))}
-        type="button"
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="font-semibold">{text.face}</p>
-            <p className="mt-1 text-sm text-[#66746e]">{text.faceDetail}</p>
-          </div>
-          <div className="flex h-12 w-12 items-center justify-center bg-cyan-50">
-            {state.kyc.face ? <Check className="h-6 w-6 text-cyan-700" /> : <Camera className="h-6 w-6 text-cyan-700" />}
-          </div>
-        </div>
-      </button>
+      <div className="border border-[#d9e2df] bg-[#f8faf6] p-4">
+        <p className="font-semibold">{text.face}</p>
+        <p className="mt-1 text-sm leading-6 text-[#66746e]">{text.faceDetail}</p>
+      </div>
       <Checklist items={text.checks} />
     </div>
   );
@@ -721,21 +896,26 @@ function BeneficiariesScreen({
   onRemoveBeneficiary,
   onUpdateBeneficiary,
   state
-}: EnrollmentPhoneProps) {
+}: EnrollmentWizardProps) {
   const text = content.wizard.beneficiaries;
+  const hasWalletError = state.beneficiaries.some((beneficiary) => !isWalletAddress(beneficiary.wallet));
+
   return (
-    <div className="space-y-3">
-      {state.beneficiaries.map((beneficiary) => (
-        <BeneficiaryEditor
-          beneficiary={beneficiary}
-          key={beneficiary.id}
-          onRemoveBeneficiary={onRemoveBeneficiary}
-          onUpdateBeneficiary={onUpdateBeneficiary}
-          text={text}
-        />
-      ))}
+    <div className="space-y-4">
+      <div className="space-y-3">
+        {state.beneficiaries.map((beneficiary) => (
+          <BeneficiaryEditor
+            beneficiary={beneficiary}
+            canRemove={state.beneficiaries.length > 1}
+            key={beneficiary.id}
+            onRemoveBeneficiary={onRemoveBeneficiary}
+            onUpdateBeneficiary={onUpdateBeneficiary}
+            text={text}
+          />
+        ))}
+      </div>
       <button
-        className="flex w-full items-center gap-3 border border-dashed border-[#cdd8ce] bg-[#fbfcf8] p-3 text-left disabled:opacity-50"
+        className="flex w-full items-center gap-3 border border-dashed border-[#cdd8ce] bg-[#fbfcf8] p-4 text-left transition hover:bg-white disabled:opacity-50"
         disabled={state.beneficiaries.length >= 5}
         onClick={onAddBeneficiary}
         type="button"
@@ -748,41 +928,43 @@ function BeneficiariesScreen({
       <div className="h-2 overflow-hidden bg-[#e8ede4]">
         <div className="h-full bg-[#17231e]" style={{ width: `${Math.min(beneficiaryTotal, 100)}%` }} />
       </div>
-      <p className={`text-xs ${beneficiaryTotal === 100 ? "text-emerald-700" : "text-red-700"}`}>
-        {text.total(beneficiaryTotal)}
-      </p>
-      {beneficiaryTotal !== 100 && <p className="text-xs text-red-700">{text.invalid}</p>}
+      <div className="flex flex-col gap-1 text-xs sm:flex-row sm:items-center sm:justify-between">
+        <p className={beneficiaryTotal === 100 ? "text-emerald-700" : "text-red-700"}>
+          {text.total(beneficiaryTotal)}
+        </p>
+        {beneficiaryTotal !== 100 && <p className="text-red-700">{text.invalid}</p>}
+        {hasWalletError && <p className="text-red-700">{text.walletInvalid}</p>}
+      </div>
     </div>
   );
 }
 
-function QuoteScreen({ content, onSetState, state }: EnrollmentPhoneProps) {
+function QuoteScreen({ content, onSetState, state }: EnrollmentWizardProps) {
   const text = content.wizard.quote;
   const ruleIcons = [Percent, HeartHandshake, BadgeCheck, Users];
+
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
+    <div className="space-y-5">
+      <div className="grid gap-3 sm:grid-cols-3">
         <QuoteMetric label={text.premium} value="30 USDC" />
         <QuoteMetric label={text.principal} value="10,800 USDC" />
+        <QuoteMetric label={text.payout} value="90 USDC / mo" />
       </div>
-      <QuoteMetric label={text.payout} value="90 USDC / mo" />
-      {text.rules.map(([label, value], index) => (
-        <RuleRow icon={ruleIcons[index]} key={label} label={label} value={value} />
-      ))}
-      <label className="flex items-start gap-3 border border-[#dce4d8] bg-white p-3 text-sm">
-        <input
-          checked={state.quoteReviewed}
-          className="mt-1 h-4 w-4 accent-[#17231e]"
-          onChange={(event) => onSetState((current) => ({ ...current, quoteReviewed: event.target.checked }))}
-          type="checkbox"
-        />
-        <span>{text.reviewed}</span>
-      </label>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {text.rules.map(([label, value], index) => (
+          <RuleRow icon={ruleIcons[index]} key={label} label={label} value={value} />
+        ))}
+      </div>
+      <ConsentCheck
+        checked={state.quoteReviewed}
+        label={text.reviewed}
+        onChange={(checked) => onSetState((current) => ({ ...clearSubmission(current), quoteReviewed: checked }))}
+      />
     </div>
   );
 }
 
-function ConfirmScreen({ canSubmit, completion, content, onSetState, state }: EnrollmentPhoneProps) {
+function ConfirmScreen({ canSubmit, completion, content, onSetState, state }: EnrollmentWizardProps) {
   const text = content.wizard.confirm;
   const checklist = [
     completion.identity,
@@ -790,44 +972,43 @@ function ConfirmScreen({ canSubmit, completion, content, onSetState, state }: En
     completion.beneficiaries,
     completion.quote
   ];
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
+      <div className="grid gap-3 md:grid-cols-2">
+        <SummaryFact label={text.wallet} value={state.walletSession ? shortAddress(state.walletSession.address) : "-"} />
+        <SummaryFact label={text.proof} value={state.humanReservation ? shortProofId(state.humanReservation.nullifier) : "-"} />
+        <SummaryFact label={text.firstPayment} value="30 USDC" />
+        <SummaryFact label={text.network} value="World Chain" />
+      </div>
+
       <div className="border border-[#ddd8ed] bg-[#f5f2ff] p-4">
         <p className="text-sm text-[#655a80]">{text.termsHash}</p>
         <p className="mt-2 break-all font-mono text-xs text-[#32284f]">0x9a81...f03c</p>
       </div>
-      <div className="grid grid-cols-2 gap-2">
+
+      <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
         {text.checklist.map((item, index) => (
           <StatusPill complete={checklist[index]} key={item} label={item} />
         ))}
       </div>
-      <div className="border border-[#e3dfd6] bg-white p-4">
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-[#66746e]">{text.firstPayment}</span>
-          <span className="font-semibold">30 USDC</span>
-        </div>
-        <div className="mt-3 flex items-center justify-between">
-          <span className="text-sm text-[#66746e]">{text.network}</span>
-          <span className="font-semibold">World Chain</span>
-        </div>
-      </div>
+
       <ConsentCheck
         checked={state.termsAccepted}
         label={text.terms}
-        onChange={(checked) => onSetState((current) => ({ ...current, termsAccepted: checked }))}
+        onChange={(checked) => onSetState((current) => ({ ...clearSubmission(current), termsAccepted: checked }))}
       />
       <ConsentCheck
         checked={state.riskAccepted}
         label={text.risk}
-        onChange={(checked) => onSetState((current) => ({ ...current, riskAccepted: checked }))}
+        onChange={(checked) => onSetState((current) => ({ ...clearSubmission(current), riskAccepted: checked }))}
       />
       <ConsentCheck
         checked={state.paymentReady}
         disabled={!canSubmit}
         label={text.payment}
-        onChange={(checked) => onSetState((current) => ({ ...current, paymentReady: checked }))}
+        onChange={(checked) => onSetState((current) => ({ ...clearSubmission(current), paymentReady: checked }))}
       />
-      {!canSubmit && <p className="text-xs leading-5 text-red-700">{content.wizard.demoBody}</p>}
     </div>
   );
 }
@@ -849,9 +1030,9 @@ function InteractiveInfoBlock({
         <div className={`flex h-10 w-10 items-center justify-center ${checked ? "bg-emerald-50 text-emerald-700" : "bg-[#eef3ec] text-[#526258]"}`}>
           {checked ? <Check className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
         </div>
-        <div>
+        <div className="min-w-0">
           <p className="font-semibold">{title}</p>
-          <p className="mt-1 text-sm leading-6 text-[#66746e]">{detail}</p>
+          <p className="mt-1 break-words text-sm leading-6 text-[#66746e]">{detail}</p>
         </div>
       </div>
     </div>
@@ -859,21 +1040,31 @@ function InteractiveInfoBlock({
 }
 
 function KycTile({
+  accept,
+  capture,
   field,
+  fileName,
   icon: Icon,
   label,
   onKycFile,
-  state
+  pendingLabel,
+  uploadedLabel
 }: {
-  field: keyof Pick<KycFiles, "passportFront" | "passportSecond">;
+  accept: string;
+  capture?: "user" | "environment";
+  field: keyof KycFiles;
+  fileName: string;
   icon: ComponentType<{ className?: string }>;
   label: string;
-  onKycFile: (field: keyof Pick<KycFiles, "passportFront" | "passportSecond">, fileName: string) => void;
-  state: string;
+  onKycFile: (field: keyof KycFiles, fileName: string) => void;
+  pendingLabel: string;
+  uploadedLabel: string;
 }) {
   return (
-    <label className="cursor-pointer border border-[#d9e2df] bg-white p-3">
+    <label className="cursor-pointer border border-[#d9e2df] bg-white p-4 transition hover:border-[#17231e]">
       <input
+        accept={accept}
+        capture={capture}
         className="sr-only"
         onChange={(event) => onKycFile(field, event.target.files?.[0]?.name ?? "")}
         type="file"
@@ -882,22 +1073,28 @@ function KycTile({
         <Icon className="h-5 w-5 text-cyan-700" />
       </div>
       <p className="mt-4 text-sm font-semibold">{label}</p>
-      <p className="mt-1 truncate text-xs text-[#66746e]">{state}</p>
+      <p className={`mt-1 truncate text-xs ${fileName ? "text-emerald-700" : "text-[#66746e]"}`}>
+        {fileName ? `${uploadedLabel}: ${fileName}` : pendingLabel}
+      </p>
     </label>
   );
 }
 
 function BeneficiaryEditor({
   beneficiary,
+  canRemove,
   onRemoveBeneficiary,
   onUpdateBeneficiary,
   text
 }: {
   beneficiary: Beneficiary;
+  canRemove: boolean;
   onRemoveBeneficiary: (id: string) => void;
   onUpdateBeneficiary: (id: string, field: keyof Pick<Beneficiary, "name" | "percent" | "wallet">, value: string) => void;
   text: (typeof copy)[Language]["wizard"]["beneficiaries"];
 }) {
+  const walletInvalid = beneficiary.wallet.trim().length > 0 && !isWalletAddress(beneficiary.wallet);
+
   return (
     <div className="border border-[#dce4d8] bg-white p-3">
       <div className="flex items-center gap-2">
@@ -906,11 +1103,13 @@ function BeneficiaryEditor({
           aria-label={text.name}
           className="min-w-0 flex-1 border border-[#e3e8df] bg-[#fbfcf8] px-2 py-2 text-sm font-semibold outline-none focus:border-[#17231e]"
           onChange={(event) => onUpdateBeneficiary(beneficiary.id, "name", event.target.value)}
+          placeholder={text.namePlaceholder}
           value={beneficiary.name}
         />
         <button
-          aria-label="Remove beneficiary"
-          className="flex h-9 w-9 items-center justify-center border border-[#e3e8df] text-[#66746e]"
+          aria-label={text.remove}
+          className="flex h-9 w-9 items-center justify-center border border-[#e3e8df] text-[#66746e] transition hover:border-red-300 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-40"
+          disabled={!canRemove}
           onClick={() => onRemoveBeneficiary(beneficiary.id)}
           type="button"
         >
@@ -920,9 +1119,11 @@ function BeneficiaryEditor({
       <div className="mt-2 grid grid-cols-[1fr_88px] gap-2">
         <input
           aria-label={text.wallet}
-          className="min-w-0 border border-[#e3e8df] bg-[#fbfcf8] px-2 py-2 text-xs outline-none focus:border-[#17231e]"
+          className={`min-w-0 border bg-[#fbfcf8] px-2 py-2 text-xs outline-none focus:border-[#17231e] ${
+            walletInvalid ? "border-red-300" : "border-[#e3e8df]"
+          }`}
           onChange={(event) => onUpdateBeneficiary(beneficiary.id, "wallet", event.target.value)}
-          placeholder="0x..."
+          placeholder={text.walletPlaceholder}
           value={beneficiary.wallet}
         />
         <input
@@ -941,10 +1142,10 @@ function BeneficiaryEditor({
 
 function Checklist({ items }: { items: string[] }) {
   return (
-    <div className="space-y-2">
+    <div className="grid gap-2 md:grid-cols-3">
       {items.map((item) => (
-        <div key={item} className="flex items-center gap-2 text-sm text-[#4d5e55]">
-          <span className="flex h-5 w-5 items-center justify-center bg-emerald-100 text-emerald-700">
+        <div key={item} className="flex items-center gap-2 border border-[#dce4d8] bg-[#f8faf6] px-3 py-3 text-sm text-[#4d5e55]">
+          <span className="flex h-5 w-5 shrink-0 items-center justify-center bg-emerald-100 text-emerald-700">
             <Check className="h-3.5 w-3.5" />
           </span>
           {item}
@@ -1012,7 +1213,7 @@ function ConsentCheck({
 
 function StatusPill({ complete, label }: { complete: boolean; label: string }) {
   return (
-    <div className={`flex items-center gap-2 border px-2 py-2 text-xs ${complete ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-[#e3e8df] bg-white text-[#66746e]"}`}>
+    <div className={`flex items-center gap-2 border px-3 py-2 text-xs ${complete ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-[#e3e8df] bg-white text-[#66746e]"}`}>
       <span className="flex h-4 w-4 items-center justify-center">
         {complete && <Check className="h-3.5 w-3.5" />}
       </span>
@@ -1021,11 +1222,23 @@ function StatusPill({ complete, label }: { complete: boolean; label: string }) {
   );
 }
 
+function SummaryFact({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="border border-[#dce4d8] bg-[#f8faf6] p-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#66746e]">{label}</p>
+      <p className="mt-2 break-words font-semibold">{value}</p>
+    </div>
+  );
+}
+
 function getCompletion(state: EnrollmentState, beneficiaryTotal: number): CompletionMap {
   return {
-    identity: state.walletReady && state.identityReserved,
-    kyc: Boolean(state.kyc.passportFront && state.kyc.passportSecond && state.kyc.face),
-    beneficiaries: state.beneficiaries.length > 0 && beneficiaryTotal === 100,
+    identity: Boolean(state.walletSession && state.humanReservation),
+    kyc: Boolean(state.kyc.passportFront && state.kyc.passportSecond && state.kyc.faceCapture),
+    beneficiaries:
+      state.beneficiaries.length > 0 &&
+      beneficiaryTotal === 100 &&
+      state.beneficiaries.every((beneficiary) => beneficiary.name.trim().length > 0 && isWalletAddress(beneficiary.wallet)),
     quote: state.quoteReviewed,
     confirm: state.submitted
   };
@@ -1039,32 +1252,86 @@ function clampPercent(value: number) {
   return Math.min(100, Math.max(0, value));
 }
 
-function getPrimaryLabel({ completion, content, state, step }: EnrollmentPhoneProps) {
+function getPrimaryLabel({ content, state, step }: EnrollmentWizardProps) {
   if (state.submitted) {
-    return content.wizard.done;
-  }
-
-  if (step.id === "identity") {
-    if (!state.walletReady) {
-      return content.wizard.identity.connectDemo;
-    }
-
-    if (!state.identityReserved) {
-      return content.wizard.identity.reserveDemo;
-    }
-  }
-
-  if (step.id === "kyc" && !completion.kyc) {
-    return content.wizard.kyc.captureFace;
-  }
-
-  if (step.id === "quote" && !completion.quote) {
-    return content.wizard.quote.reviewed;
+    return content.wizard.submitted;
   }
 
   if (step.id === "confirm") {
-    return content.wizard.done;
+    return content.wizard.submit;
   }
 
   return content.wizard.continue;
+}
+
+function createEmptyBeneficiary(index: number, percent: number): Beneficiary {
+  return {
+    color: beneficiaryColors[(index - 1) % beneficiaryColors.length],
+    id: `beneficiary-${index}-${Date.now()}`,
+    name: "",
+    percent,
+    wallet: ""
+  };
+}
+
+function restoreEnrollmentState(value: unknown): EnrollmentState {
+  if (!value || typeof value !== "object") {
+    return initialState;
+  }
+
+  const stored = value as Partial<EnrollmentState>;
+  const beneficiaries =
+    Array.isArray(stored.beneficiaries) && stored.beneficiaries.length > 0
+      ? stored.beneficiaries.map((beneficiary, index) => ({
+          ...createEmptyBeneficiary(index + 1, 0),
+          ...beneficiary,
+          color: beneficiary.color || beneficiaryColors[index % beneficiaryColors.length],
+          id: beneficiary.id || `beneficiary-${index + 1}-${Date.now()}`
+        }))
+      : initialState.beneficiaries;
+
+  return {
+    ...initialState,
+    ...stored,
+    beneficiaries,
+    humanReservation: stored.humanReservation ?? null,
+    kyc: {
+      ...initialState.kyc,
+      ...stored.kyc
+    },
+    walletSession: stored.walletSession ?? null
+  };
+}
+
+function clearSubmission(state: EnrollmentState): EnrollmentState {
+  if (!state.submitted && !state.applicationId && !state.submittedAt) {
+    return state;
+  }
+
+  return {
+    ...state,
+    applicationId: null,
+    submitted: false,
+    submittedAt: null
+  };
+}
+
+function isWalletAddress(value: string) {
+  return /^0x[a-fA-F0-9]{40}$/.test(value.trim());
+}
+
+function sameWalletSession(left: WalletAuthSession | null, right: WalletAuthSession | null) {
+  return left?.address === right?.address && left?.chainId === right?.chainId && left?.method === right?.method;
+}
+
+function sameHumanReservation(left: PolicyHumanReservationView | null, right: PolicyHumanReservationView | null) {
+  return left?.nullifier === right?.nullifier && left?.walletAddress === right?.walletAddress;
+}
+
+function shortAddress(address: string) {
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
+function shortProofId(nullifier: string) {
+  return `${nullifier.slice(0, 8)}...${nullifier.slice(-6)}`;
 }
