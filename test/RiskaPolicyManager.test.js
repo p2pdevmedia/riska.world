@@ -50,7 +50,6 @@ async function deployFixture() {
 }
 
 async function openPolicy(ctx, beneficiaries, shares) {
-  await ctx.manager.connect(ctx.owner).setEligibility(ctx.holder.address, true, true);
   await ctx.manager.connect(ctx.holder).openPolicy(beneficiaries, shares, termsHash);
   return 1;
 }
@@ -64,17 +63,13 @@ async function reportVerifyAndSettleDeath(ctx, policyId, evidence = evidenceHash
 }
 
 describe("RiskaPolicyManager", function () {
-  it("requires KYC and World ID eligibility before opening a policy", async function () {
+  it("opens a policy directly from the holder wallet", async function () {
     const ctx = await deployFixture();
 
-    await expect(
-      ctx.manager.connect(ctx.holder).openPolicy([ctx.beneficiaryA.address], [10_000], termsHash)
-    ).to.be.revertedWith("KYC_NOT_APPROVED");
+    await ctx.manager.connect(ctx.holder).openPolicy([ctx.beneficiaryA.address], [10_000], termsHash);
 
-    await ctx.manager.connect(ctx.owner).setEligibility(ctx.holder.address, true, false);
-    await expect(
-      ctx.manager.connect(ctx.holder).openPolicy([ctx.beneficiaryA.address], [10_000], termsHash)
-    ).to.be.revertedWith("WORLD_ID_NOT_VERIFIED");
+    const policy = await ctx.manager.policies(1);
+    expect(policy.holder).to.equal(ctx.holder.address);
   });
 
   it("opens one policy per verified holder and stores beneficiary shares", async function () {
@@ -100,7 +95,6 @@ describe("RiskaPolicyManager", function () {
 
   it("rejects invalid beneficiary splits", async function () {
     const ctx = await deployFixture();
-    await ctx.manager.connect(ctx.owner).setEligibility(ctx.holder.address, true, true);
 
     await expect(
       ctx.manager.connect(ctx.holder).openPolicy([ctx.beneficiaryA.address, ctx.beneficiaryB.address], [8_000, 1_000], termsHash)
@@ -113,7 +107,6 @@ describe("RiskaPolicyManager", function () {
 
   it("rejects duplicate or excessive beneficiaries in the registry", async function () {
     const ctx = await deployFixture();
-    await ctx.manager.connect(ctx.owner).setEligibility(ctx.holder.address, true, true);
 
     await expect(
       ctx.manager

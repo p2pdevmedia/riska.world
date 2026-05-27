@@ -12,12 +12,12 @@ Core project files:
 - `docs/productive-development-plan.md`: captured product decisions, calculations, risks, and roadmap.
 - `contracts/RiskaThirtyYearPolicy.sol`: current Solidity MVP contract.
 - `contracts/RiskaPolicyMath.sol`: production-aligned payout math for the 12-month waiting period, 80% pre-maturity beneficiary formula, 90% post-maturity beneficiary formula, and 100% maturity principal model.
-- `contracts/RiskaPolicyManager.sol`: first production-directed policy manager using the math library with temporary World ID eligibility stubs, one policy per holder, multiple beneficiaries, premium payment, maturity activation, retirement payouts, inactivity review, and verified-death settlement.
+- `contracts/RiskaPolicyManager.sol`: first production-directed policy manager using the math library with one policy per holder, multiple beneficiaries, premium payment, maturity activation, retirement payouts, inactivity review, and verified-death settlement.
 - `contracts/RiskaBeneficiaryRegistry.sol`: beneficiary storage module with share validation, duplicate protection, and manager-only writes.
 - `contracts/RiskaDeathVerifier.sol`: death-report workflow with reporter submission, evidence hash, 90-day dispute window, Riska Team verification/rejection, and manager-only consumption.
 - `contracts/RiskaPremiumVault.sol`: USDC custody module with principal liability accounting, protocol reserve tracking for retained formula balances, and manager-only premium/payout operations.
 - `test/RiskaPolicyMath.test.js`: Hardhat tests for the base Riska 30 payout rules.
-- `test/RiskaPolicyManager.test.js`: Hardhat tests for policy opening, beneficiary shares, eligibility, death reports, dispute windows, settlement, maturity, and payout cadence.
+- `test/RiskaPolicyManager.test.js`: Hardhat tests for policy opening, beneficiary shares, death reports, dispute windows, settlement, maturity, and payout cadence.
 - `lib/contracts.ts`: contract metadata and documentation slugs used by the frontend.
 - `lib/i18n.ts`: bilingual product, whitepaper, and contract copy.
 - `components/MiniAppProvider.tsx`: World MiniKit provider wrapper for the Next.js app.
@@ -164,7 +164,7 @@ Current critical limitations:
 - Single claim verifier.
 - No multisig or timelock.
 - No upgradeability implementation yet.
-- World ID gate exists in the app via IDKit, but the contract still relies on owner-set eligibility flags until the backend writes verified eligibility into the policy manager.
+- World ID gate exists in the app via IDKit; the current testnet contract opens directly from the holder wallet after app-level verification.
 - No multi-beneficiary percentages.
 - No separate vault module.
 - No external audit.
@@ -209,7 +209,7 @@ Current capabilities:
 
 - Uses `Ownable`, `Pausable`, and `ReentrancyGuard`; token movement is delegated to `RiskaPremiumVault`.
 - Uses `RiskaPolicyMath` for the base product formula.
-- Requires temporary owner-managed eligibility flags before policy opening.
+- Opens policies directly from the holder wallet after the app-level World ID and beneficiary steps are complete.
 - Enforces one policy per holder.
 - Writes beneficiary splits through `RiskaBeneficiaryRegistry`.
 - Collects 30 USDC through `RiskaPremiumVault` at policy opening and lets the holder pay additional monthly periods.
@@ -222,7 +222,7 @@ Current capabilities:
 
 Current limitations:
 
-- Eligibility is owner-set until the backend writes verified World ID state into the policy manager.
+- World ID verification is enforced in the app/backend flow, not by an owner approval transaction in this testnet contract.
 - Governance is still a single owner, not multisig/timelock.
 - Contract is not upgradeable yet.
 - No yield strategy accounting yet.

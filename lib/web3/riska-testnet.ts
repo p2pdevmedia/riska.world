@@ -29,9 +29,8 @@ export type TestnetBeneficiaryInput = {
 export type TestnetIssuanceStatus =
   | "loading_contracts"
   | "switching_network"
-  | "checking_eligibility"
-  | "approving_eligibility"
   | "checking_usdc"
+  | "minting_usdc"
   | "approving_usdc"
   | "opening_policy"
   | "issued";
@@ -40,7 +39,7 @@ export type TestnetIssuanceResult = {
   policyId: string;
   txHashes: {
     approval?: Hash;
-    eligibility?: Hash;
+    mint?: Hash;
     openPolicy: Hash;
   };
 };
@@ -79,17 +78,20 @@ const erc20Abi = [
     outputs: [{ name: "", type: "uint256" }],
     stateMutability: "view",
     type: "function"
+  },
+  {
+    inputs: [
+      { name: "to", type: "address" },
+      { name: "amount", type: "uint256" }
+    ],
+    name: "mint",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function"
   }
 ] as const;
 
 const policyManagerAbi = [
-  {
-    inputs: [{ name: "", type: "address" }],
-    name: "kycApproved",
-    outputs: [{ name: "", type: "bool" }],
-    stateMutability: "view",
-    type: "function"
-  },
   {
     inputs: [
       { name: "beneficiaries", type: "address[]" },
@@ -102,34 +104,9 @@ const policyManagerAbi = [
     type: "function"
   },
   {
-    inputs: [],
-    name: "owner",
-    outputs: [{ name: "", type: "address" }],
-    stateMutability: "view",
-    type: "function"
-  },
-  {
     inputs: [{ name: "", type: "address" }],
     name: "policyOf",
     outputs: [{ name: "", type: "uint256" }],
-    stateMutability: "view",
-    type: "function"
-  },
-  {
-    inputs: [
-      { name: "account", type: "address" },
-      { name: "kycApproved_", type: "bool" },
-      { name: "worldIdVerified_", type: "bool" }
-    ],
-    name: "setEligibility",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function"
-  },
-  {
-    inputs: [{ name: "", type: "address" }],
-    name: "worldIdVerified",
-    outputs: [{ name: "", type: "bool" }],
     stateMutability: "view",
     type: "function"
   }
@@ -188,45 +165,8 @@ export async function issueTestnetPolicy({
 
   const txHashes: Partial<TestnetIssuanceResult["txHashes"]> = {};
 
-  onStatus?.("checking_eligibility");
-  const [owner, kycApproved, worldIdVerified] = await Promise.all([
-    publicClient.readContract({
-      abi: policyManagerAbi,
-      address: policyManager,
-      functionName: "owner"
-    }),
-    publicClient.readContract({
-      abi: policyManagerAbi,
-      address: policyManager,
-      args: [normalizedHolder],
-      functionName: "kycApproved"
-    }),
-    publicClient.readContract({
-      abi: policyManagerAbi,
-      address: policyManager,
-      args: [normalizedHolder],
-      functionName: "worldIdVerified"
-    })
-  ]);
-
-  if (!kycApproved || !worldIdVerified) {
-    if (getAddress(owner) !== account) {
-      throw new Error("This wallet is not contract owner. The Riska owner must approve testnet policy eligibility before issuance.");
-    }
-
-    onStatus?.("approving_eligibility");
-    txHashes.eligibility = await walletClient.writeContract({
-      abi: policyManagerAbi,
-      account,
-      address: policyManager,
-      args: [normalizedHolder, true, true],
-      functionName: "setEligibility"
-    });
-    await publicClient.waitForTransactionReceipt({ hash: txHashes.eligibility });
-  }
-
   onStatus?.("checking_usdc");
-  const [balance, allowance] = await Promise.all([
+  let [balance, allowance] = await Promise.all([
     publicClient.readContract({
       abi: erc20Abi,
       address: mockUsdc,
@@ -242,7 +182,26 @@ export async function issueTestnetPolicy({
   ]);
 
   if (balance < FIRST_PREMIUM) {
-    throw new Error(`This wallet needs at least 30 MockUSDC. Current balance: ${formatUnits(balance, 6)} mUSDC.`);
+    const amountToMint = FIRST_PREMIUM - balance;
+    onStatus?.("minting_usdc");
+    txHashes.mint = await walletClient.writeContract({
+      abi: erc20Abi,
+      account,
+      address: mockUsdc,
+      args: [account, amountToMint],
+      functionName: "mint"
+    });
+    await publicClient.waitForTransactionReceipt({ hash: txHashes.mint });
+    balance = await publicClient.readContract({
+      abi: erc20Abi,
+      address: mockUsdc,
+      args: [account],
+      functionName: "balanceOf"
+    });
+
+    if (balance < FIRST_PREMIUM) {
+      throw new Error(`This wallet needs at least 30 MockUSDC. Current balance: ${formatUnits(balance, 6)} mUSDC.`);
+    }
   }
 
   if (allowance < FIRST_PREMIUM) {
@@ -281,7 +240,7 @@ export async function issueTestnetPolicy({
     policyId: policyId.toString(),
     txHashes: {
       approval: txHashes.approval,
-      eligibility: txHashes.eligibility,
+      mint: txHashes.mint,
       openPolicy: openPolicyHash
     }
   };

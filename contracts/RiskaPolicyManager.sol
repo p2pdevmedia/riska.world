@@ -43,10 +43,6 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
 
     mapping(uint256 => Policy) public policies;
     mapping(address => uint256) public policyOf;
-    mapping(address => bool) public kycApproved;
-    mapping(address => bool) public worldIdVerified;
-
-    event EligibilityUpdated(address indexed account, bool kycApproved, bool worldIdVerified);
     event PolicyOpened(uint256 indexed policyId, address indexed holder, bytes32 indexed termsHash);
     event PremiumPaid(uint256 indexed policyId, uint16 periods, uint256 amount, uint16 paidMonths);
     event PolicyStatusUpdated(uint256 indexed policyId, PolicyStatus status);
@@ -76,20 +72,11 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
         _unpause();
     }
 
-    function setEligibility(address account, bool kycApproved_, bool worldIdVerified_) external onlyOwner {
-        require(account != address(0), "INVALID_ACCOUNT");
-        kycApproved[account] = kycApproved_;
-        worldIdVerified[account] = worldIdVerified_;
-        emit EligibilityUpdated(account, kycApproved_, worldIdVerified_);
-    }
-
     function openPolicy(
         address[] memory beneficiaries,
         uint16[] memory sharesBps,
         bytes32 termsHash
     ) external whenNotPaused nonReentrant returns (uint256 policyId) {
-        require(kycApproved[msg.sender], "KYC_NOT_APPROVED");
-        require(worldIdVerified[msg.sender], "WORLD_ID_NOT_VERIFIED");
         require(policyOf[msg.sender] == 0, "POLICY_EXISTS");
         require(termsHash != bytes32(0), "INVALID_TERMS");
 

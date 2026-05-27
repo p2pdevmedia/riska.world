@@ -144,7 +144,7 @@ const copy = {
       body:
         "No payout before 12 paid months, beneficiaries receive 80% before maturity, the holder receives 100% at maturity, and beneficiaries receive 90% after maturity.",
       items: [
-        "No policy issuance before World ID eligibility",
+        "World ID verification is completed before policy issuance",
         "Beneficiaries must total 100%",
         "Terms hash shown before payment",
         "Audited contracts required before user funds"
@@ -269,7 +269,7 @@ const copy = {
       body:
         "No hay pago antes de 12 meses pagos, beneficiarios cobran 80% antes de madurez, el titular cobra 100% al madurar y beneficiarios cobran 90% despues de madurez.",
       items: [
-        "No se emite poliza antes de validar World ID",
+        "La verificacion World ID se completa antes de emitir",
         "Los beneficiarios deben sumar 100%",
         "Hash de terminos antes del pago",
         "Contratos auditados antes de fondos de usuarios"
@@ -1312,12 +1312,11 @@ function getPrimaryLabel({ content, state, step, testnetIssue }: EnrollmentWizar
 
 function getTestnetStepLabel(step: TestnetIssuanceStatus) {
   const labels: Record<TestnetIssuanceStatus, string> = {
-    approving_eligibility: "Approving eligibility",
     approving_usdc: "Approving USDC",
-    checking_eligibility: "Checking eligibility",
     checking_usdc: "Checking USDC",
     issued: "Policy issued",
     loading_contracts: "Loading contracts",
+    minting_usdc: "Minting test USDC",
     opening_policy: "Opening policy",
     switching_network: "Switching network"
   };
