@@ -878,6 +878,8 @@ export const dictionaries: Record<Language, Dictionary> = {
         user_rejected: "Verification was cancelled. No policy slot was reserved.",
         verification_rejected:
           "World App rejected the verification. Make sure your account is verified and try again.",
+        wallet_session_required:
+          "Connect your wallet again before verifying World ID. In World App this creates the secure Wallet Auth session Riska needs.",
         world_id_3_not_available:
           "This World App account cannot create the required proof yet. Finish verification and try again.",
         world_id_4_not_available:
@@ -1693,6 +1695,8 @@ export const dictionaries: Record<Language, Dictionary> = {
         user_rejected: "Cancelaste la verificación. No se reservó ninguna póliza.",
         verification_rejected:
           "World App rechazó la verificación. Asegúrate de que tu cuenta esté verificada e inténtalo de nuevo.",
+        wallet_session_required:
+          "Vuelve a conectar tu wallet antes de verificar World ID. En World App eso crea la sesión segura de Wallet Auth que Riska necesita.",
         world_id_3_not_available:
           "Esta cuenta de World App todavía no puede crear la prueba requerida. Completa la verificación e inténtalo de nuevo.",
         world_id_4_not_available:

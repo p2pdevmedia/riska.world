@@ -71,10 +71,15 @@ export async function POST(request: Request) {
   }
 
   const walletSession = readWalletSession(cookies());
+  const allowsUnsignedBrowserWallet = RISKA_WORLD_ID_ENVIRONMENT === "staging";
 
-  if (!walletSession && process.env.NODE_ENV === "production") {
+  if (!walletSession && process.env.NODE_ENV === "production" && !allowsUnsignedBrowserWallet) {
     return NextResponse.json(
-      { success: false, error: "Wallet Auth session is required before World ID verification." },
+      {
+        success: false,
+        code: "wallet_session_required",
+        error: "Wallet Auth session is required before World ID verification."
+      },
       { status: 401 }
     );
   }
