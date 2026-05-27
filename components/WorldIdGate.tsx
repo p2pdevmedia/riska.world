@@ -44,7 +44,13 @@ function shortProofId(nullifier: string) {
   return `${nullifier.slice(0, 8)}…${nullifier.slice(-6)}`;
 }
 
-export function WorldIdGate({ walletAddress }: { walletAddress?: string }) {
+export function WorldIdGate({
+  variant = "dark",
+  walletAddress
+}: {
+  variant?: "dark" | "light";
+  walletAddress?: string;
+}) {
   const { language, t } = useLanguage();
   const copy = t.worldIdGate;
   const worldAppId = getWorldAppId();
@@ -161,32 +167,49 @@ export function WorldIdGate({ walletAddress }: { walletAddress?: string }) {
       : copy.statuses.locked;
 
   const buttonDisabled = status === "loading" || !walletAddress || !worldAppId;
+  const isLight = variant === "light";
+  const panelClass = isLight
+    ? "border border-[#dce4d8] bg-[#f8faf6] px-4 py-4"
+    : "rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4";
+  const eyebrowClass = isLight
+    ? "text-xs uppercase tracking-[0.26em] text-[#6b766f]"
+    : "text-xs uppercase tracking-[0.26em] text-slate-400";
+  const descriptionClass = isLight ? "mt-1 text-sm text-[#516159]" : "mt-1 text-sm text-slate-300/80";
+  const statusClass = isLight ? "text-[#26342d]" : "text-slate-200";
+  const detailClass = isLight ? "break-all text-xs text-[#66746e]" : "break-all text-xs text-slate-400";
+  const proofClass = isLight ? "text-xs text-emerald-700" : "text-xs text-aurora-500/90";
+  const errorClass = isLight
+    ? "border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700"
+    : "rounded-xl border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs text-red-200";
+  const buttonClass = isLight
+    ? "bg-[#17231e] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#26342d] disabled:cursor-not-allowed disabled:bg-[#ccd6cf] disabled:text-[#728078]"
+    : "rounded-full bg-aurora-600 px-5 py-3 text-sm font-medium text-white shadow-glow transition hover:bg-aurora-500 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400 disabled:shadow-none";
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4">
+    <div className={panelClass}>
       <div className="flex flex-col gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.26em] text-slate-400">
+          <p className={eyebrowClass}>
             {copy.statusLabel}
           </p>
           <h4 className="mt-2 text-lg font-semibold">{copy.heading}</h4>
-          <p className="mt-1 text-sm text-slate-300/80">{copy.description}</p>
+          <p className={descriptionClass}>{copy.description}</p>
         </div>
 
         <div className="space-y-2 text-sm">
-          <p className="text-slate-200">{statusText}</p>
+          <p className={statusClass}>{statusText}</p>
           {walletAddress && (
-            <p className="break-all text-xs text-slate-400">
+            <p className={detailClass}>
               {copy.signalLabel(normalizeWorldIdSignal(walletAddress))}
             </p>
           )}
           {reservation && (
-            <p className="text-xs text-aurora-500/90">
+            <p className={proofClass}>
               {copy.proofLabel(shortProofId(reservation.nullifier))}
             </p>
           )}
           {error && (
-            <p className="rounded-xl border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+            <p className={errorClass}>
               {error}
             </p>
           )}
@@ -195,7 +218,7 @@ export function WorldIdGate({ walletAddress }: { walletAddress?: string }) {
         <button
           onClick={startVerification}
           disabled={buttonDisabled}
-          className="rounded-full bg-aurora-600 px-5 py-3 text-sm font-medium text-white shadow-glow transition hover:bg-aurora-500 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400 disabled:shadow-none"
+          className={buttonClass}
         >
           {status === "loading" ? copy.actionLoading : copy.action}
         </button>

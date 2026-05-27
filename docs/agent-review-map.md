@@ -60,22 +60,17 @@ File:
 
 Main sections:
 
-- `components/Navbar.tsx`
-- `components/Hero.tsx`
+- `components/RiskaEnrollmentHome.tsx`
 - `components/WalletAuth.tsx`
-- `components/ImpactMetrics.tsx`
-- `components/RetirementProduct.tsx`
-- `components/AboutSections.tsx`
-- `components/ValueGrid.tsx`
-- `components/ContractsSection.tsx`
-- `components/TechStack.tsx`
-- `components/CallToAction.tsx`
-- `components/Footer.tsx`
+- `components/WorldIdGate.tsx`
+- `components/LanguageToggle.tsx`
 
 Current purpose:
 
-- Product landing page.
+- Mobile-first Riska enrollment wizard and product entry point.
+- Functional local demo flow for identity reservation, KYC file selection, beneficiary percentages, quote review, and terms/payment readiness.
 - Mini App Wallet Auth entry point with backend SIWE verification.
+- World ID / one-human-one-policy gate surfaced inside the enrollment flow.
 - Product thesis and protocol contract links.
 
 Review focus:
@@ -85,8 +80,8 @@ Review focus:
 - Wallet Auth is verified server-side and now writes a signed `HttpOnly` wallet session for World ID binding; full account/session persistence is still pending.
 - World ID uses IDKit proof-of-human requests, backend RP signatures, backend `/api/v4/verify/{rp_id}` verification, wallet-bound signal hash checks, and nullifier reservation for the one-policy-per-human flow.
 - Production still needs persistent database storage for nullifiers; the current registry is an in-process demo model for the grant flow.
-- No KYC intake yet.
-- No real policy creation flow yet.
+- KYC intake is UI-only right now; production still needs encrypted upload/storage, review tooling, retention policy, and audit logging.
+- No real policy creation transaction yet.
 
 ### `/whitepaper`
 
@@ -411,7 +406,25 @@ For real-money launch:
 - Requires incident response plan.
 - Requires monitoring dashboard.
 
-## 7. Suggested Agent Review Checklist
+## 7. World Developer Portal Setup
+
+Current portal objects created through the World Developer Portal MCP:
+
+- Team: `Riska`
+- Mini App: `RISKA`
+- App ID: `app_0132d065b4ed3bd281fefe2c8ea09f02`
+- App mode: `mini-app`
+- Build: production
+- World ID RP ID: `rp_06de503e374550e8`
+- RP registration status: production `registered`, staging `registered`
+- Signer address: `0x636f792e8c2DdE8DDFC09ff41E68e85a442e1109`
+- World ID action: `riska-policy-human-v1`
+- Action environment: production
+
+Local environment values were written to `.env.local`, which is ignored by git.
+The RP signing private key must remain server-only and must never be committed.
+
+## 8. Suggested Agent Review Checklist
 
 Agents reviewing this repo should produce findings with:
 

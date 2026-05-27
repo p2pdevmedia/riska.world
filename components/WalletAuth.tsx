@@ -25,7 +25,7 @@ type MessageState =
   | { type: "error" }
   | { type: "custom"; text: string };
 
-export function WalletAuth() {
+export function WalletAuth({ variant = "dark" }: { variant?: "dark" | "light" }) {
   const { t } = useLanguage();
   const { isInstalled } = useMiniKit();
   const walletText = t.walletAuth;
@@ -173,26 +173,52 @@ export function WalletAuth() {
       ? message.text
       : walletText.messages[message.type];
 
+  const isLight = variant === "light";
+  const panelClass = isLight
+    ? "border border-[#d9ded5] bg-white p-5 md:p-7 space-y-5"
+    : "glass-panel p-8 md:p-10 space-y-6 max-w-lg";
+  const descriptionClass = isLight ? "text-sm text-[#516159]" : "text-sm text-slate-300/80";
+  const miniPanelClass = isLight
+    ? "border border-[#dce4d8] bg-[#f8faf6] px-4 py-3"
+    : "rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3";
+  const eyebrowClass = isLight
+    ? "text-xs uppercase tracking-[0.26em] text-[#6b766f]"
+    : "text-xs uppercase tracking-[0.26em] text-slate-400";
+  const statusEyebrowClass = isLight
+    ? "text-sm uppercase tracking-[0.22em] text-[#6b766f]"
+    : "text-sm uppercase tracking-[0.3em] text-slate-400";
+  const secondaryTextClass = isLight ? "text-sm text-[#405047]" : "text-sm text-slate-200";
+  const detailTextClass = isLight ? "mt-1 text-xs text-[#66746e]" : "mt-1 text-xs text-slate-400";
+  const primaryButtonClass = isLight
+    ? "bg-[#17231e] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#26342d] disabled:cursor-not-allowed disabled:bg-[#ccd6cf] disabled:text-[#728078]"
+    : "rounded-full bg-aurora-600 px-6 py-3 text-white shadow-glow transition hover:bg-aurora-500 disabled:cursor-not-allowed disabled:bg-slate-600 disabled:shadow-none";
+  const secondaryButtonClass = isLight
+    ? "border border-[#cbd7cf] bg-white px-5 py-3 text-sm font-semibold text-[#26342d] transition hover:border-[#17231e]"
+    : "rounded-full border border-white/10 bg-night-800 px-6 py-3 text-slate-200 transition hover:border-aurora-500";
+  const messageClass = isLight
+    ? "border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs text-emerald-800"
+    : "rounded-xl border border-aurora-500/20 bg-aurora-500/10 px-4 py-2 text-xs text-aurora-500/90";
+
   return (
-    <div className="glass-panel p-8 md:p-10 space-y-6 max-w-lg">
+    <div className={panelClass}>
       <div>
         <h3 className="text-2xl font-semibold">{walletText.heading}</h3>
-        <p className="text-sm text-slate-300/80">{walletText.description}</p>
+        <p className={descriptionClass}>{walletText.description}</p>
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
-        <p className="text-xs uppercase tracking-[0.26em] text-slate-400">
+      <div className={miniPanelClass}>
+        <p className={eyebrowClass}>
           {walletText.miniApp.label}
         </p>
-        <p className="mt-1 text-sm text-slate-200">{miniAppStatus}</p>
+        <p className={`mt-1 ${secondaryTextClass}`}>{miniAppStatus}</p>
       </div>
 
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-sm uppercase tracking-[0.3em] text-slate-400">{walletText.statusLabel}</p>
+          <p className={statusEyebrowClass}>{walletText.statusLabel}</p>
           <p className="text-lg font-medium">{statusText}</p>
           {state.status === "connected" && (
-            <p className="mt-1 text-xs text-slate-400">
+            <p className={detailTextClass}>
               {walletText.chainId(state.chainId)} · {walletText.mode[state.method]}
             </p>
           )}
@@ -200,7 +226,7 @@ export function WalletAuth() {
         {state.status === "connected" ? (
           <button
             onClick={disconnect}
-            className="rounded-full border border-white/10 bg-night-800 px-6 py-3 text-slate-200 transition hover:border-aurora-500"
+            className={secondaryButtonClass}
           >
             {walletText.actions.disconnect}
           </button>
@@ -208,7 +234,7 @@ export function WalletAuth() {
           <button
             onClick={connect}
             disabled={state.status === "connecting"}
-            className="rounded-full bg-aurora-600 px-6 py-3 text-white shadow-glow transition hover:bg-aurora-500 disabled:cursor-not-allowed disabled:bg-slate-600 disabled:shadow-none"
+            className={primaryButtonClass}
           >
             {actionLabel}
           </button>
@@ -216,12 +242,15 @@ export function WalletAuth() {
       </div>
 
       {messageText && (
-        <p className="rounded-xl border border-aurora-500/20 bg-aurora-500/10 px-4 py-2 text-xs text-aurora-500/90">
+        <p className={messageClass}>
           {messageText}
         </p>
       )}
 
-      <WorldIdGate walletAddress={state.status === "connected" ? state.address : undefined} />
+      <WorldIdGate
+        variant={variant}
+        walletAddress={state.status === "connected" ? state.address : undefined}
+      />
     </div>
   );
 }
