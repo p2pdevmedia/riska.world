@@ -2,7 +2,6 @@
 
 import {
   BadgeCheck,
-  Camera,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -10,11 +9,9 @@ import {
   FileCheck2,
   Fingerprint,
   HeartHandshake,
-  IdCard,
   Percent,
   ShieldCheck,
   Trash2,
-  Upload,
   UserPlus,
   Users,
   WalletCards
@@ -43,7 +40,7 @@ import {
   type TestnetIssuanceStatus
 } from "@/lib/web3/riska-testnet";
 
-type StepId = "identity" | "kyc" | "beneficiaries" | "quote" | "confirm";
+type StepId = "identity" | "beneficiaries" | "quote" | "confirm";
 
 type WizardStep = {
   accent: string;
@@ -59,19 +56,12 @@ type Beneficiary = {
   wallet: string;
 };
 
-type KycFiles = {
-  faceCapture: string;
-  passportFront: string;
-  passportSecond: string;
-};
-
 type EnrollmentState = {
   applicationId: string | null;
   beneficiaries: Beneficiary[];
   humanReservation: PolicyHumanReservationView | null;
   issuedPolicyId: string | null;
   issuedTransactionHash: string | null;
-  kyc: KycFiles;
   paymentReady: boolean;
   quoteReviewed: boolean;
   riskAccepted: boolean;
@@ -94,12 +84,11 @@ type TestnetIssueState =
   | { result: TestnetIssuanceResult; status: "issued" }
   | { message: string; status: "error" };
 
-const storageKey = "riska.enrollment.v1";
+const storageKey = "riska.enrollment.v2";
 const beneficiaryColors = ["bg-rose-500", "bg-amber-500", "bg-emerald-500", "bg-cyan-500", "bg-violet-500"];
 
 const steps: WizardStep[] = [
   { accent: "bg-emerald-500", icon: Fingerprint, id: "identity" },
-  { accent: "bg-cyan-500", icon: IdCard, id: "kyc" },
   { accent: "bg-rose-500", icon: Users, id: "beneficiaries" },
   { accent: "bg-amber-500", icon: CircleDollarSign, id: "quote" },
   { accent: "bg-violet-500", icon: FileCheck2, id: "confirm" }
@@ -142,7 +131,7 @@ const copy = {
       badge: "World Chain policy application",
       title: "Enroll in Riska 30.",
       body:
-        "Complete the real policy application flow: wallet, World ID, KYC, beneficiaries, policy quote, and signed consent before issuance.",
+        "Complete the real policy application flow: wallet, World ID, beneficiaries, policy quote, and signed consent before issuance.",
       metrics: [
         ["Monthly premium", "30 USDC"],
         ["Waiting period", "12 months"],
@@ -155,7 +144,7 @@ const copy = {
       body:
         "No payout before 12 paid months, beneficiaries receive 80% before maturity, the holder receives 100% at maturity, and beneficiaries receive 90% after maturity.",
       items: [
-        "No policy issuance before KYC approval",
+        "No policy issuance before World ID eligibility",
         "Beneficiaries must total 100%",
         "Terms hash shown before payment",
         "Audited contracts required before user funds"
@@ -169,14 +158,13 @@ const copy = {
       pending: "Pending",
       ready: "Ready",
       required: "Required",
-      step: (index: number) => `Step ${index + 1} of 5`,
+      step: (index: number) => `Step ${index + 1} of ${steps.length}`,
       submit: "Open test policy",
       submitted: "Policy issued",
       steps: {
         beneficiaries: { meta: "Beneficiaries", title: "Beneficiary allocation" },
         confirm: { meta: "World Chain", title: "Review and consent" },
         identity: { meta: "Wallet + World ID", title: "Verified human" },
-        kyc: { meta: "Passport + face", title: "Identity documents" },
         quote: { meta: "30 USDC / month", title: "Policy quote" }
       },
       identity: {
@@ -186,15 +174,6 @@ const copy = {
         walletDetail: "Wallet Auth binds this application to a World Chain address.",
         worldId: "Human reserved",
         worldIdDetail: "World ID reserves one policy slot for one verified human."
-      },
-      kyc: {
-        checks: ["Encrypted off-chain storage target", "Riska Team review queue", "No premium payment before approval"],
-        face: "Face capture",
-        faceDetail: "Use a live front-facing image for the passport match.",
-        passportFront: "Passport front",
-        passportSecond: "Second page",
-        pending: "Required",
-        uploaded: "Selected"
       },
       beneficiaries: {
         add: "Add beneficiary",
@@ -222,7 +201,7 @@ const copy = {
       },
       confirm: {
         application: "Application",
-        checklist: ["World ID", "KYC", "Beneficiaries", "Quote"],
+        checklist: ["World ID", "Beneficiaries", "Quote"],
         firstPayment: "First payment",
         network: "Network",
         proof: "Human proof",
@@ -235,7 +214,7 @@ const copy = {
         testnetTx: "Open policy tx",
         terms: "I accept the Riska 30 policy terms.",
         termsHash: "Terms hash",
-        risk: "I understand the payout rules, KYC review, and smart-contract audit requirement before user funds are activated.",
+        risk: "I understand the payout rules and smart-contract audit requirement before user funds are activated.",
         payment: "I authorize preparing the first 30 USDC payment for the issuance step.",
         wallet: "Wallet"
       }
@@ -277,7 +256,7 @@ const copy = {
       badge: "Solicitud de poliza en World Chain",
       title: "Inscribite en Riska 30.",
       body:
-        "Completa el flujo real de solicitud: wallet, World ID, KYC, beneficiarios, cotizacion de poliza y consentimiento firmado antes de emitir.",
+        "Completa el flujo real de solicitud: wallet, World ID, beneficiarios, cotizacion de poliza y consentimiento firmado antes de emitir.",
       metrics: [
         ["Prima mensual", "30 USDC"],
         ["Espera inicial", "12 meses"],
@@ -290,7 +269,7 @@ const copy = {
       body:
         "No hay pago antes de 12 meses pagos, beneficiarios cobran 80% antes de madurez, el titular cobra 100% al madurar y beneficiarios cobran 90% despues de madurez.",
       items: [
-        "No se emite poliza antes de aprobar KYC",
+        "No se emite poliza antes de validar World ID",
         "Los beneficiarios deben sumar 100%",
         "Hash de terminos antes del pago",
         "Contratos auditados antes de fondos de usuarios"
@@ -304,14 +283,13 @@ const copy = {
       pending: "Pendiente",
       ready: "Listo",
       required: "Requerido",
-      step: (index: number) => `Paso ${index + 1} de 5`,
+      step: (index: number) => `Paso ${index + 1} de ${steps.length}`,
       submit: "Abrir poliza testnet",
       submitted: "Poliza emitida",
       steps: {
         beneficiaries: { meta: "Beneficiarios", title: "Asignacion de beneficiarios" },
         confirm: { meta: "World Chain", title: "Revision y consentimiento" },
         identity: { meta: "Wallet + World ID", title: "Humano verificado" },
-        kyc: { meta: "Pasaporte + rostro", title: "Documentos de identidad" },
         quote: { meta: "30 USDC / mes", title: "Cotizacion de poliza" }
       },
       identity: {
@@ -321,15 +299,6 @@ const copy = {
         walletDetail: "Wallet Auth ata esta solicitud a una direccion de World Chain.",
         worldId: "Humano reservado",
         worldIdDetail: "World ID reserva un cupo de poliza para un humano verificado."
-      },
-      kyc: {
-        checks: ["Destino de datos cifrado off-chain", "Cola de revision Riska Team", "Sin pago de prima antes de aprobar"],
-        face: "Captura facial",
-        faceDetail: "Usa una imagen frontal viva para matchear contra el pasaporte.",
-        passportFront: "Pasaporte frente",
-        passportSecond: "Segunda hoja",
-        pending: "Requerido",
-        uploaded: "Seleccionado"
       },
       beneficiaries: {
         add: "Agregar beneficiario",
@@ -357,7 +326,7 @@ const copy = {
       },
       confirm: {
         application: "Solicitud",
-        checklist: ["World ID", "KYC", "Beneficiarios", "Cotizacion"],
+        checklist: ["World ID", "Beneficiarios", "Cotizacion"],
         firstPayment: "Primer pago",
         network: "Red",
         proof: "Prueba humana",
@@ -370,7 +339,7 @@ const copy = {
         testnetTx: "Tx de apertura",
         terms: "Acepto los terminos de la poliza Riska 30.",
         termsHash: "Hash de terminos",
-        risk: "Entiendo las reglas de pago, la revision KYC y el requisito de auditoria de contratos antes de activar fondos de usuarios.",
+        risk: "Entiendo las reglas de pago y el requisito de auditoria de contratos antes de activar fondos de usuarios.",
         payment: "Autorizo preparar el primer pago de 30 USDC para el paso de emision.",
         wallet: "Wallet"
       }
@@ -382,11 +351,6 @@ const initialState: EnrollmentState = {
   applicationId: null,
   beneficiaries: [createEmptyBeneficiary(1, 100)],
   humanReservation: null,
-  kyc: {
-    faceCapture: "",
-    passportFront: "",
-    passportSecond: ""
-  },
   paymentReady: false,
   issuedPolicyId: null,
   issuedTransactionHash: null,
@@ -461,7 +425,7 @@ export function RiskaEnrollmentHome() {
   const activeStep = steps[activeStepIndex] ?? steps[0];
   const beneficiaryTotal = state.beneficiaries.reduce((total, beneficiary) => total + beneficiary.percent, 0);
   const completion = getCompletion(state, beneficiaryTotal);
-  const canSubmit = completion.identity && completion.kyc && completion.beneficiaries && completion.quote;
+  const canSubmit = completion.identity && completion.beneficiaries && completion.quote;
   const readyToSubmit = canSubmit && state.termsAccepted && state.riskAccepted && state.paymentReady;
   const testnetReady = testnetDeployment.status === "configured";
   const testnetWorking = testnetIssue.status === "working";
@@ -499,16 +463,6 @@ export function RiskaEnrollmentHome() {
       };
     });
   }, []);
-
-  function setKycFile(field: keyof KycFiles, fileName: string) {
-    setState((current) => ({
-      ...clearSubmission(current),
-      kyc: {
-        ...current.kyc,
-        [field]: fileName
-      }
-    }));
-  }
 
   function updateBeneficiary(id: string, field: keyof Pick<Beneficiary, "name" | "percent" | "wallet">, value: string) {
     setState((current) => ({
@@ -652,7 +606,6 @@ export function RiskaEnrollmentHome() {
                 onAddBeneficiary={addBeneficiary}
                 onBack={goBack}
                 onHumanReservationChange={handleHumanReservationChange}
-                onKycFile={setKycFile}
                 onPrimary={continueEnrollment}
                 onRemoveBeneficiary={removeBeneficiary}
                 onSetState={setState}
@@ -765,7 +718,6 @@ type EnrollmentWizardProps = {
   onAddBeneficiary: () => void;
   onBack: () => void;
   onHumanReservationChange: (reservation: PolicyHumanReservationView | null) => void;
-  onKycFile: (field: keyof KycFiles, fileName: string) => void;
   onPrimary: () => void;
   onRemoveBeneficiary: (id: string) => void;
   onSetState: Dispatch<SetStateAction<EnrollmentState>>;
@@ -793,7 +745,7 @@ function StepRail({
   return (
     <div className="border border-[#d9ded5] bg-white p-2">
       <div className="overflow-x-auto">
-        <div className="grid min-w-[820px] grid-cols-5 gap-2">
+        <div className="grid min-w-[680px] grid-cols-4 gap-2">
           {steps.map((step, index) => {
             const Icon = step.icon;
             const selected = step.id === activeStepId;
@@ -854,7 +806,7 @@ function EnrollmentWizard(props: EnrollmentWizardProps) {
       </header>
 
       <div className="h-1 bg-[#e4eae1]">
-        <div className={`h-full ${step.accent}`} style={{ width: `${(activeStepIndex + 1) * 20}%` }} />
+        <div className={`h-full ${step.accent}`} style={{ width: `${((activeStepIndex + 1) / steps.length) * 100}%` }} />
       </div>
 
       <div className="px-5 py-6 md:px-7">
@@ -902,8 +854,6 @@ function renderScreen(props: EnrollmentWizardProps) {
   switch (props.step.id) {
     case "identity":
       return <IdentityScreen {...props} />;
-    case "kyc":
-      return <KycScreen {...props} />;
     case "beneficiaries":
       return <BeneficiariesScreen {...props} />;
     case "quote":
@@ -943,53 +893,6 @@ function IdentityScreen({
         onSessionChange={onWalletSessionChange}
         variant="light"
       />
-    </div>
-  );
-}
-
-function KycScreen({ content, onKycFile, state }: EnrollmentWizardProps) {
-  const text = content.wizard.kyc;
-
-  return (
-    <div className="space-y-5">
-      <div className="grid gap-3 md:grid-cols-3">
-        <KycTile
-          accept="image/*,.pdf"
-          field="passportFront"
-          fileName={state.kyc.passportFront}
-          icon={Upload}
-          label={text.passportFront}
-          onKycFile={onKycFile}
-          pendingLabel={text.pending}
-          uploadedLabel={text.uploaded}
-        />
-        <KycTile
-          accept="image/*,.pdf"
-          field="passportSecond"
-          fileName={state.kyc.passportSecond}
-          icon={Upload}
-          label={text.passportSecond}
-          onKycFile={onKycFile}
-          pendingLabel={text.pending}
-          uploadedLabel={text.uploaded}
-        />
-        <KycTile
-          accept="image/*"
-          capture="user"
-          field="faceCapture"
-          fileName={state.kyc.faceCapture}
-          icon={Camera}
-          label={text.face}
-          onKycFile={onKycFile}
-          pendingLabel={text.pending}
-          uploadedLabel={text.uploaded}
-        />
-      </div>
-      <div className="border border-[#d9e2df] bg-[#f8faf6] p-4">
-        <p className="font-semibold">{text.face}</p>
-        <p className="mt-1 text-sm leading-6 text-[#66746e]">{text.faceDetail}</p>
-      </div>
-      <Checklist items={text.checks} />
     </div>
   );
 }
@@ -1081,7 +984,6 @@ function ConfirmScreen({
   const text = content.wizard.confirm;
   const checklist = [
     completion.identity,
-    completion.kyc,
     completion.beneficiaries,
     completion.quote
   ];
@@ -1107,7 +1009,7 @@ function ConfirmScreen({
         testnetIssue={testnetIssue}
       />
 
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         {text.checklist.map((item, index) => (
           <StatusPill complete={checklist[index]} key={item} label={item} />
         ))}
@@ -1218,47 +1120,6 @@ function InteractiveInfoBlock({
         </div>
       </div>
     </div>
-  );
-}
-
-function KycTile({
-  accept,
-  capture,
-  field,
-  fileName,
-  icon: Icon,
-  label,
-  onKycFile,
-  pendingLabel,
-  uploadedLabel
-}: {
-  accept: string;
-  capture?: "user" | "environment";
-  field: keyof KycFiles;
-  fileName: string;
-  icon: ComponentType<{ className?: string }>;
-  label: string;
-  onKycFile: (field: keyof KycFiles, fileName: string) => void;
-  pendingLabel: string;
-  uploadedLabel: string;
-}) {
-  return (
-    <label className="cursor-pointer border border-[#d9e2df] bg-white p-4 transition hover:border-[#17231e]">
-      <input
-        accept={accept}
-        capture={capture}
-        className="sr-only"
-        onChange={(event) => onKycFile(field, event.target.files?.[0]?.name ?? "")}
-        type="file"
-      />
-      <div className="flex h-10 w-10 items-center justify-center bg-cyan-50">
-        <Icon className="h-5 w-5 text-cyan-700" />
-      </div>
-      <p className="mt-4 text-sm font-semibold">{label}</p>
-      <p className={`mt-1 truncate text-xs ${fileName ? "text-emerald-700" : "text-[#66746e]"}`}>
-        {fileName ? `${uploadedLabel}: ${fileName}` : pendingLabel}
-      </p>
-    </label>
   );
 }
 
@@ -1416,7 +1277,6 @@ function SummaryFact({ label, value }: { label: string; value: string }) {
 function getCompletion(state: EnrollmentState, beneficiaryTotal: number): CompletionMap {
   return {
     identity: Boolean(state.walletSession && state.humanReservation),
-    kyc: Boolean(state.kyc.passportFront && state.kyc.passportSecond && state.kyc.faceCapture),
     beneficiaries:
       state.beneficiaries.length > 0 &&
       beneficiaryTotal === 100 &&
@@ -1544,10 +1404,6 @@ function restoreEnrollmentState(value: unknown): EnrollmentState {
     ...stored,
     beneficiaries,
     humanReservation: stored.humanReservation ?? null,
-    kyc: {
-      ...initialState.kyc,
-      ...stored.kyc
-    },
     walletSession: stored.walletSession ?? null
   };
 }

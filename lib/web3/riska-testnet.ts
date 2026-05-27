@@ -211,7 +211,7 @@ export async function issueTestnetPolicy({
 
   if (!kycApproved || !worldIdVerified) {
     if (getAddress(owner) !== account) {
-      throw new Error("This wallet is not contract owner. The Riska owner must approve KYC and World ID eligibility before test issuance.");
+      throw new Error("This wallet is not contract owner. The Riska owner must approve testnet policy eligibility before issuance.");
     }
 
     onStatus?.("approving_eligibility");

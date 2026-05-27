@@ -1,17 +1,14 @@
 import {
   BadgeCheck,
-  Camera,
   Check,
   ChevronRight,
   CircleDollarSign,
   FileCheck2,
   Fingerprint,
   HeartHandshake,
-  IdCard,
   LockKeyhole,
   Percent,
   ShieldCheck,
-  Upload,
   UserPlus,
   Users,
   WalletCards
@@ -25,7 +22,7 @@ type Step = {
   icon: ComponentType<{ className?: string }>;
   meta: string;
   progress: string;
-  screen: "identity" | "kyc" | "beneficiaries" | "quote" | "confirm";
+  screen: "identity" | "beneficiaries" | "quote" | "confirm";
   title: string;
 };
 
@@ -33,47 +30,37 @@ const steps: Step[] = [
   {
     accent: "bg-emerald-500",
     button: "Verificar humano",
-    eyebrow: "Paso 1 de 5",
+    eyebrow: "Paso 1 de 4",
     icon: Fingerprint,
     meta: "Wallet + World ID",
-    progress: "20%",
+    progress: "25%",
     screen: "identity",
     title: "Confirma que eres una persona unica"
   },
   {
-    accent: "bg-cyan-500",
-    button: "Subir documento",
-    eyebrow: "Paso 2 de 5",
-    icon: IdCard,
-    meta: "KYC simple",
-    progress: "40%",
-    screen: "kyc",
-    title: "Valida pasaporte y rostro"
-  },
-  {
     accent: "bg-rose-500",
     button: "Guardar beneficiarios",
-    eyebrow: "Paso 3 de 5",
+    eyebrow: "Paso 2 de 4",
     icon: Users,
     meta: "Hasta 100%",
-    progress: "60%",
+    progress: "50%",
     screen: "beneficiaries",
     title: "Elige a quienes proteger"
   },
   {
     accent: "bg-amber-500",
     button: "Revisar contrato",
-    eyebrow: "Paso 4 de 5",
+    eyebrow: "Paso 3 de 4",
     icon: CircleDollarSign,
     meta: "30 USDC / mes",
-    progress: "80%",
+    progress: "75%",
     screen: "quote",
     title: "Entiende tu poliza antes de pagar"
   },
   {
     accent: "bg-violet-500",
     button: "Firmar y pagar",
-    eyebrow: "Paso 5 de 5",
+    eyebrow: "Paso 4 de 4",
     icon: FileCheck2,
     meta: "World Chain",
     progress: "100%",
@@ -94,14 +81,13 @@ export function OnboardingMockupsCanvas() {
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-[#516159]">
               Flujo pensado para World App: cada pantalla pide una decision concreta, explica por
-              que importa, y deja claro que no hay poliza real hasta KYC, beneficiarios, firma y
-              pago.
+              que importa, y deja claro que no hay poliza real hasta beneficiarios, firma y pago.
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-sm md:w-80">
             <CanvasMetric label="Duracion objetivo" value="4-6 min" />
-            <CanvasMetric label="Pantallas clave" value="5" />
+            <CanvasMetric label="Pantallas clave" value="4" />
           </div>
         </div>
 
@@ -169,8 +155,6 @@ function renderScreen(screen: Step["screen"]) {
   switch (screen) {
     case "identity":
       return <IdentityScreen />;
-    case "kyc":
-      return <KycScreen />;
     case "beneficiaries":
       return <BeneficiariesScreen />;
     case "quote":
@@ -192,7 +176,7 @@ function IdentityScreen() {
       <InfoBlock
         icon={ShieldCheck}
         title="Una persona, una poliza"
-        detail="World ID reserva un nullifier unico antes de avanzar a KYC."
+        detail="World ID reserva un nullifier unico antes de avanzar a beneficiarios."
         tone="cyan"
       />
       <div className="border border-[#dae3d8] bg-[#f2f6ee] p-4">
@@ -202,29 +186,6 @@ function IdentityScreen() {
           polizas duplicadas.
         </p>
       </div>
-    </div>
-  );
-}
-
-function KycScreen() {
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
-        <KycTile icon={Upload} label="Pasaporte frente" state="Pendiente" />
-        <KycTile icon={Upload} label="Segunda hoja" state="Pendiente" />
-      </div>
-      <div className="border border-[#d9e2df] bg-white p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="font-semibold">FaceID + vida</p>
-            <p className="mt-1 text-sm text-[#66746e]">Match contra foto del pasaporte.</p>
-          </div>
-          <div className="flex h-12 w-12 items-center justify-center bg-cyan-50">
-            <Camera className="h-6 w-6 text-cyan-700" />
-          </div>
-        </div>
-      </div>
-      <Checklist items={["Datos cifrados off-chain", "Revision del Riska Team", "Sin pago hasta aprobar KYC"]} />
     </div>
   );
 }
@@ -284,7 +245,6 @@ function ConfirmScreen() {
       <Checklist
         items={[
           "World ID verificado",
-          "KYC aprobado",
           "Beneficiarios 100%",
           "Contrato leido"
         ]}
@@ -327,26 +287,6 @@ function InfoBlock({
           <p className="mt-1 text-sm leading-6 text-[#66746e]">{detail}</p>
         </div>
       </div>
-    </div>
-  );
-}
-
-function KycTile({
-  icon: Icon,
-  label,
-  state
-}: {
-  icon: ComponentType<{ className?: string }>;
-  label: string;
-  state: string;
-}) {
-  return (
-    <div className="border border-[#d9e2df] bg-white p-3">
-      <div className="flex h-10 w-10 items-center justify-center bg-cyan-50">
-        <Icon className="h-5 w-5 text-cyan-700" />
-      </div>
-      <p className="mt-4 text-sm font-semibold">{label}</p>
-      <p className="mt-1 text-xs text-[#66746e]">{state}</p>
     </div>
   );
 }

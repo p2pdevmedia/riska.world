@@ -32,7 +32,7 @@ contracts/RiskaThirtyYearPolicy.sol
 
 The current contract is intentionally scoped and does not yet match the final production design. It implements an MVP lifecycle, stablecoin accounting, premium split, death settlement, maturity activation, programmed payouts, fee withdrawal, and lapsed-policy surrender.
 
-It does not yet implement production-grade World ID proof verification, KYC, multi-beneficiary percentages, upgrade governance, yield strategies, final payout formulas, or jurisdiction-specific legal compliance.
+It does not yet implement production-grade World ID proof persistence, upgrade governance, yield strategies, final payout formulas, or jurisdiction-specific legal compliance.
 
 ## White Paper
 

@@ -53,7 +53,7 @@ Riska 30 should therefore be built as a Mini App-compatible product path:
 - World App distribution for reachable consumer onboarding.
 - World Chain contracts for transparent policy state and settlement.
 - Stablecoin-denominated accounting for premiums and payouts where legally permitted.
-- Production KYC using passport-document capture and FaceID/liveness matching before real-money policy activation.
+- Real-money activation only after jurisdiction-specific legal and operational clearance.
 - Usage metrics that can evolve from prototype validation to active-user evidence.
 
 ## 4. Policy Lifecycle
@@ -120,7 +120,7 @@ The first production version can start with Riska Team as approved verifier to r
 
 On-chain storage should be minimal. Sensitive evidence stays off-chain, while the contract stores only the policy id, event type, timestamp, verifier, and evidence hash.
 
-Riska's KYC flow should stay off-chain and minimal: passport front page, passport second page, and FaceID/liveness match against the passport photo. Only approval references and hashes should be connected to the on-chain policy.
+If a jurisdiction later requires additional compliance review, that process should stay outside the base onboarding flow and expose only minimal approval references to the protocol.
 
 ## 7. Capital and Solvency
 
@@ -149,7 +149,7 @@ The actuarial and yield-risk model remains a separate workstream. Grant funding 
 The current MVP contract, `RiskaThirtyYearPolicy`, implements an early lifecycle. Production contracts should be rewritten around the final policy model:
 
 - Plan creation with 30 USDC monthly premium, 12-month waiting period, beneficiary payout formula, payout duration, and policy terms hash.
-- Policy opening with holder, KYC approval reference, World ID eligibility, and multiple beneficiaries.
+- Policy opening with holder, World ID eligibility, legal terms acceptance, and multiple beneficiaries.
 - Premium collection and accounting.
 - Grace period, inactivity review, and death-report status.
 - Verified death settlement with evidence hash and 3-month dispute window.
@@ -216,7 +216,7 @@ The grant-stage product should not depend on token speculation. The strongest gr
 ### Phase 1: Production architecture prototype
 
 - Build the Riska 30 landing page and downloadable white paper.
-- Implement wallet connection, World ID path, KYC intake design, and policy preview.
+- Implement wallet connection, World ID path, beneficiary setup, and policy preview.
 - Rewrite production-oriented contracts around the final payout formula.
 - Deploy controlled production-test contracts on World Chain mainnet when required by Mini App testing.
 - Simulate and/or execute premium payments, grace period, inactivity review, maturity, and death settlement.
@@ -227,7 +227,7 @@ The grant-stage product should not depend on token speculation. The strongest gr
 - Add World ID verification.
 - Package the onboarding flow for World App.
 - Create a clearly labeled simulation/training mode for users and grant reviewers.
-- Add production transaction flow, backend verification, and KYC gates.
+- Add production transaction flow, backend verification, and policy activation checks.
 - Collect feedback from verified users.
 - Produce retention, completion, and trust metrics.
 
@@ -255,7 +255,6 @@ The working product/demo should show:
 
 - A clear policy quote.
 - World ID-gated onboarding.
-- KYC intake and approval state.
 - Beneficiary setup.
 - Premium, yield, and protected-principal disclosure.
 - On-chain policy creation.
@@ -265,7 +264,7 @@ The working product/demo should show:
 Milestones should be scoped to a defined timeline:
 
 - Month 1: final product specification, contract rewrite, policy dashboard, downloadable white paper.
-- Month 2: World ID integration, KYC intake, Mini App production flow, and simulation/training mode.
+- Month 2: World ID integration, Mini App production flow, beneficiary setup, and simulation/training mode.
 - Month 3: World Chain mainnet production-test deployment, AI-agent security review, audit package, and grant reporting metrics.
 
 ## 13. Risks and Open Questions

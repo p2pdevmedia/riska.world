@@ -12,7 +12,7 @@ Core project files:
 - `docs/productive-development-plan.md`: captured product decisions, calculations, risks, and roadmap.
 - `contracts/RiskaThirtyYearPolicy.sol`: current Solidity MVP contract.
 - `contracts/RiskaPolicyMath.sol`: production-aligned payout math for the 12-month waiting period, 80% pre-maturity beneficiary formula, 90% post-maturity beneficiary formula, and 100% maturity principal model.
-- `contracts/RiskaPolicyManager.sol`: first production-directed policy manager using the math library with KYC/World ID eligibility stubs, one policy per holder, multiple beneficiaries, premium payment, maturity activation, retirement payouts, inactivity review, and verified-death settlement.
+- `contracts/RiskaPolicyManager.sol`: first production-directed policy manager using the math library with temporary World ID eligibility stubs, one policy per holder, multiple beneficiaries, premium payment, maturity activation, retirement payouts, inactivity review, and verified-death settlement.
 - `contracts/RiskaBeneficiaryRegistry.sol`: beneficiary storage module with share validation, duplicate protection, and manager-only writes.
 - `contracts/RiskaDeathVerifier.sol`: death-report workflow with reporter submission, evidence hash, 90-day dispute window, Riska Team verification/rejection, and manager-only consumption.
 - `contracts/RiskaPremiumVault.sol`: USDC custody module with principal liability accounting, protocol reserve tracking for retained formula balances, and manager-only premium/payout operations.
@@ -68,7 +68,7 @@ Main sections:
 Current purpose:
 
 - Mobile-first Riska enrollment wizard and product entry point.
-- Functional local demo flow for identity reservation, KYC file selection, beneficiary percentages, quote review, and terms/payment readiness.
+- Functional local demo flow for identity reservation, beneficiary percentages, quote review, and terms/payment readiness.
 - Mini App Wallet Auth entry point with backend SIWE verification.
 - World ID / one-human-one-policy gate surfaced inside the enrollment flow.
 - Product thesis and protocol contract links.
@@ -80,7 +80,6 @@ Review focus:
 - Wallet Auth is verified server-side and now writes a signed `HttpOnly` wallet session for World ID binding; full account/session persistence is still pending.
 - World ID uses IDKit proof-of-human requests, backend RP signatures, backend `/api/v4/verify/{rp_id}` verification, wallet-bound signal hash checks, and nullifier reservation for the one-policy-per-human flow.
 - Production still needs persistent database storage for nullifiers; the current registry is an in-process demo model for the grant flow.
-- KYC intake is UI-only right now; production still needs encrypted upload/storage, review tooling, retention policy, and audit logging.
 - No real policy creation transaction yet.
 
 ### `/whitepaper`
@@ -166,7 +165,6 @@ Current critical limitations:
 - No multisig or timelock.
 - No upgradeability implementation yet.
 - World ID gate exists in the app via IDKit, but the contract still relies on owner-set eligibility flags until the backend writes verified eligibility into the policy manager.
-- No KYC gate.
 - No multi-beneficiary percentages.
 - No separate vault module.
 - No external audit.
@@ -211,7 +209,7 @@ Current capabilities:
 
 - Uses `Ownable`, `Pausable`, and `ReentrancyGuard`; token movement is delegated to `RiskaPremiumVault`.
 - Uses `RiskaPolicyMath` for the base product formula.
-- Requires temporary owner-managed KYC and World ID eligibility flags before policy opening.
+- Requires temporary owner-managed eligibility flags before policy opening.
 - Enforces one policy per holder.
 - Writes beneficiary splits through `RiskaBeneficiaryRegistry`.
 - Collects 30 USDC through `RiskaPremiumVault` at policy opening and lets the holder pay additional monthly periods.
@@ -224,7 +222,7 @@ Current capabilities:
 
 Current limitations:
 
-- KYC and World ID are owner-set stubs, not real integrations.
+- Eligibility is owner-set until the backend writes verified World ID state into the policy manager.
 - Governance is still a single owner, not multisig/timelock.
 - Contract is not upgradeable yet.
 - No yield strategy accounting yet.
@@ -283,7 +281,7 @@ Review focus:
 - Decide how many disputes should be stored; current version emits dispute events but stores only the report.
 - Replace the single verifier with multisig, timelock, or multi-oracle quorum before production funds.
 - Decide whether 90 days should be a constant or configurable via governance.
-- Add off-chain evidence retention and privacy process before KYC/death documents are accepted.
+- Add off-chain evidence retention and privacy process before death evidence is accepted.
 
 ### `RiskaPremiumVault`
 
@@ -343,7 +341,6 @@ Recommended production modules:
 - `RiskaToken`: RISKA governance token.
 - `RiskaPolicyManager`: policy lifecycle, policy ids, plan ids, and status coordination.
 - `WorldIdGate`: one verified human per policy.
-- `KycRegistry`: minimal KYC approval references.
 - `BeneficiaryRegistry`: multiple beneficiaries and percentages.
 - `PolicyTermsRegistry`: legal document hash and version registry.
 - `DeathVerifier`: death reports, evidence hashes, dispute windows, and verifier roles.
@@ -371,7 +368,6 @@ Base model:
 - Multiple beneficiaries must sum to 100%.
 - RISKA token supply is exactly 100,000, has 0 decimals, and is transferable from day 1.
 - Governance starts centralized because the owner/foundation controls all RISKA tokens.
-- KYC requires passport front page, passport second page, and FaceID/liveness match.
 - Production target is World Chain mainnet.
 
 Review questions:
@@ -383,7 +379,6 @@ Review questions:
 - What happens to dust from division across beneficiaries and monthly payouts?
 - Can a beneficiary be a contract wallet?
 - Can the holder be a smart account?
-- Can KYC approval be revoked?
 - Can a policy be migrated after an upgrade?
 - What protocols can receive user funds for yield?
 - What is the loss waterfall if a yield strategy suffers a loss?
@@ -394,8 +389,8 @@ Review questions:
 For Spark Grant and the production Mini App:
 
 - Build for World Chain mainnet production, while keeping a clearly labeled simulation/training mode.
-- Use backend verification for World ID, wallet auth, payment, KYC, and any sensitive Mini App command result.
-- Show policy quote, World ID verification, KYC, beneficiary setup, premium split, death verification, maturity, and payout.
+- Use backend verification for World ID, wallet auth, payment, and any sensitive Mini App command result.
+- Show policy quote, World ID verification, beneficiary setup, premium split, death verification, maturity, and payout.
 - Capture metrics: verified starts, completed quotes, beneficiary setup completion, simulated policy opens, return dashboard visits, trust feedback.
 
 For real-money launch:
@@ -419,7 +414,7 @@ Current portal objects created through the World Developer Portal MCP:
 - RP registration status: production `registered`, staging `registered`
 - Signer address: `0x636f792e8c2DdE8DDFC09ff41E68e85a442e1109`
 - World ID action: `riska-policy-human-v1`
-- Action environment: production
+- Action environments: production and staging
 
 Local environment values were written to `.env.local`, which is ignored by git.
 The RP signing private key must remain server-only and must never be committed.
@@ -443,6 +438,6 @@ Priority areas:
 - Death verification and dispute flow.
 - Upgradeability and governance.
 - Frontend status/copy accuracy.
-- World ID and KYC integration plan.
+- World ID integration plan.
 - Privacy and data retention.
 - Yield strategy accounting, caps, and failure modes.

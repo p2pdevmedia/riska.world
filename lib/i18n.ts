@@ -441,7 +441,7 @@ export const dictionaries: Record<Language, Dictionary> = {
         }
       ],
       contractNote:
-        "The production contracts need to be rewritten around World ID, KYC, multiple beneficiaries, yield accounting, upgrade governance, and the final payout formula."
+        "The production contracts need to be rewritten around World ID, multiple beneficiaries, yield accounting, upgrade governance, and the final payout formula."
     },
     contracts: {
       title: "Protocol contracts",
@@ -838,7 +838,7 @@ export const dictionaries: Record<Language, Dictionary> = {
         locked: "Connect a wallet first so the proof can be bound to that address.",
         ready: "Ready to request a World ID proof for this wallet.",
         loading: "Preparing a signed World ID request…",
-        verified: "Verified unique human. This wallet can continue to KYC and beneficiary setup.",
+        verified: "Verified unique human. This wallet can continue to beneficiary setup.",
         error: "World ID verification needs attention.",
         notConfigured: "World ID app configuration is pending."
       },
@@ -905,7 +905,7 @@ export const dictionaries: Record<Language, Dictionary> = {
         title: "Abstract",
         paragraphs: [
           "We present a 30-year life protection contract with a fixed 30 USDC monthly premium. If verified death occurs after the 12-month waiting period and before maturity, beneficiaries receive 80% of paid premiums. If the holder completes the term, the holder receives 100% of scheduled principal through 10 years of programmed withdrawals.",
-          "Riska integrates World Chain to anchor participation to human-verified accounts. World Chain proof-of-personhood helps deter duplicate-policy abuse while keeping biometric data outside the protocol. Production onboarding adds passport-based KYC and FaceID/liveness matching. Death claims require a reporter, Riska Team verification, evidence hashes, and a dispute window."
+          "Riska integrates World Chain to anchor participation to human-verified accounts. World Chain proof-of-personhood helps deter duplicate-policy abuse while keeping biometric data outside the protocol. Death claims require a reporter, Riska Team verification, evidence hashes, and a dispute window."
         ]
       },
       introduction: {
@@ -940,7 +940,7 @@ export const dictionaries: Record<Language, Dictionary> = {
         steps: [
           {
             label: "Verify identity.",
-            description: "Authenticate with World ID and complete KYC before activating a real-money policy."
+            description: "Authenticate with World ID before continuing to beneficiary setup and policy activation."
           },
           { label: "Accept policy terms.", description: "Review premium, waiting period, beneficiary formula, maturity date, payout duration, beneficiaries, and the terms hash." },
           { label: "Pay premium.", description: "The contract opens the policy and accounts the monthly USDC payment as protected principal." },
@@ -1037,7 +1037,7 @@ export const dictionaries: Record<Language, Dictionary> = {
           },
           {
             label: "Data minimization:",
-            description: "Only necessary policy, KYC approval, and death-report references live on-chain while passport and FaceID evidence remain off-chain with cryptographic proofs."
+            description: "Only necessary policy, World ID, and death-report references live on-chain while sensitive evidence remains off-chain with cryptographic proofs."
           },
           {
             label: "Human verification:",
@@ -1256,7 +1256,7 @@ export const dictionaries: Record<Language, Dictionary> = {
         }
       ],
       contractNote:
-        "Los contratos productivos deben reescribirse alrededor de World ID, KYC, múltiples beneficiarios, contabilidad de yield, gobernanza upgradeable y la fórmula final de pagos."
+        "Los contratos productivos deben reescribirse alrededor de World ID, múltiples beneficiarios, contabilidad de yield, gobernanza upgradeable y la fórmula final de pagos."
     },
     contracts: {
       title: "Contratos del protocolo",
@@ -1653,7 +1653,7 @@ export const dictionaries: Record<Language, Dictionary> = {
         locked: "Primero conecta una wallet para atar la prueba a esa dirección.",
         ready: "Listo para pedir una prueba World ID para esta wallet.",
         loading: "Preparando una solicitud World ID firmada…",
-        verified: "Humano único verificado. Esta wallet puede seguir a KYC y beneficiarios.",
+        verified: "Humano único verificado. Esta wallet puede seguir a beneficiarios.",
         error: "La verificación World ID necesita atención.",
         notConfigured: "Falta configurar la app de World ID."
       },
@@ -1720,7 +1720,7 @@ export const dictionaries: Record<Language, Dictionary> = {
         title: "Resumen",
         paragraphs: [
           "Presentamos un contrato de protección de vida a 30 años con prima fija de 30 USDC mensuales. Si hay fallecimiento verificado después de la espera de 12 meses y antes de madurez, los beneficiarios cobran 80% de las primas pagadas. Si el titular completa el plazo, cobra 100% del principal programado mediante retiros durante 10 años.",
-          "Riska se integra con World Chain para anclar la participación a cuentas verificadas como humanas. La prueba de humanidad ayuda a frenar abuso por pólizas duplicadas sin guardar datos biométricos en el protocolo. Producción suma KYC con pasaporte y FaceID/liveness. Los reclamos por fallecimiento requieren reportero, verificación del Riska Team, hashes de evidencia y ventana de disputa."
+          "Riska se integra con World Chain para anclar la participación a cuentas verificadas como humanas. La prueba de humanidad ayuda a frenar abuso por pólizas duplicadas sin guardar datos biométricos en el protocolo. Los reclamos por fallecimiento requieren reportero, verificación del Riska Team, hashes de evidencia y ventana de disputa."
         ]
       },
       introduction: {
@@ -1755,7 +1755,7 @@ export const dictionaries: Record<Language, Dictionary> = {
         steps: [
           {
             label: "Verifica identidad.",
-            description: "Autentícate con World ID y completa KYC antes de activar una póliza con dinero real."
+            description: "Autentícate con World ID antes de seguir a beneficiarios y activación de póliza."
           },
           {
             label: "Acepta términos de póliza.",
@@ -1855,7 +1855,7 @@ export const dictionaries: Record<Language, Dictionary> = {
           },
           {
             label: "Minimización de datos:",
-            description: "Solo referencias necesarias de pólizas, aprobación KYC y reportes de fallecimiento viven on-chain mientras pasaporte y FaceID quedan off-chain con pruebas criptográficas."
+            description: "Solo referencias necesarias de pólizas, World ID y reportes de fallecimiento viven on-chain mientras la evidencia sensible queda off-chain con pruebas criptográficas."
           },
           {
             label: "Verificación humana:",

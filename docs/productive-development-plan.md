@@ -12,7 +12,7 @@ Riska is a 30-year life protection product with a retirement-style programmed pa
 - Market vision: global distribution through World App and World Chain.
 - Production legal reality: live insurance sales must still be cleared jurisdiction by jurisdiction.
 - Identity rule: one policy per World ID verified human.
-- KYC rule: complete KYC for real-money policies.
+- Eligibility rule: no real-money policy activation before World ID verification, legal clearance, and operational approval for the launch jurisdiction.
 - Payment asset: USDC on World Chain as the accounting asset.
 - Entry assets: WLD and fiat on-ramp may be accepted through adapters, but should convert to USDC before policy accounting.
 - Monthly premium: 30 USDC.
@@ -26,7 +26,6 @@ Riska is a 30-year life protection product with a retirement-style programmed pa
 - Initial death verification: Riska team acts as the verifier/oracle.
 - Dispute / verification window: 3 months.
 - Inactivity review window: 12 months with no premium payment or no monthly payout claim can trigger a death-review workflow, but death status still requires a death report and Riska Team verification.
-- KYC rule: simple production KYC using passport front page, passport second page, and FaceID/liveness match against the passport photo.
 - Production target: World Chain mainnet Mini App.
 - Age rule: no age limit, including real-money production, subject to final legal and risk review.
 - Current audit stage: AI-agent review and internal hardening only.
@@ -180,7 +179,6 @@ Required production modules:
 - `RiskaPolicyManager`: creates policies, enforces lifecycle, coordinates modules.
 - `RiskaToken`: RISKA governance token.
 - `WorldIdGate`: enforces one verified human per active policy.
-- `KycRegistry`: stores minimal KYC approval references, not private documents.
 - `BeneficiaryRegistry`: manages multiple beneficiaries and percentages.
 - `PolicyTermsRegistry`: stores hashes and versions of legal policy terms.
 - `DeathVerifier`: manages death reports, evidence hashes, dispute windows, and verifier roles.
@@ -216,7 +214,7 @@ Required production modules:
 - Integrate World ID verification.
 - Build World App compatible onboarding.
 - Add World Chain mainnet transaction flows with backend verification.
-- Add policy quote, KYC intake, beneficiary setup, maturity projection, premium payment, and death-claim flow.
+- Add policy quote, beneficiary setup, maturity projection, premium payment, and death-claim flow.
 - Keep a clearly labeled simulation/training mode for grant reviewers and users not ready to transact.
 - Collect grant metrics: verified starts, quote completion, beneficiary completion, dashboard return rate, trust score.
 
@@ -248,7 +246,6 @@ Required production modules:
 - Confirm whether RISKA token uses voting checkpoints/delegation or a custom governance model.
 - Confirm whether the 80% beneficiary payout is calculated from paid principal only or from paid principal plus a portion of earned yield.
 - Confirm whether beneficiaries receive nothing before 12 months, or whether premiums are refunded to the holder estate.
-- Confirm KYC provider, encryption approach, and data storage policy.
 - Confirm fiat on-ramp provider.
 - Confirm whether users can enter at any age with the same 30 USDC premium, or whether risk controls/yield assumptions vary by age.
 - Confirm whether Riska wants traditional life-insurance-style leverage later, where beneficiaries can receive more than paid premiums.
