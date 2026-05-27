@@ -130,6 +130,35 @@ npm run contracts:compile
 npm run contracts:test
 ```
 
+### World Chain Sepolia test deployment
+
+World Chain Sepolia uses chain id `4801` and the public RPC URL
+`https://worldchain-sepolia.g.alchemy.com/public`.
+
+Create a local deployer wallet:
+
+```bash
+npm run wallet:create:worldchain-sepolia
+```
+
+This writes the deployer private key to `.env.worldchain-sepolia.local`, which is
+git-ignored. Fund the printed address with World Chain Sepolia ETH from:
+
+```text
+https://www.alchemy.com/faucets/world-chain-sepolia
+```
+
+Deploy the test contract set after funding the wallet:
+
+```bash
+npm run contracts:deploy:worldchain-sepolia
+```
+
+The deploy script publishes `MockUSDC`, the modular Riska policy contracts, and
+the legacy `RiskaThirtyYearPolicy`, then wires the policy manager into the
+registry, verifier, and vault. Successful deployments are saved under
+`deployments/worldchain-sepolia/`.
+
 ## Stack
 
 - Next.js and React for the web interface.

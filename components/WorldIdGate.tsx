@@ -6,6 +6,8 @@ import {
   type IDKitResult,
   type RpContext
 } from "@worldcoin/idkit";
+import { MiniKit } from "@worldcoin/minikit-js";
+import { useMiniKit } from "@worldcoin/minikit-js/minikit-provider";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useLanguage } from "@/components/LanguageProvider";
@@ -21,6 +23,7 @@ type GateStatus = "idle" | "loading" | "verified" | "error";
 type VerifyPolicyHumanResponse = {
   success: boolean;
   alreadyReserved?: boolean;
+  code?: string;
   error?: string;
   reservation?: {
     credentialIdentifiers: string[];
@@ -44,6 +47,20 @@ function shortProofId(nullifier: string) {
   return `${nullifier.slice(0, 8)}…${nullifier.slice(-6)}`;
 }
 
+function getMiniKitHumanCredentialStatus() {
+  const verificationStatus = MiniKit.user?.verificationStatus;
+
+  if (!verificationStatus) {
+    return "unknown";
+  }
+
+  return verificationStatus.isOrbVerified ||
+    verificationStatus.isDocumentVerified ||
+    verificationStatus.isSecureDocumentVerified
+    ? "verified"
+    : "unverified";
+}
+
 export function WorldIdGate({
   onReservationChange,
   variant = "dark",
@@ -54,6 +71,7 @@ export function WorldIdGate({
   walletAddress?: string;
 }) {
   const { language, t } = useLanguage();
+  const { isInstalled } = useMiniKit();
   const copy = t.worldIdGate;
   const worldAppId = getWorldAppId();
 
@@ -74,6 +92,17 @@ export function WorldIdGate({
     onReservationChange?.(null);
   }, [onReservationChange, walletAddress]);
 
+  const resolveWorldIdError = useCallback(
+    (errorCode?: string, fallback?: string) => {
+      if (errorCode && copy.errors[errorCode]) {
+        return copy.errors[errorCode];
+      }
+
+      return fallback ?? copy.errors.generic_error ?? copy.verifyError;
+    },
+    [copy.errors, copy.verifyError]
+  );
+
   const startVerification = useCallback(async () => {
     if (!walletAddress) {
       setStatus("error");
@@ -87,56 +116,100 @@ export function WorldIdGate({
       return;
     }
 
+    if (isInstalled && getMiniKitHumanCredentialStatus() === "unverified") {
+      setStatus("error");
+      setError(resolveWorldIdError("credential_unavailable"));
+      return;
+    }
+
     setStatus("loading");
     setError(null);
 
-    const response = await fetch("/api/world-id/rp-signature", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ action: RISKA_WORLD_ID_POLICY_ACTION })
-    });
+    let response: Response;
 
-    const payload = (await response.json()) as RpSignatureResponse;
-
-    if (!response.ok || !payload.configured || !payload.rpContext) {
+    try {
+      response = await fetch("/api/world-id/rp-signature", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ action: RISKA_WORLD_ID_POLICY_ACTION })
+      });
+    } catch {
       setStatus("error");
-      setError(payload.error ?? copy.signatureError);
+      setError(resolveWorldIdError("connection_failed"));
+      return;
+    }
+
+    const payload = (await response.json().catch(() => null)) as RpSignatureResponse | null;
+
+    if (!payload || !response.ok || !payload.configured || !payload.rpContext) {
+      setStatus("error");
+      setError(payload?.error ?? copy.signatureError);
       return;
     }
 
     setRpContext(payload.rpContext);
     setIsOpen(true);
-  }, [copy.configMissing, copy.signatureError, copy.walletRequired, walletAddress, worldAppId]);
+  }, [
+    copy.configMissing,
+    copy.signatureError,
+    copy.walletRequired,
+    isInstalled,
+    resolveWorldIdError,
+    walletAddress,
+    worldAppId
+  ]);
 
   const handleVerify = useCallback(
     async (result: IDKitResult) => {
-      const response = await fetch("/api/world-id/verify-policy-human", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          idkitResponse: result,
-          walletAddress
-        })
-      });
+      verificationRef.current = null;
 
-      const payload = (await response.json()) as VerifyPolicyHumanResponse;
-      verificationRef.current = payload;
+      let response: Response;
 
-      if (!response.ok || !payload.success || !payload.reservation) {
-        throw new Error(
-          payload.alreadyReserved ? copy.duplicateError : payload.error ?? copy.verifyError
-        );
+      try {
+        response = await fetch("/api/world-id/verify-policy-human", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            idkitResponse: result,
+            walletAddress
+          })
+        });
+      } catch {
+        const networkError = resolveWorldIdError("connection_failed");
+        verificationRef.current = {
+          success: false,
+          code: "connection_failed",
+          error: networkError
+        };
+        throw new Error(networkError);
       }
 
+      const payload = (await response.json().catch(() => null)) as VerifyPolicyHumanResponse | null;
+
+      if (!payload || !response.ok || !payload.success || !payload.reservation) {
+        const verificationError = payload?.alreadyReserved
+          ? copy.duplicateError
+          : resolveWorldIdError(payload?.code, payload?.error);
+
+        verificationRef.current = {
+          success: false,
+          ...payload,
+          error: verificationError
+        };
+
+        throw new Error(verificationError);
+      }
+
+      verificationRef.current = payload;
       setReservation(payload.reservation);
       onReservationChange?.(payload.reservation);
       setStatus("verified");
     },
-    [copy.duplicateError, copy.verifyError, onReservationChange, walletAddress]
+    [copy.duplicateError, onReservationChange, resolveWorldIdError, walletAddress]
   );
 
   const handleSuccess = useCallback(() => {
@@ -153,9 +226,11 @@ export function WorldIdGate({
     (errorCode: string) => {
       const lastError = verificationRef.current?.error;
       setStatus("error");
-      setError(lastError ? `${lastError}` : `${copy.errorPrefix} ${errorCode}`);
+      setError(lastError ?? resolveWorldIdError(errorCode));
+      setIsOpen(false);
+      setRpContext(null);
     },
-    [copy.errorPrefix]
+    [resolveWorldIdError]
   );
 
   const statusText =

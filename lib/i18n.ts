@@ -183,6 +183,7 @@ export type Dictionary = {
     verifyError: string;
     duplicateError: string;
     errorPrefix: string;
+    errors: Record<string, string>;
     signalLabel: (signal: string) => string;
     proofLabel: (proofId: string) => string;
   };
@@ -445,7 +446,7 @@ export const dictionaries: Record<Language, Dictionary> = {
     contracts: {
       title: "Protocol contracts",
       subtitle:
-        "Riska's on-chain modules target World Chain. Draft contracts can be shown before deployment; deployed modules include explorer links.",
+        "Riska's current test modules are deployed on World Chain Sepolia. Each deployed module includes an explorer link and local source reference.",
       addressLabel: "Contract address",
       pendingLabel: "Pending deployment",
       explorerLabel: "View on explorer",
@@ -464,6 +465,12 @@ export const dictionaries: Record<Language, Dictionary> = {
             "Issues coverage NFTs, enforces policy lifecycles, and exposes underwriting controls."
         },
         {
+          id: "beneficiaryRegistry",
+          name: "BeneficiaryRegistry",
+          description:
+            "Stores beneficiary wallets and allocation shares for each policy opened by the manager."
+        },
+        {
           id: "deathVerifier",
           name: "DeathVerifier",
           description:
@@ -474,6 +481,12 @@ export const dictionaries: Record<Language, Dictionary> = {
           name: "PremiumVault",
           description:
             "Holds liquidity, accounts for pool balances, and releases capital for payouts."
+        },
+        {
+          id: "mockUsdc",
+          name: "MockUSDC",
+          description:
+            "Test ERC-20 payment token used for the Sepolia issuance flow and first premium approval."
         }
       ]
     },
@@ -497,7 +510,7 @@ export const dictionaries: Record<Language, Dictionary> = {
         title: "RiskaThirtyYearPolicy",
         summary:
           "The MVP contract for the Riska 30 product: a 30-year contribution policy that protects beneficiaries before maturity and pays the holder through programmed withdrawals after maturity.",
-        status: "Draft contract, pending rewrite for production, audit, and deployment.",
+        status: "Deployed on World Chain Sepolia for test flows. Not audited for production funds.",
         responsibilities: [
           "Create plans with premium, death benefit, allocation percentages, payout months, and terms hash.",
           "Open policies with holder, beneficiary, maturity date, paid-through date, and retirement balance.",
@@ -543,7 +556,7 @@ export const dictionaries: Record<Language, Dictionary> = {
         title: "PolicyManager",
         summary:
           "The policy registry and issuance module for deployed coverage records. In the Riska 30 architecture, it is the place where a signed electronic policy becomes an on-chain policy reference.",
-        status: "Deployed module. The Riska 30 documentation describes the target role while source import is pending.",
+        status: "Deployed on World Chain Sepolia and wired to the registry, verifier, and vault.",
         responsibilities: [
           "Bind a policy holder, beneficiary, plan, and terms hash to a durable on-chain record.",
           "Expose lifecycle state to the app so users can see whether coverage is active, in grace, matured, or closed.",
@@ -575,13 +588,51 @@ export const dictionaries: Record<Language, Dictionary> = {
           "Administrative permissions should be time-delayed or moved behind governance before public scale."
         ],
         sourceNote:
-          "The deployed address is listed on this page. The verified ABI and source should be imported here after the Riska 30 contract set is finalized."
+          "The local source below is the contract used for the current World Chain Sepolia deployment."
+      },
+      beneficiaryRegistry: {
+        title: "BeneficiaryRegistry",
+        summary:
+          "The registry module that stores beneficiary wallets and allocation shares for each policy created through the Riska policy manager.",
+        status: "Deployed on World Chain Sepolia and restricted so only the policy manager can set beneficiaries.",
+        responsibilities: [
+          "Store beneficiary accounts and basis-point allocations for each policy.",
+          "Reject empty, duplicate, zero-address, or oversized beneficiary sets.",
+          "Require total beneficiary shares to equal 100%.",
+          "Expose beneficiary count and indexed beneficiary reads for payout logic and app views."
+        ],
+        interfaceItems: [
+          {
+            name: "setPolicyManager",
+            description: "Sets the only contract authorized to write beneficiary records."
+          },
+          {
+            name: "setBeneficiaries",
+            description: "Writes the beneficiary accounts and share percentages for a policy."
+          },
+          {
+            name: "beneficiaryCount",
+            description: "Returns how many beneficiaries are configured for a policy."
+          },
+          {
+            name: "beneficiaryAt",
+            description: "Returns a beneficiary wallet and share by index."
+          }
+        ],
+        safeguards: [
+          "Only the configured policy manager can write beneficiary data.",
+          "The registry rejects duplicate wallets and zero addresses.",
+          "A policy can have at most eight beneficiaries.",
+          "Shares must add up to exactly 10,000 basis points."
+        ],
+        sourceNote:
+          "The local source below is the contract used for the current World Chain Sepolia deployment."
       },
       deathVerifier: {
         title: "DeathVerifier",
         summary:
           "The verification module that receives death reports, records evidence hashes, and authorizes beneficiary settlement under the policy rules.",
-        status: "Deployed module. The current page documents the verification role and Riska 30 target behavior.",
+        status: "Deployed on World Chain Sepolia with a single configured verifier for test flows.",
         responsibilities: [
           "Receive a death report for a policy without storing private documents directly on-chain.",
           "Record the hash or reference of off-chain evidence used by the verifier.",
@@ -613,13 +664,13 @@ export const dictionaries: Record<Language, Dictionary> = {
           "Evidence references should be immutable after settlement."
         ],
         sourceNote:
-          "The deployed address is listed on this page. The full verified source should be imported before presenting this as audited production documentation."
+          "The local source below is the contract used for the current World Chain Sepolia deployment."
       },
       premiumVault: {
         title: "PremiumVault",
         summary:
           "The liquidity and accounting module for premiums, reserves, liabilities, fees, and payouts. This is the contract page that should replace the broken external premium-vault documentation link.",
-        status: "Deployed module. Riska 30 target documentation is now hosted internally at /contracts/premium-vault.",
+        status: "Deployed on World Chain Sepolia and authorized to accept calls from the policy manager.",
         responsibilities: [
           "Receive premium flows from policy contracts and account for where each unit of capital belongs.",
           "Keep retirement liabilities separate from risk liquidity used for death benefits.",
@@ -651,7 +702,45 @@ export const dictionaries: Record<Language, Dictionary> = {
           "Vault operations should emit events for premium receipt, reserve funding, payout, and fee withdrawal."
         ],
         sourceNote:
-          "The deployed address is listed here with an explorer link. The source file is not bundled in this repository yet, so this page documents the intended Riska 30 accounting behavior until the verified source is imported."
+          "The local source below is the contract used for the current World Chain Sepolia deployment."
+      },
+      mockUsdc: {
+        title: "MockUSDC",
+        summary:
+          "A six-decimal ERC-20 test token used as the payment token for World Chain Sepolia policy issuance tests.",
+        status: "Deployed on World Chain Sepolia. The deployer minted 20,000 MockUSDC for test enrollment flows.",
+        responsibilities: [
+          "Represent a USDC-like payment token in testnet flows.",
+          "Expose six decimals so premiums match the policy math assumptions.",
+          "Allow test minting for wallets that need premium funds.",
+          "Provide the token approved by holders before opening a policy."
+        ],
+        interfaceItems: [
+          {
+            name: "decimals",
+            description: "Returns 6 to match USDC-style accounting."
+          },
+          {
+            name: "mint",
+            description: "Mints test tokens for development and test issuance."
+          },
+          {
+            name: "approve",
+            description: "Lets a holder approve the vault to collect the first premium."
+          },
+          {
+            name: "balanceOf",
+            description: "Shows the available test balance for a wallet."
+          }
+        ],
+        safeguards: [
+          "This token is only for testnet and has no production value.",
+          "Minting is intentionally open in the mock contract for development convenience.",
+          "Production should use a real, allowlisted payment token.",
+          "The app labels this deployment as World Chain Sepolia."
+        ],
+        sourceNote:
+          "The local source below is the mock ERC-20 used for the current World Chain Sepolia deployment."
       }
     },
     docsPage: {
@@ -761,6 +850,39 @@ export const dictionaries: Record<Language, Dictionary> = {
       verifyError: "Unable to verify the World ID proof.",
       duplicateError: "This verified human is already reserved for a Riska policy.",
       errorPrefix: "IDKit error:",
+      errors: {
+        cancelled: "Verification was cancelled. No policy slot was reserved.",
+        connection_failed: "The connection with World App was interrupted. Check your connection and try again.",
+        credential_unavailable:
+          "This World App account is not verified as human yet. Finish World ID verification in World App, then return to Riska and try again.",
+        failed_by_host_app:
+          "Riska could not accept the proof. Reconnect your wallet session and try again.",
+        generic_error: "We could not complete World ID verification. Please try again.",
+        identity_attributes_not_matched:
+          "This World ID does not match the proof requirements for a Riska policy.",
+        inclusion_proof_failed:
+          "World App could not prepare the proof for this account. Wait a moment and try again.",
+        inclusion_proof_pending:
+          "Your World ID proof is still being prepared. Wait a moment and try again.",
+        invalid_network: "World ID returned a proof for the wrong network. Please try again from World App.",
+        invalid_rp_signature:
+          "Riska's World ID configuration needs attention before verification can continue.",
+        malformed_request: "The World ID request could not be read. Please refresh Riska and try again.",
+        max_verifications_reached:
+          "This World ID has already been used for this Riska verification.",
+        nullifier_replayed:
+          "This World ID has already been reserved for this Riska verification.",
+        timeout: "World App took too long to answer. Please try again.",
+        unexpected_response:
+          "World App returned an unexpected response. Please update World App and try again.",
+        user_rejected: "Verification was cancelled. No policy slot was reserved.",
+        verification_rejected:
+          "World App rejected the verification. Make sure your account is verified and try again.",
+        world_id_3_not_available:
+          "This World App account cannot create the required proof yet. Finish verification and try again.",
+        world_id_4_not_available:
+          "This World App account cannot create the required proof yet. Update World App or finish verification, then try again."
+      },
       signalLabel: (signal: string) => `Signal: ${signal}`,
       proofLabel: (proofId: string) => `Reserved nullifier: ${proofId}`
     },
@@ -1139,7 +1261,7 @@ export const dictionaries: Record<Language, Dictionary> = {
     contracts: {
       title: "Contratos del protocolo",
       subtitle:
-        "Los módulos on-chain de Riska apuntan a World Chain. Los contratos borrador pueden mostrarse antes del despliegue; los módulos desplegados incluyen enlaces al explorador.",
+        "Los módulos actuales de prueba de Riska están desplegados en World Chain Sepolia. Cada módulo desplegado incluye enlace al explorador y referencia de código local.",
       addressLabel: "Dirección del contrato",
       pendingLabel: "Despliegue pendiente",
       explorerLabel: "Ver en el explorador",
@@ -1158,6 +1280,12 @@ export const dictionaries: Record<Language, Dictionary> = {
             "Emite NFTs de cobertura, gestiona el ciclo de vida de las pólizas y expone controles de suscripción."
         },
         {
+          id: "beneficiaryRegistry",
+          name: "BeneficiaryRegistry",
+          description:
+            "Guarda wallets de beneficiarios y porcentajes de asignación para cada póliza abierta por el manager."
+        },
+        {
           id: "deathVerifier",
           name: "DeathVerifier",
           description:
@@ -1168,6 +1296,12 @@ export const dictionaries: Record<Language, Dictionary> = {
           name: "PremiumVault",
           description:
             "Resguarda la liquidez, lleva los saldos de los pools y libera capital para pagos."
+        },
+        {
+          id: "mockUsdc",
+          name: "MockUSDC",
+          description:
+            "Token ERC-20 de prueba usado en Sepolia para el flujo de emisión y aprobación de la primera prima."
         }
       ]
     },
@@ -1191,7 +1325,7 @@ export const dictionaries: Record<Language, Dictionary> = {
         title: "RiskaThirtyYearPolicy",
         summary:
           "El contrato MVP para Riska 30: una póliza de aportes a 30 años que protege beneficiarios antes de la madurez y paga al titular con retiros programados después de madurar.",
-        status: "Contrato borrador, pendiente de reescritura productiva, auditoría y despliegue.",
+        status: "Desplegado en World Chain Sepolia para flujos de prueba. No auditado para fondos productivos.",
         responsibilities: [
           "Crear planes con prima, beneficio por fallecimiento, porcentajes de asignación, meses de pago y hash de términos.",
           "Abrir pólizas con titular, beneficiario, fecha de madurez, fecha cubierta y saldo de retiro.",
@@ -1237,7 +1371,7 @@ export const dictionaries: Record<Language, Dictionary> = {
         title: "PolicyManager",
         summary:
           "El módulo de registro y emisión de pólizas desplegadas. En Riska 30, es donde una póliza electrónica firmada se convierte en una referencia on-chain.",
-        status: "Módulo desplegado. La documentación Riska 30 describe el rol objetivo mientras importamos el código fuente.",
+        status: "Desplegado en World Chain Sepolia y conectado con registry, verifier y vault.",
         responsibilities: [
           "Vincular titular, beneficiario, plan y hash de términos a un registro on-chain duradero.",
           "Exponer el estado de ciclo de vida para que la app muestre si la cobertura está activa, en gracia, madura o cerrada.",
@@ -1269,13 +1403,51 @@ export const dictionaries: Record<Language, Dictionary> = {
           "Los permisos administrativos deben migrar a timelocks o gobernanza antes de escalar."
         ],
         sourceNote:
-          "La dirección desplegada figura en esta página. El ABI verificado y el código fuente deberían importarse aquí cuando se finalice el set de contratos Riska 30."
+          "El código local de abajo corresponde al contrato usado en el despliegue actual de World Chain Sepolia."
+      },
+      beneficiaryRegistry: {
+        title: "BeneficiaryRegistry",
+        summary:
+          "El módulo de registro que guarda wallets de beneficiarios y porcentajes de asignación para cada póliza creada por el policy manager.",
+        status: "Desplegado en World Chain Sepolia y restringido para que solo el policy manager pueda escribir beneficiarios.",
+        responsibilities: [
+          "Guardar cuentas de beneficiarios y asignaciones en basis points para cada póliza.",
+          "Rechazar conjuntos vacíos, duplicados, con dirección cero o con demasiados beneficiarios.",
+          "Exigir que los porcentajes sumen 100%.",
+          "Exponer cantidad e índices de beneficiarios para pagos y vistas de la app."
+        ],
+        interfaceItems: [
+          {
+            name: "setPolicyManager",
+            description: "Define el único contrato autorizado a escribir registros de beneficiarios."
+          },
+          {
+            name: "setBeneficiaries",
+            description: "Guarda las wallets y porcentajes de beneficiarios para una póliza."
+          },
+          {
+            name: "beneficiaryCount",
+            description: "Devuelve cuántos beneficiarios tiene configurados una póliza."
+          },
+          {
+            name: "beneficiaryAt",
+            description: "Devuelve wallet y porcentaje de un beneficiario por índice."
+          }
+        ],
+        safeguards: [
+          "Solo el policy manager configurado puede escribir datos de beneficiarios.",
+          "El registro rechaza wallets duplicadas y direcciones cero.",
+          "Una póliza puede tener como máximo ocho beneficiarios.",
+          "Las asignaciones deben sumar exactamente 10.000 basis points."
+        ],
+        sourceNote:
+          "El código local de abajo corresponde al contrato usado en el despliegue actual de World Chain Sepolia."
       },
       deathVerifier: {
         title: "DeathVerifier",
         summary:
           "El módulo de verificación que recibe reportes de fallecimiento, registra hashes de evidencia y autoriza pagos a beneficiarios bajo las reglas de la póliza.",
-        status: "Módulo desplegado. Esta página documenta el rol de verificación y el comportamiento objetivo para Riska 30.",
+        status: "Desplegado en World Chain Sepolia con un verificador único configurado para pruebas.",
         responsibilities: [
           "Recibir reportes de fallecimiento sin almacenar documentos privados directamente on-chain.",
           "Registrar el hash o referencia de la evidencia off-chain usada por el verificador.",
@@ -1307,13 +1479,13 @@ export const dictionaries: Record<Language, Dictionary> = {
           "Las referencias de evidencia deben ser inmutables después de liquidar."
         ],
         sourceNote:
-          "La dirección desplegada figura en esta página. El código fuente verificado debe importarse antes de presentarlo como documentación productiva auditada."
+          "El código local de abajo corresponde al contrato usado en el despliegue actual de World Chain Sepolia."
       },
       premiumVault: {
         title: "PremiumVault",
         summary:
           "El módulo de liquidez y contabilidad para primas, reservas, pasivos, fees y pagos. Esta es la página que reemplaza el enlace externo roto de premium-vault.",
-        status: "Módulo desplegado. La documentación objetivo de Riska 30 ahora vive internamente en /contracts/premium-vault.",
+        status: "Desplegado en World Chain Sepolia y autorizado a recibir llamadas del policy manager.",
         responsibilities: [
           "Recibir flujos de primas desde los contratos de póliza y contabilizar a dónde pertenece cada unidad de capital.",
           "Separar pasivos de retiro de la liquidez de riesgo usada para beneficios por fallecimiento.",
@@ -1345,7 +1517,45 @@ export const dictionaries: Record<Language, Dictionary> = {
           "Las operaciones del vault deben emitir eventos por prima recibida, fondeo de reserva, pago y retiro de fees."
         ],
         sourceNote:
-          "La dirección desplegada aparece aquí con enlace al explorador. El archivo fuente todavía no está incluido en este repositorio, así que esta página documenta el comportamiento contable objetivo de Riska 30 hasta importar el código verificado."
+          "El código local de abajo corresponde al contrato usado en el despliegue actual de World Chain Sepolia."
+      },
+      mockUsdc: {
+        title: "MockUSDC",
+        summary:
+          "Token ERC-20 de prueba con seis decimales usado como token de pago para tests de emisión en World Chain Sepolia.",
+        status: "Desplegado en World Chain Sepolia. El deployer minteó 20.000 MockUSDC para flujos de inscripción de prueba.",
+        responsibilities: [
+          "Representar un token tipo USDC en flujos de testnet.",
+          "Exponer seis decimales para coincidir con la matemática de la póliza.",
+          "Permitir minteo de prueba para wallets que necesiten fondos de prima.",
+          "Servir como token aprobado por titulares antes de abrir una póliza."
+        ],
+        interfaceItems: [
+          {
+            name: "decimals",
+            description: "Devuelve 6 para contabilidad estilo USDC."
+          },
+          {
+            name: "mint",
+            description: "Mintea tokens de prueba para desarrollo y emisión testnet."
+          },
+          {
+            name: "approve",
+            description: "Permite que el titular apruebe al vault para cobrar la primera prima."
+          },
+          {
+            name: "balanceOf",
+            description: "Muestra el balance de prueba disponible para una wallet."
+          }
+        ],
+        safeguards: [
+          "Este token es solo de testnet y no tiene valor productivo.",
+          "El minteo abierto es intencional en el mock para facilitar desarrollo.",
+          "Producción debe usar un token de pago real y allowlisted.",
+          "La app etiqueta este despliegue como World Chain Sepolia."
+        ],
+        sourceNote:
+          "El código local de abajo es el ERC-20 mock usado en el despliegue actual de World Chain Sepolia."
       }
     },
     docsPage: {
@@ -1455,6 +1665,39 @@ export const dictionaries: Record<Language, Dictionary> = {
       verifyError: "No se pudo verificar la prueba de World ID.",
       duplicateError: "Este humano verificado ya está reservado para una póliza Riska.",
       errorPrefix: "Error IDKit:",
+      errors: {
+        cancelled: "Cancelaste la verificación. No se reservó ninguna póliza.",
+        connection_failed: "La conexión con World App se interrumpió. Revisa tu conexión e inténtalo de nuevo.",
+        credential_unavailable:
+          "Esta cuenta de World App todavía no está verificada como humana. Completa la verificación de World ID en World App y vuelve a intentarlo en Riska.",
+        failed_by_host_app:
+          "Riska no pudo aceptar la prueba. Vuelve a conectar tu sesión de wallet e inténtalo otra vez.",
+        generic_error: "No pudimos completar la verificación de World ID. Inténtalo de nuevo.",
+        identity_attributes_not_matched:
+          "Este World ID no cumple los requisitos de prueba para una póliza Riska.",
+        inclusion_proof_failed:
+          "World App no pudo preparar la prueba para esta cuenta. Espera un momento e inténtalo de nuevo.",
+        inclusion_proof_pending:
+          "Tu prueba de World ID todavía se está preparando. Espera un momento e inténtalo de nuevo.",
+        invalid_network: "World ID devolvió una prueba para la red incorrecta. Inténtalo de nuevo desde World App.",
+        invalid_rp_signature:
+          "La configuración de World ID de Riska necesita una corrección antes de continuar.",
+        malformed_request: "La solicitud de World ID no se pudo leer. Refresca Riska e inténtalo de nuevo.",
+        max_verifications_reached:
+          "Este World ID ya fue usado para esta verificación de Riska.",
+        nullifier_replayed:
+          "Este World ID ya está reservado para esta verificación de Riska.",
+        timeout: "World App tardó demasiado en responder. Inténtalo de nuevo.",
+        unexpected_response:
+          "World App devolvió una respuesta inesperada. Actualiza World App e inténtalo de nuevo.",
+        user_rejected: "Cancelaste la verificación. No se reservó ninguna póliza.",
+        verification_rejected:
+          "World App rechazó la verificación. Asegúrate de que tu cuenta esté verificada e inténtalo de nuevo.",
+        world_id_3_not_available:
+          "Esta cuenta de World App todavía no puede crear la prueba requerida. Completa la verificación e inténtalo de nuevo.",
+        world_id_4_not_available:
+          "Esta cuenta de World App todavía no puede crear la prueba requerida. Actualiza World App o completa la verificación, y vuelve a intentarlo."
+      },
       signalLabel: (signal: string) => `Signal: ${signal}`,
       proofLabel: (proofId: string) => `Nullifier reservado: ${proofId}`
     },

@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "contracts:compile": "hardhat compile --config hardhat.config.cjs",
-    "contracts:test": "hardhat test --config hardhat.config.cjs"
+    "contracts:test": "hardhat test --config hardhat.config.cjs",
+    "wallet:create:worldchain-sepolia": "node scripts/create-worldchain-test-wallet.cjs",
+    "contracts:deploy:worldchain-sepolia": "hardhat run --config hardhat.config.cjs scripts/deploy-worldchain-sepolia.cjs --network worldchainSepolia"
   },
   "dependencies": {
     "@prisma/client": "5.13.0",

@@ -1,14 +1,20 @@
 "use client";
 
-import { createWalletClient, custom, getAddress } from "viem";
-import { worldchain } from "viem/chains";
+import { createWalletClient, custom, getAddress, type Chain } from "viem";
+import { worldchain, worldchainSepolia } from "viem/chains";
+
+import {
+  WORLDCHAIN_SEPOLIA_CHAIN_ID_HEX,
+  WORLDCHAIN_SEPOLIA_EXPLORER_URL,
+  WORLDCHAIN_SEPOLIA_RPC_URL
+} from "@/lib/riska-testnet";
 
 export type WalletConnection = {
   address: string;
   chainId: number;
 };
 
-type MetaMaskEthereum = {
+export type MetaMaskEthereum = {
   isMetaMask?: boolean;
   providers?: MetaMaskEthereum[];
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
@@ -85,6 +91,16 @@ async function getMetaMaskProvider(): Promise<MetaMaskEthereum | undefined> {
   return cachedMetaMaskProvider;
 }
 
+export async function getBrowserEthereumProvider(): Promise<MetaMaskEthereum> {
+  const ethereum = await getMetaMaskProvider();
+
+  if (!ethereum) {
+    throw new Error("MetaMask no está disponible en este navegador.");
+  }
+
+  return ethereum;
+}
+
 async function requestWithTimeout<T>(request: Promise<T>, message: string): Promise<T> {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
@@ -101,12 +117,8 @@ async function requestWithTimeout<T>(request: Promise<T>, message: string): Prom
   }
 }
 
-export async function connectWallet(): Promise<WalletConnection> {
-  const ethereum = await getMetaMaskProvider();
-
-  if (!ethereum) {
-    throw new Error("MetaMask no está disponible en este navegador.");
-  }
+export async function connectWallet(chain: Chain = worldchain): Promise<WalletConnection> {
+  const ethereum = await getBrowserEthereumProvider();
 
   const [account] = (await requestWithTimeout(
     ethereum.request({
@@ -120,7 +132,7 @@ export async function connectWallet(): Promise<WalletConnection> {
   }
 
   const walletClient = createWalletClient({
-    chain: worldchain,
+    chain,
     transport: custom(ethereum)
   });
 
@@ -128,6 +140,47 @@ export async function connectWallet(): Promise<WalletConnection> {
   const chainId = await walletClient.getChainId();
 
   return { address, chainId };
+}
+
+export async function switchToWorldchainSepolia(): Promise<void> {
+  const ethereum = await getBrowserEthereumProvider();
+
+  try {
+    await ethereum.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: WORLDCHAIN_SEPOLIA_CHAIN_ID_HEX }]
+    });
+  } catch (error) {
+    if (!isUnknownChainError(error)) {
+      throw error;
+    }
+
+    await ethereum.request({
+      method: "wallet_addEthereumChain",
+      params: [
+        {
+          blockExplorerUrls: [WORLDCHAIN_SEPOLIA_EXPLORER_URL.replace(/\/address\/$/, "")],
+          chainId: WORLDCHAIN_SEPOLIA_CHAIN_ID_HEX,
+          chainName: "World Chain Sepolia",
+          nativeCurrency: {
+            decimals: 18,
+            name: "Ether",
+            symbol: "ETH"
+          },
+          rpcUrls: [WORLDCHAIN_SEPOLIA_RPC_URL]
+        }
+      ]
+    });
+  }
+}
+
+export async function createWorldchainSepoliaWalletClient() {
+  const ethereum = await getBrowserEthereumProvider();
+
+  return createWalletClient({
+    chain: worldchainSepolia,
+    transport: custom(ethereum)
+  });
 }
 
 export async function disconnectWallet(): Promise<void> {
@@ -183,4 +236,13 @@ export function onWalletChange(
     disposed = true;
     removeListeners();
   };
+}
+
+function isUnknownChainError(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    ((error as { code?: unknown }).code === 4902 || (error as { code?: unknown }).code === -32603)
+  );
 }

@@ -34,6 +34,14 @@ import { Navbar } from "@/components/Navbar";
 import { WalletAuth, type WalletAuthSession } from "@/components/WalletAuth";
 import type { PolicyHumanReservationView } from "@/components/WorldIdGate";
 import type { Language } from "@/lib/i18n";
+import { RISKA_POLICY_TERMS_HASH, WORLDCHAIN_SEPOLIA_CHAIN_ID, type RiskaTestnetDeployment } from "@/lib/riska-testnet";
+import {
+  formatTestnetContractError,
+  getRiskaTestnetDeployment,
+  issueTestnetPolicy,
+  type TestnetIssuanceResult,
+  type TestnetIssuanceStatus
+} from "@/lib/web3/riska-testnet";
 
 type StepId = "identity" | "kyc" | "beneficiaries" | "quote" | "confirm";
 
@@ -61,6 +69,8 @@ type EnrollmentState = {
   applicationId: string | null;
   beneficiaries: Beneficiary[];
   humanReservation: PolicyHumanReservationView | null;
+  issuedPolicyId: string | null;
+  issuedTransactionHash: string | null;
   kyc: KycFiles;
   paymentReady: boolean;
   quoteReviewed: boolean;
@@ -72,6 +82,17 @@ type EnrollmentState = {
 };
 
 type CompletionMap = Record<StepId, boolean>;
+
+type TestnetDeploymentState =
+  | { status: "loading" }
+  | { deployment: RiskaTestnetDeployment; status: "configured" }
+  | { error: string; status: "missing" };
+
+type TestnetIssueState =
+  | { status: "idle" }
+  | { status: "working"; step: TestnetIssuanceStatus }
+  | { result: TestnetIssuanceResult; status: "issued" }
+  | { message: string; status: "error" };
 
 const storageKey = "riska.enrollment.v1";
 const beneficiaryColors = ["bg-rose-500", "bg-amber-500", "bg-emerald-500", "bg-cyan-500", "bg-violet-500"];
@@ -149,8 +170,8 @@ const copy = {
       ready: "Ready",
       required: "Required",
       step: (index: number) => `Step ${index + 1} of 5`,
-      submit: "Submit application",
-      submitted: "Application submitted",
+      submit: "Open test policy",
+      submitted: "Policy issued",
       steps: {
         beneficiaries: { meta: "Beneficiaries", title: "Beneficiary allocation" },
         confirm: { meta: "World Chain", title: "Review and consent" },
@@ -206,7 +227,12 @@ const copy = {
         network: "Network",
         proof: "Human proof",
         submitted:
-          "Application is ready for review. The next backend step is storing it, approving KYC, and opening policy issuance.",
+          "Test policy opened on World Chain Sepolia.",
+        testnetConfigured: "Testnet contracts ready",
+        testnetMissing: "Testnet contracts pending deployment",
+        testnetPolicy: "Policy ID",
+        testnetTitle: "World Chain Sepolia issuance",
+        testnetTx: "Open policy tx",
         terms: "I accept the Riska 30 policy terms.",
         termsHash: "Terms hash",
         risk: "I understand the payout rules, KYC review, and smart-contract audit requirement before user funds are activated.",
@@ -279,8 +305,8 @@ const copy = {
       ready: "Listo",
       required: "Requerido",
       step: (index: number) => `Paso ${index + 1} de 5`,
-      submit: "Enviar solicitud",
-      submitted: "Solicitud enviada",
+      submit: "Abrir poliza testnet",
+      submitted: "Poliza emitida",
       steps: {
         beneficiaries: { meta: "Beneficiarios", title: "Asignacion de beneficiarios" },
         confirm: { meta: "World Chain", title: "Revision y consentimiento" },
@@ -336,7 +362,12 @@ const copy = {
         network: "Red",
         proof: "Prueba humana",
         submitted:
-          "La solicitud queda lista para revision. El proximo paso backend es guardarla, aprobar KYC y abrir emision de poliza.",
+          "Poliza de prueba abierta en World Chain Sepolia.",
+        testnetConfigured: "Contratos testnet listos",
+        testnetMissing: "Contratos testnet pendientes de deploy",
+        testnetPolicy: "Policy ID",
+        testnetTitle: "Emision en World Chain Sepolia",
+        testnetTx: "Tx de apertura",
         terms: "Acepto los terminos de la poliza Riska 30.",
         termsHash: "Hash de terminos",
         risk: "Entiendo las reglas de pago, la revision KYC y el requisito de auditoria de contratos antes de activar fondos de usuarios.",
@@ -357,6 +388,8 @@ const initialState: EnrollmentState = {
     passportSecond: ""
   },
   paymentReady: false,
+  issuedPolicyId: null,
+  issuedTransactionHash: null,
   quoteReviewed: false,
   riskAccepted: false,
   submitted: false,
@@ -370,6 +403,8 @@ export function RiskaEnrollmentHome() {
   const content = copy[language];
   const [activeStepId, setActiveStepId] = useState<StepId>("identity");
   const [hydrated, setHydrated] = useState(false);
+  const [testnetDeployment, setTestnetDeployment] = useState<TestnetDeploymentState>({ status: "loading" });
+  const [testnetIssue, setTestnetIssue] = useState<TestnetIssueState>({ status: "idle" });
   const [state, setState] = useState<EnrollmentState>(initialState);
 
   useEffect(() => {
@@ -386,6 +421,29 @@ export function RiskaEnrollmentHome() {
   }, []);
 
   useEffect(() => {
+    let mounted = true;
+
+    void getRiskaTestnetDeployment()
+      .then((deployment) => {
+        if (mounted) {
+          setTestnetDeployment({ deployment, status: "configured" });
+        }
+      })
+      .catch((error) => {
+        if (mounted) {
+          setTestnetDeployment({
+            error: formatTestnetContractError(error),
+            status: "missing"
+          });
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
     if (!hydrated) {
       return;
     }
@@ -393,17 +451,32 @@ export function RiskaEnrollmentHome() {
     window.localStorage.setItem(storageKey, JSON.stringify(state));
   }, [hydrated, state]);
 
+  useEffect(() => {
+    if (!state.submitted && testnetIssue.status === "issued") {
+      setTestnetIssue({ status: "idle" });
+    }
+  }, [state.submitted, testnetIssue.status]);
+
   const activeStepIndex = steps.findIndex((step) => step.id === activeStepId);
   const activeStep = steps[activeStepIndex] ?? steps[0];
   const beneficiaryTotal = state.beneficiaries.reduce((total, beneficiary) => total + beneficiary.percent, 0);
   const completion = getCompletion(state, beneficiaryTotal);
   const canSubmit = completion.identity && completion.kyc && completion.beneficiaries && completion.quote;
   const readyToSubmit = canSubmit && state.termsAccepted && state.riskAccepted && state.paymentReady;
+  const testnetReady = testnetDeployment.status === "configured";
+  const testnetWorking = testnetIssue.status === "working";
 
   const handleWalletSessionChange = useCallback((walletSession: WalletAuthSession | null) => {
     setState((current) => {
       if (sameWalletSession(current.walletSession, walletSession)) {
         return current;
+      }
+
+      if (current.walletSession?.address === walletSession?.address && current.walletSession?.method === walletSession?.method) {
+        return {
+          ...current,
+          walletSession
+        };
       }
 
       return {
@@ -485,9 +558,33 @@ export function RiskaEnrollmentHome() {
     setActiveStepId(previousStep.id);
   }
 
-  function continueEnrollment() {
+  async function continueEnrollment() {
     if (activeStep.id === "confirm") {
-      if (readyToSubmit) {
+      if (readyToSubmit && state.walletSession && testnetReady) {
+        setTestnetIssue({ status: "idle" });
+        try {
+          const result = await issueTestnetPolicy({
+            beneficiaries: state.beneficiaries,
+            holder: state.walletSession.address,
+            onStatus: (step) => setTestnetIssue({ status: "working", step })
+          });
+
+          setTestnetIssue({ result, status: "issued" });
+          setState((current) => ({
+            ...current,
+            applicationId: current.applicationId ?? `RISKA-WCSP-${result.policyId}`,
+            issuedPolicyId: result.policyId,
+            issuedTransactionHash: result.txHashes.openPolicy,
+            submitted: true,
+            submittedAt: current.submittedAt ?? new Date().toISOString()
+          }));
+        } catch (error) {
+          setTestnetIssue({
+            message: formatTestnetContractError(error),
+            status: "error"
+          });
+        }
+      } else if (readyToSubmit) {
         setState((current) => ({
           ...current,
           applicationId: current.applicationId ?? `RISKA-${Date.now().toString(36).toUpperCase()}`,
@@ -508,7 +605,7 @@ export function RiskaEnrollmentHome() {
 
   const primaryDisabled =
     activeStep.id === "confirm"
-      ? !readyToSubmit || state.submitted
+      ? !readyToSubmit || !testnetReady || testnetWorking || state.submitted
       : !completion[activeStep.id];
 
   return (
@@ -518,53 +615,57 @@ export function RiskaEnrollmentHome() {
         <WelcomeScreen content={content} />
 
         <section id="enroll" className="mx-auto max-w-7xl px-5 py-8 md:px-8 lg:py-12">
-          <div className="grid gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-start">
-            <aside className="space-y-6">
-              <div>
-                <p className="text-sm font-semibold text-emerald-700">{content.hero.badge}</p>
-                <h1 className="mt-3 max-w-2xl text-4xl font-semibold leading-tight md:text-6xl">
-                  {content.hero.title}
-                </h1>
-                <p className="mt-5 max-w-xl text-base leading-7 text-[#516159]">{content.hero.body}</p>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                {content.hero.metrics.map(([label, value]) => (
-                  <div key={label} className="border border-[#d9ded5] bg-white px-3 py-3">
-                    <p className="text-xs text-[#6b766f]">{label}</p>
-                    <p className="mt-1 text-lg font-semibold">{value}</p>
-                  </div>
-                ))}
-              </div>
-
-              <StepRail
-                activeStepId={activeStepId}
-                completion={completion}
-                content={content}
-                onStepSelect={setActiveStepId}
-              />
-            </aside>
-
-            <EnrollmentWizard
-              activeStepIndex={activeStepIndex}
-              beneficiaryTotal={beneficiaryTotal}
-              canSubmit={canSubmit}
+          <div className="space-y-6">
+            <StepRail
+              activeStepId={activeStepId}
               completion={completion}
               content={content}
-              onAddBeneficiary={addBeneficiary}
-              onBack={goBack}
-              onHumanReservationChange={handleHumanReservationChange}
-              onKycFile={setKycFile}
-              onPrimary={continueEnrollment}
-              onRemoveBeneficiary={removeBeneficiary}
-              onSetState={setState}
-              onUpdateBeneficiary={updateBeneficiary}
-              onWalletSessionChange={handleWalletSessionChange}
-              primaryDisabled={primaryDisabled}
-              readyToSubmit={readyToSubmit}
-              state={state}
-              step={activeStep}
+              onStepSelect={setActiveStepId}
             />
+
+            <div className="grid gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-start">
+              <aside className="space-y-6">
+                <div>
+                  <p className="text-sm font-semibold text-emerald-700">{content.hero.badge}</p>
+                  <h1 className="mt-3 max-w-2xl text-4xl font-semibold leading-tight md:text-6xl">
+                    {content.hero.title}
+                  </h1>
+                  <p className="mt-5 max-w-xl text-base leading-7 text-[#516159]">{content.hero.body}</p>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  {content.hero.metrics.map(([label, value]) => (
+                    <div key={label} className="border border-[#d9ded5] bg-white px-3 py-3">
+                      <p className="text-xs text-[#6b766f]">{label}</p>
+                      <p className="mt-1 text-lg font-semibold">{value}</p>
+                    </div>
+                  ))}
+                </div>
+              </aside>
+
+              <EnrollmentWizard
+                activeStepIndex={activeStepIndex}
+                beneficiaryTotal={beneficiaryTotal}
+                canSubmit={canSubmit}
+                completion={completion}
+                content={content}
+                onAddBeneficiary={addBeneficiary}
+                onBack={goBack}
+                onHumanReservationChange={handleHumanReservationChange}
+                onKycFile={setKycFile}
+                onPrimary={continueEnrollment}
+                onRemoveBeneficiary={removeBeneficiary}
+                onSetState={setState}
+                onUpdateBeneficiary={updateBeneficiary}
+                onWalletSessionChange={handleWalletSessionChange}
+                primaryDisabled={primaryDisabled}
+                readyToSubmit={readyToSubmit}
+                state={state}
+                step={activeStep}
+                testnetDeployment={testnetDeployment}
+                testnetIssue={testnetIssue}
+              />
+            </div>
           </div>
         </section>
 
@@ -674,6 +775,8 @@ type EnrollmentWizardProps = {
   readyToSubmit: boolean;
   state: EnrollmentState;
   step: WizardStep;
+  testnetDeployment: TestnetDeploymentState;
+  testnetIssue: TestnetIssueState;
 };
 
 function StepRail({
@@ -688,37 +791,39 @@ function StepRail({
   onStepSelect: (stepId: StepId) => void;
 }) {
   return (
-    <div className="border border-[#d9ded5] bg-white p-4">
-      <div className="space-y-2">
-        {steps.map((step, index) => {
-          const Icon = step.icon;
-          const selected = step.id === activeStepId;
-          const complete = completion[step.id];
-          const stepCopy = content.wizard.steps[step.id];
+    <div className="border border-[#d9ded5] bg-white p-2">
+      <div className="overflow-x-auto">
+        <div className="grid min-w-[820px] grid-cols-5 gap-2">
+          {steps.map((step, index) => {
+            const Icon = step.icon;
+            const selected = step.id === activeStepId;
+            const complete = completion[step.id];
+            const stepCopy = content.wizard.steps[step.id];
 
-          return (
-            <button
-              aria-current={selected ? "step" : undefined}
-              className={`flex w-full items-center gap-3 border px-3 py-3 text-left transition ${
-                selected ? "border-[#17231e] bg-[#f8faf6]" : "border-transparent hover:border-[#d9ded5] hover:bg-[#fbfcf8]"
-              }`}
-              key={step.id}
-              onClick={() => onStepSelect(step.id)}
-              type="button"
-            >
-              <span className={`flex h-10 w-10 shrink-0 items-center justify-center ${step.accent}`}>
-                {complete ? <Check className="h-5 w-5 text-white" /> : <Icon className="h-5 w-5 text-white" />}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-xs text-[#66746e]">{content.wizard.step(index)}</span>
-                <span className="block truncate text-sm font-semibold">{stepCopy.meta}</span>
-              </span>
-              <span className={`text-xs ${complete ? "text-emerald-700" : "text-[#7a867e]"}`}>
-                {complete ? content.wizard.complete : content.wizard.pending}
-              </span>
-            </button>
-          );
-        })}
+            return (
+              <button
+                aria-current={selected ? "step" : undefined}
+                className={`flex min-h-[76px] w-full items-center gap-3 border px-3 py-3 text-left transition ${
+                  selected ? "border-[#17231e] bg-[#f8faf6]" : "border-transparent hover:border-[#d9ded5] hover:bg-[#fbfcf8]"
+                }`}
+                key={step.id}
+                onClick={() => onStepSelect(step.id)}
+                type="button"
+              >
+                <span className={`flex h-9 w-9 shrink-0 items-center justify-center ${step.accent}`}>
+                  {complete ? <Check className="h-4 w-4 text-white" /> : <Icon className="h-4 w-4 text-white" />}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-xs text-[#66746e]">{content.wizard.step(index)}</span>
+                  <span className="block truncate text-sm font-semibold">{stepCopy.meta}</span>
+                </span>
+                <span className={`shrink-0 text-xs ${complete ? "text-emerald-700" : "text-[#7a867e]"}`}>
+                  {complete ? content.wizard.complete : content.wizard.pending}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -964,7 +1069,15 @@ function QuoteScreen({ content, onSetState, state }: EnrollmentWizardProps) {
   );
 }
 
-function ConfirmScreen({ canSubmit, completion, content, onSetState, state }: EnrollmentWizardProps) {
+function ConfirmScreen({
+  canSubmit,
+  completion,
+  content,
+  onSetState,
+  state,
+  testnetDeployment,
+  testnetIssue
+}: EnrollmentWizardProps) {
   const text = content.wizard.confirm;
   const checklist = [
     completion.identity,
@@ -979,13 +1092,20 @@ function ConfirmScreen({ canSubmit, completion, content, onSetState, state }: En
         <SummaryFact label={text.wallet} value={state.walletSession ? shortAddress(state.walletSession.address) : "-"} />
         <SummaryFact label={text.proof} value={state.humanReservation ? shortProofId(state.humanReservation.nullifier) : "-"} />
         <SummaryFact label={text.firstPayment} value="30 USDC" />
-        <SummaryFact label={text.network} value="World Chain" />
+        <SummaryFact label={text.network} value={`World Chain Sepolia (${WORLDCHAIN_SEPOLIA_CHAIN_ID})`} />
       </div>
 
       <div className="border border-[#ddd8ed] bg-[#f5f2ff] p-4">
         <p className="text-sm text-[#655a80]">{text.termsHash}</p>
-        <p className="mt-2 break-all font-mono text-xs text-[#32284f]">0x9a81...f03c</p>
+        <p className="mt-2 break-all font-mono text-xs text-[#32284f]">{RISKA_POLICY_TERMS_HASH}</p>
       </div>
+
+      <TestnetIssuePanel
+        content={content}
+        state={state}
+        testnetDeployment={testnetDeployment}
+        testnetIssue={testnetIssue}
+      />
 
       <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
         {text.checklist.map((item, index) => (
@@ -1009,6 +1129,68 @@ function ConfirmScreen({ canSubmit, completion, content, onSetState, state }: En
         label={text.payment}
         onChange={(checked) => onSetState((current) => ({ ...clearSubmission(current), paymentReady: checked }))}
       />
+    </div>
+  );
+}
+
+function TestnetIssuePanel({
+  content,
+  state,
+  testnetDeployment,
+  testnetIssue
+}: {
+  content: (typeof copy)[Language];
+  state: EnrollmentState;
+  testnetDeployment: TestnetDeploymentState;
+  testnetIssue: TestnetIssueState;
+}) {
+  const text = content.wizard.confirm;
+  const deployment = testnetDeployment.status === "configured" ? testnetDeployment.deployment : null;
+  const openPolicyTx =
+    state.issuedTransactionHash ??
+    (testnetIssue.status === "issued" ? testnetIssue.result.txHashes.openPolicy : null);
+  const policyId =
+    state.issuedPolicyId ??
+    (testnetIssue.status === "issued" ? testnetIssue.result.policyId : null);
+  const status = getTestnetPanelStatus(content, testnetDeployment, testnetIssue);
+  const explorerUrl = deployment && openPolicyTx ? `${deployment.explorerBaseUrl.replace(/\/address\/$/, "/tx/")}${openPolicyTx}` : null;
+
+  return (
+    <div className="border border-[#cfe0d2] bg-[#f8faf6] p-4">
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-[#26342d]">{text.testnetTitle}</p>
+          <p className={`mt-1 text-sm ${status.tone}`}>{status.message}</p>
+        </div>
+        {deployment?.contracts.policyManager?.address && (
+          <p className="break-all font-mono text-xs text-[#66746e]">
+            {shortAddress(deployment.contracts.policyManager.address)}
+          </p>
+        )}
+      </div>
+
+      {(policyId || openPolicyTx) && (
+        <div className="mt-4 grid gap-2 md:grid-cols-2">
+          {policyId && <SummaryFact label={text.testnetPolicy} value={policyId} />}
+          {openPolicyTx && (
+            <div className="border border-[#dce4d8] bg-white p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#66746e]">{text.testnetTx}</p>
+              {explorerUrl ? (
+                <a
+                  className="mt-2 block break-all font-mono text-xs font-semibold text-emerald-700 hover:text-emerald-900"
+                  href={explorerUrl}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  {openPolicyTx}
+                </a>
+              ) : (
+                <p className="mt-2 break-all font-mono text-xs font-semibold">{openPolicyTx}</p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -1252,9 +1434,13 @@ function clampPercent(value: number) {
   return Math.min(100, Math.max(0, value));
 }
 
-function getPrimaryLabel({ content, state, step }: EnrollmentWizardProps) {
+function getPrimaryLabel({ content, state, step, testnetIssue }: EnrollmentWizardProps) {
   if (state.submitted) {
     return content.wizard.submitted;
+  }
+
+  if (step.id === "confirm" && testnetIssue.status === "working") {
+    return getTestnetStepLabel(testnetIssue.step);
   }
 
   if (step.id === "confirm") {
@@ -1262,6 +1448,69 @@ function getPrimaryLabel({ content, state, step }: EnrollmentWizardProps) {
   }
 
   return content.wizard.continue;
+}
+
+function getTestnetStepLabel(step: TestnetIssuanceStatus) {
+  const labels: Record<TestnetIssuanceStatus, string> = {
+    approving_eligibility: "Approving eligibility",
+    approving_usdc: "Approving USDC",
+    checking_eligibility: "Checking eligibility",
+    checking_usdc: "Checking USDC",
+    issued: "Policy issued",
+    loading_contracts: "Loading contracts",
+    opening_policy: "Opening policy",
+    switching_network: "Switching network"
+  };
+
+  return labels[step];
+}
+
+function getTestnetPanelStatus(
+  content: (typeof copy)[Language],
+  deployment: TestnetDeploymentState,
+  issue: TestnetIssueState
+) {
+  const text = content.wizard.confirm;
+
+  if (issue.status === "working") {
+    return {
+      message: getTestnetStepLabel(issue.step),
+      tone: "text-amber-700"
+    };
+  }
+
+  if (issue.status === "issued") {
+    return {
+      message: text.submitted,
+      tone: "text-emerald-700"
+    };
+  }
+
+  if (issue.status === "error") {
+    return {
+      message: issue.message,
+      tone: "text-red-700"
+    };
+  }
+
+  if (deployment.status === "configured") {
+    return {
+      message: text.testnetConfigured,
+      tone: "text-emerald-700"
+    };
+  }
+
+  if (deployment.status === "loading") {
+    return {
+      message: content.wizard.pending,
+      tone: "text-[#66746e]"
+    };
+  }
+
+  return {
+    message: `${text.testnetMissing}: ${deployment.error}`,
+    tone: "text-red-700"
+  };
 }
 
 function createEmptyBeneficiary(index: number, percent: number): Beneficiary {
@@ -1304,13 +1553,21 @@ function restoreEnrollmentState(value: unknown): EnrollmentState {
 }
 
 function clearSubmission(state: EnrollmentState): EnrollmentState {
-  if (!state.submitted && !state.applicationId && !state.submittedAt) {
+  if (
+    !state.submitted &&
+    !state.applicationId &&
+    !state.submittedAt &&
+    !state.issuedPolicyId &&
+    !state.issuedTransactionHash
+  ) {
     return state;
   }
 
   return {
     ...state,
     applicationId: null,
+    issuedPolicyId: null,
+    issuedTransactionHash: null,
     submitted: false,
     submittedAt: null
   };
