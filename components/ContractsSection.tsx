@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
+
 import { useLanguage } from "@/components/LanguageProvider";
-import { contracts } from "@/lib/contracts";
+import { contracts, getContractPath } from "@/lib/contracts";
 
 export function ContractsSection() {
   const { t } = useLanguage();
@@ -34,9 +36,15 @@ export function ContractsSection() {
                   <span className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
                     {contractsText.addressLabel}
                   </span>
-                  <code className="mt-2 block break-words rounded bg-black/40 px-3 py-2 font-mono text-sm text-aurora-200">
-                    {contract.address}
-                  </code>
+                  {contract.address ? (
+                    <code className="mt-2 block break-words rounded bg-black/40 px-3 py-2 font-mono text-sm text-aurora-200">
+                      {contract.address}
+                    </code>
+                  ) : (
+                    <p className="mt-2 rounded bg-black/40 px-3 py-2 text-sm text-slate-300">
+                      {contractsText.pendingLabel}
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="flex flex-wrap gap-3">
@@ -50,11 +58,9 @@ export function ContractsSection() {
                     {contractsText.explorerLabel}
                   </a>
                 ) : null}
-                {contract.docsUrl ? (
-                  <a href={contract.docsUrl} target="_blank" rel="noreferrer" className={linkClassName}>
-                    {contractsText.docsLabel}
-                  </a>
-                ) : null}
+                <Link href={getContractPath(contract)} className={linkClassName}>
+                  {contractsText.docsLabel}
+                </Link>
               </div>
             </article>
           );

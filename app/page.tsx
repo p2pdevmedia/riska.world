@@ -5,6 +5,7 @@ import { Footer } from "@/components/Footer";
 import { Hero } from "@/components/Hero";
 import { ImpactMetrics } from "@/components/ImpactMetrics";
 import { Navbar } from "@/components/Navbar";
+import { RetirementProduct } from "@/components/RetirementProduct";
 import { TechStack } from "@/components/TechStack";
 import { ValueGrid } from "@/components/ValueGrid";
 
@@ -15,6 +16,7 @@ export default function Page() {
       <div id="login" className="flex-1">
         <Hero />
         <ImpactMetrics />
+        <RetirementProduct />
         <AboutSections />
         <ValueGrid />
         <ContractsSection />

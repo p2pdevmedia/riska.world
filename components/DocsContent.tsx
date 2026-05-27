@@ -1,9 +1,9 @@
 "use client";
 
+import Link from "next/link";
+
 import { ContractsSection } from "@/components/ContractsSection";
 import { useLanguage } from "@/components/LanguageProvider";
-
-const FULL_DOCS_URL = "https://docs.riska.world";
 
 export function DocsContent() {
   const { t } = useLanguage();
@@ -28,14 +28,12 @@ export function DocsContent() {
           >
             {docsPage.hero.primaryCta}
           </a>
-          <a
-            href={FULL_DOCS_URL}
-            target="_blank"
-            rel="noreferrer"
+          <Link
+            href="/whitepaper"
             className="rounded-full border border-white/10 px-5 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-200 transition hover:border-aurora-400/60 hover:text-white"
           >
             {docsPage.hero.secondaryCta}
-          </a>
+          </Link>
         </div>
       </section>
       <div className="mt-4">

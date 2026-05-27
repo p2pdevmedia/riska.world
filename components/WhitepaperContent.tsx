@@ -16,6 +16,16 @@ export function WhitepaperContent() {
           {whitepaper.header.title}
         </h1>
         <p className="text-sm text-slate-400">{whitepaper.header.date}</p>
+        <div className="mx-auto flex max-w-2xl flex-col items-center gap-3 pt-4">
+          <a
+            href="/whitepapers/riska-whitepaper-v2.pdf"
+            download
+            className="rounded-full bg-aurora-600 px-6 py-3 text-sm font-semibold text-white shadow-glow transition hover:bg-aurora-500"
+          >
+            {whitepaper.download.label}
+          </a>
+          <p className="text-sm leading-6 text-slate-400">{whitepaper.download.note}</p>
+        </div>
       </header>
 
       <section className="mb-12 space-y-6">

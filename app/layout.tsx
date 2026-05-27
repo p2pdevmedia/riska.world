@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { LanguageProvider } from "@/components/LanguageProvider";
+import { MiniAppProvider } from "@/components/MiniAppProvider";
 import { dictionaries } from "@/lib/i18n";
 import "@/styles/globals.css";
 
@@ -22,7 +23,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.15),_transparent_55%)]">
-        <LanguageProvider>{children}</LanguageProvider>
+        <MiniAppProvider>
+          <LanguageProvider>{children}</LanguageProvider>
+        </MiniAppProvider>
       </body>
     </html>
   );

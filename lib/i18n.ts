@@ -43,10 +43,21 @@ export type Dictionary = {
       description: string;
     }[];
   };
+  retirementProduct: {
+    badge: string;
+    title: string;
+    subtitle: string;
+    timelineTitle: string;
+    timeline: { label: string; description: string }[];
+    economicsTitle: string;
+    economics: { label: string; value: string; description: string }[];
+    contractNote: string;
+  };
   contracts: {
     title: string;
     subtitle: string;
     addressLabel: string;
+    pendingLabel: string;
     explorerLabel: string;
     docsLabel: string;
     items: {
@@ -55,6 +66,36 @@ export type Dictionary = {
       description: string;
     }[];
   };
+  contractDetail: {
+    backLabel: string;
+    eyebrow: string;
+    addressLabel: string;
+    pendingAddressLabel: string;
+    networkLabel: string;
+    statusLabel: string;
+    explorerLabel: string;
+    responsibilitiesTitle: string;
+    interfaceTitle: string;
+    safeguardsTitle: string;
+    sourceTitle: string;
+    sourceIncludedLabel: string;
+    sourcePendingLabel: string;
+  };
+  contractDocs: Record<
+    ContractId,
+    {
+      title: string;
+      summary: string;
+      status: string;
+      responsibilities: string[];
+      interfaceItems: {
+        name: string;
+        description: string;
+      }[];
+      safeguards: string[];
+      sourceNote: string;
+    }
+  >;
   docsPage: {
     metadata: {
       title: string;
@@ -90,6 +131,12 @@ export type Dictionary = {
   walletAuth: {
     heading: string;
     description: string;
+    miniApp: {
+      label: string;
+      checking: string;
+      installed: string;
+      browserFallback: string;
+    };
     statusLabel: string;
     status: {
       connected: (address: string) => string;
@@ -97,8 +144,13 @@ export type Dictionary = {
       disconnected: string;
     };
     chainId: (chainId: number) => string;
+    mode: {
+      "world-app": string;
+      browser: string;
+    };
     actions: {
-      connect: string;
+      connectWorldApp: string;
+      connectBrowser: string;
       connecting: string;
       disconnect: string;
     };
@@ -106,7 +158,33 @@ export type Dictionary = {
       welcome: string;
       disconnected: string;
       error: string;
+      nonceError: string;
+      verifyError: string;
+      worldAppRequired: string;
     };
+  };
+  worldIdGate: {
+    heading: string;
+    description: string;
+    statusLabel: string;
+    statuses: {
+      locked: string;
+      ready: string;
+      loading: string;
+      verified: string;
+      error: string;
+      notConfigured: string;
+    };
+    action: string;
+    actionLoading: string;
+    walletRequired: string;
+    configMissing: string;
+    signatureError: string;
+    verifyError: string;
+    duplicateError: string;
+    errorPrefix: string;
+    signalLabel: (signal: string) => string;
+    proofLabel: (proofId: string) => string;
   };
   whitepaper: {
     metadata: {
@@ -117,6 +195,10 @@ export type Dictionary = {
       badge: string;
       title: string;
       date: string;
+    };
+    download: {
+      label: string;
+      note: string;
     };
     abstract: {
       title: string;
@@ -204,17 +286,17 @@ export type Dictionary = {
 export const dictionaries: Record<Language, Dictionary> = {
   en: {
     metadata: {
-      title: "Riska.world – Peer-to-Peer Life Insurance",
+      title: "Riska.world - Life Protection + 30-Year Retirement Income",
       description:
-        "Riska delivers peer-to-peer life insurance where transparent contracts, oracle reports, and the RSK token align incentives for dependable, auditable family protection."
+        "Riska combines life protection with a 30-year USDC policy: after the 12-month waiting period, beneficiaries receive a formula payout; at maturity, the holder receives 100% principal over 10 years."
     },
     navbar: {
       brand: "riska.world",
       links: [
-        { href: "#about", label: "About" },
-        { href: "#vision", label: "Vision" },
+        { href: "/#product", label: "Product" },
+        { href: "/#vision", label: "Vision" },
         { href: "/docs", label: "Contracts" },
-        { href: "#stack", label: "Stack" },
+        { href: "/#stack", label: "Stack" },
         { href: "/whitepaper", label: "Whitepaper" }
       ],
       cta: "Log in",
@@ -224,105 +306,158 @@ export const dictionaries: Record<Language, Dictionary> = {
       }
     },
     hero: {
-      badge: "Riska Foundation · November 2025",
-      title: "Peer-to-peer life insurance with verifiable triggers.",
+      badge: "Riska 30 · Life protection + programmed income",
+      title: "30 USDC a month. If you reach maturity, you collect 100%.",
       description:
-        "Life policies, premiums, and beneficiary payouts execute through deterministic contracts, while independent oracle reports confirm vital events. Riska keeps family protection reliable, auditable, and globally accessible for World Chain verified users with sybil-resistant access.",
+        "Riska turns life insurance into a long-term USDC policy. After 12 paid months, verified beneficiaries can receive 80% of paid premiums if the holder dies before maturity. At 30 years, the holder receives 100% of scheduled principal over 10 years.",
       chips: [
-        "Transparent life contracts",
-        "Oracle-confirmed events",
-        "RSK-backed reserves",
-        "World Chain verified families"
+        "30 USDC monthly premium",
+        "12-month waiting period",
+        "80% beneficiary formula",
+        "100% maturity principal"
       ]
     },
     impactMetrics: {
-      title: "Design goals",
+      title: "Product rules",
       subtitle:
-        "Riska removes discretionary bottlenecks by expressing life coverage as code and confirming truth via verifiable data feeds.",
+        "One policy, published outcomes: beneficiary support after the waiting period, programmed income when the 30-year term is complete.",
       body:
-        "Each life pool publishes the guarantees it provides, how beneficiary payouts are computed, and which reports confirm protected events. Participation is open, execution is deterministic, and incentives stay aligned through the RSK economy.",
+        "The base promise is principal-denominated in USDC: 80% of paid premiums to beneficiaries after verified death from month 12 through maturity, 90% of the matured or remaining balance after maturity, and 100% principal to the holder if they complete the term.",
       metrics: [
-        { label: "Capital & coverage", value: "Open participation" },
-        { label: "Execution", value: "Deterministic" },
-        { label: "Event truth", value: "Objective oracles" },
-        { label: "Governance", value: "Transparent" },
-        { label: "User identity", value: "World Chain verified" }
+        { label: "Contribution term", value: "30 years" },
+        { label: "Monthly premium", value: "30 USDC" },
+        { label: "Waiting period", value: "12 months" },
+        { label: "After maturity", value: "10-year payout" },
+        { label: "Contract terms", value: "Auditable" },
+        { label: "User identity", value: "Verified human" }
       ]
     },
     aboutSections: {
       sections: [
         {
-          title: "Public risk pools",
+          title: "30-year life contract",
           description:
-            "Pools hold capital, publish what they cover, and express policy terms as transparent rules anyone can audit.",
+            "Each policy publishes the 30 USDC premium, maturity date, waiting period, beneficiary formula, and programmed income method.",
           points: [
-            "Life policies specify insured sum, coverage window, and qualifying event",
-            "Examples include term life, income protection, mortgage payoff, and funeral coverage",
-            "Everyday intuition: a promise to your family with a clear rule that pays when verified"
+            "The holder contributes for 30 years",
+            "The legal terms hash is linked to the on-chain policy",
+            "The policy state is visible: active, grace, matured, payout, or closed"
           ]
         },
         {
-          title: "User lifecycle",
+          title: "Family protection phase",
           description:
-            "From selecting a product to automatic settlement, each step follows deterministic logic enforced by oracles.",
+            "Before maturity, the policy pays beneficiaries only under the published formula and after verified death reporting.",
           points: [
-            "Select a life product with published terms",
-            "Pay premium and receive a timestamped policy",
-            "Oracles monitor triggers and execute payouts automatically"
+            "Beneficiaries are set at policy creation",
+            "Death reports are verified before payout",
+            "From month 12 through maturity, beneficiaries receive 80% of paid premiums after approval"
           ]
         },
         {
-          title: "Capital discipline",
+          title: "Retirement income phase",
           description:
-            "Premiums cover expected loss, risk margin, and operating fees, while solvency buffers keep pools resilient.",
+            "After 30 years, the policy matures and converts the accumulated balance into scheduled payments.",
           points: [
-            "Expected loss: E[Li] = qiSi",
-            "Premium formula: πi = qiSi + ρi + κi",
-            "Capital rule: P ≥ μ + z1−ασ"
+            "Maturity is time-based and does not require an oracle",
+            "The holder receives 100% of scheduled principal over 120 monthly payments",
+            "Beneficiaries receive 90% of the matured or remaining balance if verified death occurs after maturity"
           ]
         }
       ]
     },
     valueGrid: {
-      title: "System components",
+      title: "Contract components",
       subtitle:
-        "Deterministic contracts, oracle proofs, and token incentives combine to deliver fast, transparent settlements.",
+        "The protocol is scoped around one defensible product: life protection during accumulation, programmed income after maturity.",
       values: [
         {
-          title: "Deterministic contracts",
+          title: "Electronic policy terms",
           description:
-            "Policies execute as written, eliminating discretionary approval and keeping rules auditable."
+            "A signed policy document defines coverage, beneficiaries, premiums, maturity, payout schedule, and dispute rules. Its hash is stored on-chain."
         },
         {
-          title: "Oracle reports",
+          title: "Principal and yield",
           description:
-            "Independent data providers submit signed evidence; matching reports finalize events, disagreements trigger bounded disputes."
+            "The 30 USDC monthly premium is protected principal for the base promise. Protocol economics come from allowlisted yield strategies and must be accounted separately."
         },
         {
-          title: "Instant claims",
+          title: "Beneficiary formula",
           description:
-            "Once an event is confirmed, payouts settle immediately and disputes rely on published routines."
+            "Before 12 paid months there is no policy payout. From month 12 through maturity, verified beneficiaries receive 80% of paid premiums."
         },
         {
-          title: "RSK economy",
+          title: "Programmed income",
           description:
-            "Liquidity providers, data operators, and users align through staking, fees, and deflationary token retirements."
+            "After 30 years, 100% of scheduled principal converts into fixed withdrawals over 10 years."
         },
         {
-          title: "World Chain verified access",
+          title: "Verified access",
           description:
-            "Users prove they are unique humans through World Chain verification, keeping coverage open while deterring sybil abuse."
+            "World Chain verification limits duplicate policy abuse while preserving a wallet-native onboarding flow."
         }
       ]
     },
-    contracts: {
-      title: "Deployed contracts",
+    retirementProduct: {
+      badge: "Riska 30 contract",
+      title: "A life policy that becomes income after 30 years.",
       subtitle:
-        "Riska's on-chain modules live on World Chain. Edit lib/contracts.ts and this list refreshes instantly.",
+        "Riska 30 keeps the promise explicit: 30 USDC per month, 12-month waiting period, 80% beneficiary payout before maturity, and 100% principal return to the holder at maturity.",
+      timelineTitle: "Policy lifecycle",
+      timeline: [
+        {
+          label: "Years 0-30",
+          description: "The holder pays 30 USDC per month. Principal accumulates toward the 30-year maturity promise."
+        },
+        {
+          label: "If death occurs",
+          description: "After 12 paid months, a verified death claim pays beneficiaries 80% of paid premiums before maturity."
+        },
+        {
+          label: "Year 30",
+          description: "The policy matures by time. No death oracle is needed to unlock the retirement phase."
+        },
+        {
+          label: "After maturity",
+          description: "The holder receives 100% of scheduled principal over 10 years; verified death routes 90% of the remaining balance to beneficiaries."
+        }
+      ],
+      economicsTitle: "Policy economics",
+      economics: [
+        {
+          label: "Protected principal",
+          value: "30 USDC/mo",
+          description: "The base amount used for beneficiary formulas and maturity payout."
+        },
+        {
+          label: "Yield strategy",
+          value: "Protocol income",
+          description: "Funds can be deployed into allowlisted protocols to generate yield for reserves and operations."
+        },
+        {
+          label: "RISKA governance",
+          value: "100,000 supply",
+          description: "The 0-decimal token starts centralized and transferable, with a future decentralization path."
+        }
+      ],
+      contractNote:
+        "The production contracts need to be rewritten around World ID, KYC, multiple beneficiaries, yield accounting, upgrade governance, and the final payout formula."
+    },
+    contracts: {
+      title: "Protocol contracts",
+      subtitle:
+        "Riska's on-chain modules target World Chain. Draft contracts can be shown before deployment; deployed modules include explorer links.",
       addressLabel: "Contract address",
+      pendingLabel: "Pending deployment",
       explorerLabel: "View on explorer",
       docsLabel: "Read docs",
       items: [
+        {
+          id: "thirtyYearPolicy",
+          name: "RiskaThirtyYearPolicy",
+          description:
+            "MVP policy lifecycle for 30-year contributions, death-benefit settlement, maturity activation, and programmed retirement payouts."
+        },
         {
           id: "policyManager",
           name: "PolicyManager",
@@ -330,10 +465,10 @@ export const dictionaries: Record<Language, Dictionary> = {
             "Issues coverage NFTs, enforces policy lifecycles, and exposes underwriting controls."
         },
         {
-          id: "claimsBridge",
-          name: "ClaimsBridge",
+          id: "deathVerifier",
+          name: "DeathVerifier",
           description:
-            "Receives oracle attestations, validates reports, and routes approved claims to the vault."
+            "Receives verified death reports, stores evidence hashes, and authorizes beneficiary settlement."
         },
         {
           id: "premiumVault",
@@ -343,11 +478,188 @@ export const dictionaries: Record<Language, Dictionary> = {
         }
       ]
     },
+    contractDetail: {
+      backLabel: "Back to contracts",
+      eyebrow: "Contract documentation",
+      addressLabel: "Contract address",
+      pendingAddressLabel: "Pending deployment",
+      networkLabel: "Network",
+      statusLabel: "Status",
+      explorerLabel: "View on explorer",
+      responsibilitiesTitle: "Responsibilities",
+      interfaceTitle: "Interface map",
+      safeguardsTitle: "Risk controls",
+      sourceTitle: "Contract source",
+      sourceIncludedLabel: "Source included in this site",
+      sourcePendingLabel: "Source import pending"
+    },
+    contractDocs: {
+      thirtyYearPolicy: {
+        title: "RiskaThirtyYearPolicy",
+        summary:
+          "The MVP contract for the Riska 30 product: a 30-year contribution policy that protects beneficiaries before maturity and pays the holder through programmed withdrawals after maturity.",
+        status: "Draft contract, pending rewrite for production, audit, and deployment.",
+        responsibilities: [
+          "Create plans with premium, death benefit, allocation percentages, payout months, and terms hash.",
+          "Open policies with holder, beneficiary, maturity date, paid-through date, and retirement balance.",
+          "Collect premiums and separate retirement balance, risk reserve, and protocol fees.",
+          "Settle verified death claims before maturity and activate programmed retirement payouts after maturity."
+        ],
+        interfaceItems: [
+          {
+            name: "createPlan",
+            description: "Creates a policy plan with published economics and the hash of the electronic policy terms."
+          },
+          {
+            name: "openPolicy",
+            description: "Starts a holder policy, records the beneficiary, and collects the first premium."
+          },
+          {
+            name: "payPremium",
+            description: "Extends coverage by one or more payment periods and updates the retirement balance."
+          },
+          {
+            name: "reportDeath",
+            description: "Allows the approved verifier to submit an evidence hash and settle the beneficiary payout."
+          },
+          {
+            name: "activateRetirement",
+            description: "Converts a matured policy into programmed withdrawals for the holder."
+          },
+          {
+            name: "claimRetirementPayout",
+            description: "Releases the next scheduled retirement payout and closes the policy when the balance is exhausted."
+          }
+        ],
+        safeguards: [
+          "A non-reentrancy guard wraps premium collection, claim settlement, reserve funding, fee withdrawals, and payouts.",
+          "Death benefits only settle when available risk liquidity covers the configured benefit.",
+          "Retirement balances are tracked as protocol liabilities and separated from fee balance.",
+          "Plan terms are anchored with a terms hash so the legal document can be versioned and audited."
+        ],
+        sourceNote:
+          "The source below is the current MVP implementation included in this repository. It should be audited before production use."
+      },
+      policyManager: {
+        title: "PolicyManager",
+        summary:
+          "The policy registry and issuance module for deployed coverage records. In the Riska 30 architecture, it is the place where a signed electronic policy becomes an on-chain policy reference.",
+        status: "Deployed module. The Riska 30 documentation describes the target role while source import is pending.",
+        responsibilities: [
+          "Bind a policy holder, beneficiary, plan, and terms hash to a durable on-chain record.",
+          "Expose lifecycle state to the app so users can see whether coverage is active, in grace, matured, or closed.",
+          "Coordinate with the vault and verification modules when a claim or maturity event changes policy state.",
+          "Keep policy metadata addressable for wallets, explorers, and partner integrations."
+        ],
+        interfaceItems: [
+          {
+            name: "Policy issuance",
+            description: "Creates the coverage record after the user accepts the electronic contract and pays the required premium."
+          },
+          {
+            name: "Beneficiary registry",
+            description: "Stores or references the beneficiary selected by the holder at policy creation."
+          },
+          {
+            name: "Lifecycle status",
+            description: "Publishes the current policy state for the web app, explorers, and downstream integrations."
+          },
+          {
+            name: "Terms reference",
+            description: "Links the policy to the exact legal document hash accepted by the holder."
+          }
+        ],
+        safeguards: [
+          "Issuance should be gated by underwriting rules, verified identity, and capacity checks.",
+          "Lifecycle changes should emit events for public auditability.",
+          "Policy records should not store sensitive evidence directly on-chain.",
+          "Administrative permissions should be time-delayed or moved behind governance before public scale."
+        ],
+        sourceNote:
+          "The deployed address is listed on this page. The verified ABI and source should be imported here after the Riska 30 contract set is finalized."
+      },
+      deathVerifier: {
+        title: "DeathVerifier",
+        summary:
+          "The verification module that receives death reports, records evidence hashes, and authorizes beneficiary settlement under the policy rules.",
+        status: "Deployed module. The current page documents the verification role and Riska 30 target behavior.",
+        responsibilities: [
+          "Receive a death report for a policy without storing private documents directly on-chain.",
+          "Record the hash or reference of off-chain evidence used by the verifier.",
+          "Authorize claim settlement only after the event has passed the verification process.",
+          "Provide an auditable trail for beneficiaries, governance, and future dispute windows."
+        ],
+        interfaceItems: [
+          {
+            name: "Evidence reference",
+            description: "Stores a cryptographic reference to the documents or attestations used for verification."
+          },
+          {
+            name: "Verifier authorization",
+            description: "Restricts settlement authorization to approved reporters in the MVP."
+          },
+          {
+            name: "Claim signal",
+            description: "Notifies the policy module that a beneficiary payout can be executed."
+          },
+          {
+            name: "Dispute upgrade path",
+            description: "Leaves room for quorum, bonded reporters, and dispute windows in later versions."
+          }
+        ],
+        safeguards: [
+          "Raw medical, civil registry, or identity documents should stay off-chain.",
+          "Verifier changes should be governed and evented.",
+          "Large claims should support multiple reporters and a delay before final settlement.",
+          "Evidence references should be immutable after settlement."
+        ],
+        sourceNote:
+          "The deployed address is listed on this page. The full verified source should be imported before presenting this as audited production documentation."
+      },
+      premiumVault: {
+        title: "PremiumVault",
+        summary:
+          "The liquidity and accounting module for premiums, reserves, liabilities, fees, and payouts. This is the contract page that should replace the broken external premium-vault documentation link.",
+        status: "Deployed module. Riska 30 target documentation is now hosted internally at /contracts/premium-vault.",
+        responsibilities: [
+          "Receive premium flows from policy contracts and account for where each unit of capital belongs.",
+          "Keep retirement liabilities separate from risk liquidity used for death benefits.",
+          "Release approved beneficiary payouts, maturity withdrawals, and permitted fee withdrawals.",
+          "Expose reserve and liability data so the web app can show solvency and payout capacity."
+        ],
+        interfaceItems: [
+          {
+            name: "Premium intake",
+            description: "Receives funds from policy flows and attributes them to retirement balance, risk reserve, and fees."
+          },
+          {
+            name: "Reserve accounting",
+            description: "Tracks capital that backs death-benefit capacity separately from user retirement liabilities."
+          },
+          {
+            name: "Payout release",
+            description: "Transfers funds only when the policy or verifier module has authorized a claim or scheduled withdrawal."
+          },
+          {
+            name: "Fee withdrawal",
+            description: "Allows protocol fees to be withdrawn only from the accounted fee balance."
+          }
+        ],
+        safeguards: [
+          "Retirement liabilities must not be treated as free risk capital.",
+          "Death-benefit payments should fail if available risk liquidity is insufficient.",
+          "Treasury withdrawals should never touch user retirement balances.",
+          "Vault operations should emit events for premium receipt, reserve funding, payout, and fee withdrawal."
+        ],
+        sourceNote:
+          "The deployed address is listed here with an explorer link. The source file is not bundled in this repository yet, so this page documents the intended Riska 30 accounting behavior until the verified source is imported."
+      }
+    },
     docsPage: {
       metadata: {
         title: "Riska protocol docs",
         description:
-          "Review deployed contracts, integration entry points, and links to the canonical Riska documentation."
+          "Review deployed contracts, internal contract documentation, and integration entry points for Riska."
       },
       hero: {
         badge: "Documentation",
@@ -355,7 +667,7 @@ export const dictionaries: Record<Language, Dictionary> = {
         description:
           "Explore contract addresses, integration resources, and references for partners shipping on World Chain.",
         primaryCta: "View contract addresses",
-        secondaryCta: "Open full documentation"
+        secondaryCta: "Open white paper"
       }
     },
     techStack: {
@@ -373,30 +685,36 @@ export const dictionaries: Record<Language, Dictionary> = {
         },
         {
           title: "Auditability",
-          description: "Every claim decision—accept, deny, dispute—is recorded for public review and governance oversight."
+          description: "Every death report, maturity activation, and payout event is recorded for public review and governance oversight."
         },
         {
           title: "Governance",
-          description: "RSK holders propose parameter changes with transparent quorums, dispute windows, and fee settings."
+          description: "RISKA governance starts centralized, then can expand through transparent partner and community distribution."
         }
       ]
     },
     callToAction: {
-      title: "Read the whitepaper",
+      title: "Download the Riska 30 white paper",
       subtitle:
-        "Explore how life capital pools, oracle proofs, and the RSK incentive model deliver reliable, auditable protection for families.",
-      primary: "Open whitepaper",
+        "Prepared for grant review: product thesis, World Chain alignment, policy lifecycle, smart-contract scope, roadmap, and risk boundaries.",
+      primary: "Open white paper",
       secondary: "Contact Riska Foundation"
     },
     footer: {
-      note: "© {year} riska.world · Peer-to-peer life insurance with verifiable data.",
+      note: "© {year} riska.world · Life protection with 30-year programmed income.",
       worldChain: "World Chain",
       email: "hey@riska.world"
     },
     walletAuth: {
-      heading: "Policy console",
+      heading: "Riska 30 console",
       description:
-        "Connect a wallet to review life policies, monitor oracle-confirmed vital events, and track deterministic beneficiary settlements in real time.",
+        "Sign in through World App to review 30-year policy status, beneficiary settings, premium history, maturity date, and programmed payout state.",
+      miniApp: {
+        label: "Mini App bridge",
+        checking: "Checking World App context…",
+        installed: "World App detected. Wallet Auth will be verified on the Riska backend.",
+        browserFallback: "Browser mode active. Use the web wallet fallback for local review."
+      },
       statusLabel: "Status",
       status: {
         connected: (address: string) => `Session connected: ${address}`,
@@ -404,60 +722,96 @@ export const dictionaries: Record<Language, Dictionary> = {
         disconnected: "Not connected"
       },
       chainId: (chainId: number) => `Chain ID: ${chainId}`,
+      mode: {
+        "world-app": "World App",
+        browser: "Browser wallet"
+      },
       actions: {
-        connect: "Connect wallet",
+        connectWorldApp: "Sign in with World App",
+        connectBrowser: "Connect browser wallet",
         connecting: "Connecting…",
         disconnect: "Disconnect"
       },
       messages: {
-        welcome: "Welcome to Riska: peer-to-peer life insurance enforced by transparent rules.",
-        disconnected: "Session closed. Reconnect to manage life policies and beneficiary claims.",
-        error: "Unable to connect the wallet."
+        welcome: "Welcome to Riska 30. Wallet Auth was completed and the session is ready for the next onboarding step.",
+        disconnected: "Session closed. Reconnect to manage policies, beneficiaries, and maturity payouts.",
+        error: "Unable to connect the wallet.",
+        nonceError: "Unable to prepare the Wallet Auth nonce.",
+        verifyError: "Unable to verify the Wallet Auth signature.",
+        worldAppRequired: "Open Riska inside World App to use Mini App Wallet Auth."
       }
+    },
+    worldIdGate: {
+      heading: "One human, one policy",
+      description:
+        "Verify Proof of Human with IDKit before policy activation. Riska stores the World ID nullifier server-side so the same verified human cannot reserve a second policy.",
+      statusLabel: "World ID gate",
+      statuses: {
+        locked: "Connect a wallet first so the proof can be bound to that address.",
+        ready: "Ready to request a World ID proof for this wallet.",
+        loading: "Preparing a signed World ID request…",
+        verified: "Verified unique human. This wallet can continue to KYC and beneficiary setup.",
+        error: "World ID verification needs attention.",
+        notConfigured: "World ID app configuration is pending."
+      },
+      action: "Verify human",
+      actionLoading: "Preparing proof…",
+      walletRequired: "Connect Wallet Auth before requesting World ID.",
+      configMissing: "Set NEXT_PUBLIC_WORLD_APP_ID before opening the IDKit flow.",
+      signatureError: "Unable to create the signed RP request.",
+      verifyError: "Unable to verify the World ID proof.",
+      duplicateError: "This verified human is already reserved for a Riska policy.",
+      errorPrefix: "IDKit error:",
+      signalLabel: (signal: string) => `Signal: ${signal}`,
+      proofLabel: (proofId: string) => `Reserved nullifier: ${proofId}`
     },
     whitepaper: {
       metadata: {
-        title: "Riska Whitepaper — A Peer-to-Peer Life Insurance System",
+        title: "Riska Whitepaper - Life Protection with 30-Year Programmed Income",
         description:
-          "Explore how riska.world delivers transparent, automated life coverage with peer-to-peer capital pools, oracle verified events, and the RSK token economy."
+          "Explore how riska.world combines life protection, long-term premium accumulation, verified death claims, and programmed payouts after a 30-year maturity period."
       },
       header: {
         badge: "Riska Foundation",
-        title: "Riska: A Peer-to-Peer Life Insurance System",
+        title: "Riska: Life Protection with 30-Year Programmed Income",
         date: "November 2025"
+      },
+      download: {
+        label: "Download white paper v2",
+        note: "Prepared for World Chain grant review: Riska 30 product thesis, contract lifecycle, grant milestones, and risk scope."
       },
       abstract: {
         title: "Abstract",
         paragraphs: [
-          "We present a peer-to-peer life insurance protocol where family risks—premature death, terminal illness, income interruption, and funeral costs—are protected by public rules and verifiable data instead of discretionary processes. Policies, premiums, and beneficiary payouts are handled by transparent contracts; vital events are confirmed by independent reports. A native token (RSK) aligns incentives across families, liquidity providers, and data operators with a deflationary fee design, staking for oracle honesty, and on-chain governance. The goal is simple: make life protection reliable, auditable, and globally accessible.",
-          "Riska integrates World Chain to anchor participation to human-verified accounts. World Chain’s proof-of-personhood brings sybil resistance, lets capital pools price life risk knowing each policyholder is unique, and gives regulators a familiar compliance surface while keeping biometric data off-chain."
+          "We present a 30-year life protection contract with a fixed 30 USDC monthly premium. If verified death occurs after the 12-month waiting period and before maturity, beneficiaries receive 80% of paid premiums. If the holder completes the term, the holder receives 100% of scheduled principal through 10 years of programmed withdrawals.",
+          "Riska integrates World Chain to anchor participation to human-verified accounts. World Chain proof-of-personhood helps deter duplicate-policy abuse while keeping biometric data outside the protocol. Production onboarding adds passport-based KYC and FaceID/liveness matching. Death claims require a reporter, Riska Team verification, evidence hashes, and a dispute window."
         ]
       },
       introduction: {
         title: "1. Introduction",
         paragraphs: [
-          "Life insurance helps when it is easy to buy and reliable to settle. Legacy systems rely on opaque steps and discretionary approval. Riska removes those bottlenecks by expressing coverage as code and event truth as verifiable data feeds. Anyone can read the rules and audit settlements. This mirrors the ethos of electronic cash systems: replace institution-led discretion with transparent, predictable mechanics.",
-          "World Chain extends that ethos to identity. By authenticating with a World Chain verified credential, each participant proves they are a unique human without surrendering personal data to the protocol. Pools can open onboarding globally, reduce fraud, and concentrate underwriting capital on genuine households instead of bots."
+          "Riska focuses on a single product: a life policy that becomes programmed income after 30 years. Legacy life and retirement products are often opaque about fees, reserves, surrender value, and payout mechanics. Riska makes the policy state, payment history, maturity date, and payout rules inspectable.",
+          "The contract does not attempt to be a full pension system at launch. It implements a bounded product: pay a published beneficiary formula before maturity and return scheduled principal to the holder after maturity. Yield strategies can fund protocol economics, but they must be separated from the user-facing principal promise."
         ],
         goalsTitle: "Design Goals",
         goals: [
-          "Open participation in capital and coverage.",
-          "Deterministic execution of policy terms.",
-          "Objective event verification.",
-          "Clear incentives and governance.",
-          "Minimal surface for abuse."
+          "Make the 30-year term, maturity, and payout schedule explicit.",
+          "Keep protected principal, yield reserves, treasury balances, and beneficiary obligations separate.",
+          "Pay beneficiaries under the 12-month waiting period and 80% formula when death is verified before maturity.",
+          "Pay the holder 100% of scheduled principal through programmed withdrawals after maturity.",
+          "Keep legal terms versioned through document hashes."
         ]
       },
       systemOverview: {
         title: "2. System Overview",
         paragraphs: [
-          "Participants interact through public life pools. A pool holds capital and publishes what it covers and how beneficiary payouts are computed. A policy specifies the insured sum S (amount paid on trigger), coverage window T (validity period), and trigger θ (a condition defined by data).",
-          "Access is anchored to World Chain verified users. Each policyholder signs transactions with a proof-of-personhood credential, giving pools confidence that incentives target unique humans while preserving pseudonymity on-chain.",
-          "Examples include term life (civil registry death notice), mortgage protection (notary certificate plus death record), final expense (hospital-issued proof-of-death), and critical illness (specialist diagnosis attested by medical networks)."
+          "Participants interact with a 30-year policy contract. A plan defines the 30 USDC monthly premium, 12-month waiting period, beneficiary payout formula, payout duration, inactivity review rules, and the hash of the legal policy document.",
+          "Before maturity, the policy is active while premiums are current or inside the grace period. If the holder dies after 12 paid months and the death is verified, beneficiaries receive 80% of paid premiums.",
+          "At maturity, the policy converts into programmed income. The holder activates retirement payouts, and the contract releases 100% of scheduled principal over 120 monthly withdrawals. If verified death occurs after maturity, beneficiaries receive 90% of the matured or remaining balance."
         ],
         everydayIntuition: {
           title: "Everyday Intuition",
-          body: "A life policy is a promise with a clear rule. When the qualifying event is verified, it pays. Everyone can see the rule and verify how it is enforced."
+          body: "Riska 30 is a promise with published outcomes: after the waiting period your family has a formula payout, and if you complete 30 years you collect the scheduled principal."
         }
       },
       userLifecycle: {
@@ -465,91 +819,92 @@ export const dictionaries: Record<Language, Dictionary> = {
         steps: [
           {
             label: "Verify identity.",
-            description: "Authenticate with World Chain to confirm you are a unique human before interacting with pools."
+            description: "Authenticate with World ID and complete KYC before activating a real-money policy."
           },
-          { label: "Select product.", description: "Choose term life, income protection, mortgage payoff, or final expense coverage with published terms." },
-          { label: "Pay premium.", description: "The contract issues a timestamped policy for window T." },
-          { label: "Data monitoring.", description: "Oracles watch for the trigger θ." },
-          { label: "Settlement.", description: "If θ is confirmed within T, payout executes automatically." }
+          { label: "Accept policy terms.", description: "Review premium, waiting period, beneficiary formula, maturity date, payout duration, beneficiaries, and the terms hash." },
+          { label: "Pay premium.", description: "The contract opens the policy and accounts the monthly USDC payment as protected principal." },
+          { label: "Maintain coverage.", description: "Scheduled payments keep the policy active through the 30-year contribution term." },
+          { label: "Collect outcome.", description: "Beneficiaries are paid under the published formula after verified death, or the holder collects 100% principal after maturity." }
         ],
         examples: {
           title: "Concrete Examples",
           items: [
             {
-              label: "Term life:",
-              description: "Alice selects $250k coverage. When the civil registry posts a verified death record within T, oracles attest it and the policy pays her beneficiaries."
+              label: "Before maturity:",
+              description: "Alice pays premiums for 12 years and dies while covered. A verifier confirms the event, and her beneficiaries receive 80% of paid premiums."
             },
             {
-              label: "Mortgage protection:",
-              description: "A lender receives funds when a notary confirms the outstanding mortgage and the linked death record is verified."
+              label: "At maturity:",
+              description: "Bruno completes 30 years of payments. The policy matures, and he activates 120 monthly payments of 90 USDC."
             },
             {
-              label: "Final expense:",
-              description: "A family wallet receives a fixed stipend when hospital-issued proof-of-death is confirmed."
+              label: "During payout:",
+              description: "Carla starts receiving retirement payments. If she dies before the balance is fully distributed, 90% of the remaining balance can route to her beneficiaries after verification."
             },
             {
-              label: "Income protection:",
-              description: "If a medical network attests to a critical illness that meets the published criteria, monthly benefits stream to the beneficiary wallet."
+              label: "Missed payments:",
+              description: "If a holder misses payments for 12 months, the policy can enter inactivity review. Inactivity alone does not prove death or authorize payout."
             }
           ]
         }
       },
       capital: {
-        title: "4. Capital and Solvency",
+        title: "4. Principal, Yield, and Solvency",
         paragraphs: [
-          "Pools must stay solvent even in bad months. Premiums should reflect expected payouts plus a buffer. The expected loss for a single policy equals the chance of a claim times the payout amount, E[Li] = qiSi. Across N policies, μ = Σ qiSi. Total premiums must cover this expectation over time.",
-          "Premiums include expected loss plus risk margin ρi and operating fees κi: πi = qiSi + ρi + κi. Pools also maintain a solvency buffer so capital P meets P ≥ μ + z1−ασ, keeping insolvency probability below α."
+          "Each 30 USDC premium is protected principal for the base policy promise. Protocol income should come from yield spread, treasury subsidy, sponsor subsidy, or explicit external fees rather than reducing the protected principal.",
+          "Yield-bearing strategies introduce additional risk and require separate accounting. The contract system should expose protected principal liabilities, treasury balances, yield reserves, strategy exposure, available liquidity, and beneficiary payout obligations."
         ],
         example: {
-          title: "Illustrative Mini-Example",
-          body: "A term-life pool pays $100,000 with q = 0.2%. Expected payout per policy is $200. If fees and margin total $40, premium is $240. Selling 10,000 policies implies expected payouts of $2M; capital and buffers absorb rare mortality spikes."
+          title: "Base Example",
+          body: "A holder who pays 30 USDC for 360 months contributes 10,800 USDC. At maturity, the holder receives 10,800 USDC over 120 payments, or 90 USDC per month."
         }
       },
       eventVerification: {
-        title: "5. Event Verification",
+        title: "5. Death Verification",
         paragraphs: [
-          "Reliable data is essential in parametric life insurance. Oracles submit signed reports with event type e, timestamp t, and evidence hash h—death certificates, registry entries, or medical attestations. The contract waits a short window Δ for multiple reports; if a quorum agrees, the event is confirmed. Conflicts open a bounded dispute."
+          "Reliable data is essential for beneficiary protection. A 12-month period without premium payment or payout claims can trigger inactivity review, but inactivity alone does not prove death. A reporter must submit a death report, Riska Team must verify it, and the system should record an evidence hash and dispute window before settlement."
         ],
         plainLanguage: {
           title: "Plain-Language View",
-          body: "Several independent observers confirm the same life event. When they agree, the beneficiaries are paid. When they disagree, the system pauses briefly and resolves it using published rules."
+          body: "The contract does not decide whether a person died by itself. It records verified reports and then applies the published payout formula."
         }
       },
       claims: {
-        title: "6. Claims and Disputes",
+        title: "6. Maturity and Payouts",
         paragraphs: [
-          "Once verified, payouts execute immediately. If oracles disagree, a dispute window allows re-reporting. Data providers that misreport risk losing posted bonds. All claim decisions are recorded on-chain for audit."
+          "Maturity is deterministic: after 30 years, the policy can be activated for programmed payouts. The holder receives 100% of scheduled principal over 10 years instead of a lifetime annuity.",
+          "If verified death occurs after maturity but before activation, or during the payout phase, beneficiaries receive 90% of the matured or remaining balance."
         ]
       },
       incentives: {
-        title: "7. Economic Incentives and Capital Flow (RSK)",
-        intro: "The RSK token aligns incentives across liquidity providers, data operators, and users.",
+        title: "7. Economic Incentives and Capital Flow (RISKA)",
+        intro: "The RISKA token starts as centralized governance for protocol parameters, enterprise distribution, and future decentralization.",
         points: [
           {
-            label: "Liquidity providers:",
-            description: "Supply capital to pools and earn premiums while solvency rules and capacity limits protect their stake."
+            label: "Riska Foundation:",
+            description: "Initially controls the full 100,000-token supply and uses governance to manage protocol parameters, upgrades, and partner access."
           },
           {
-            label: "Data operators:",
-            description: "Stake RSK as bond. Honest reporting earns fees; misconduct risks slashing."
+            label: "Verifiers:",
+            description: "Riska Team verifies death reports at launch; later verifier sets can be expanded and bonded through governance."
           },
           {
-            label: "Families:",
-            description: "Pay posted life premiums and receive automatic beneficiary payouts when qualifying events are verified."
+            label: "Policyholders and families:",
+            description: "Contribute toward future programmed income while keeping beneficiary protection active before maturity."
           }
         ],
         feeParagraph:
-          "A portion of protocol fees buys and retires RSK over time, linking usage to decreasing supply. If total fees in a period are F with fraction β earmarked for retirement, the retired amount is Δretire = βF / P, with P the price of RSK at settlement. Circulating supply updates as St+1 = St − Δretire.",
+          "RISKA has a fixed supply of 100,000 tokens, 0 decimals, and transferability from day 1. Protocol economics are expected to come from yield strategies, treasury subsidy, sponsor subsidy, or explicit fees, not from reducing the protected principal owed to policyholders.",
         example: {
-          title: "Worked Example",
-          body: "If a pool processes $1,000,000 of premiums with 1% protocol fee (F = $10,000) and β = 0.5, then $5,000 buys and retires RSK. With P = $2, about 2,500 RSK are retired that period."
+          title: "Governance Posture",
+          body: "Because the owner/foundation controls all RISKA at launch, governance is centralized first. The decentralization path should be disclosed before presenting Riska as community-governed."
         }
       },
       governance: {
-        title: "8. Risk Calibration and Governance",
+        title: "8. Yield Risk and Governance",
         paragraphs: [
-          "Pools publish capacity, utilization, and recent claims. Issuance halts when safe limits would be breached. Margin M and target α are set per product type, and correlated risks receive conservative adjustments to ρi.",
-          "Governance allows RSK holders to propose parameter changes—quorum, dispute windows, fee fractions—and upgrades with time delays so participants can react. All changes remain on-chain and auditable."
+          "Plans publish principal liabilities, utilization, strategy exposure, available liquidity, beneficiary payouts, and yield reserve status. Issuance or yield deployment should halt when safe limits would be breached.",
+          "Governance controls verifier sets, yield-strategy allowlists, caps, upgrade timelocks, fee routing, and emergency actions. Even while centralized, admin actions should use multisig, timelock, and public event trails."
         ]
       },
       security: {
@@ -557,11 +912,11 @@ export const dictionaries: Record<Language, Dictionary> = {
         points: [
           {
             label: "Minimize trust:",
-            description: "Contracts are minimal and contain no privileged backdoors. Oracles are diverse and bonded to discourage misbehavior."
+            description: "Contracts should minimize privileged actions, use scoped emergency controls, and route upgrades through transparent governance."
           },
           {
             label: "Data minimization:",
-            description: "Only necessary policy and claim references live on-chain while evidence remains off-chain with cryptographic proofs."
+            description: "Only necessary policy, KYC approval, and death-report references live on-chain while passport and FaceID evidence remain off-chain with cryptographic proofs."
           },
           {
             label: "Human verification:",
@@ -569,16 +924,16 @@ export const dictionaries: Record<Language, Dictionary> = {
           },
           {
             label: "Auditability:",
-            description: "Every decision—accept, deny, dispute—is stored on-chain for public review."
+            description: "Every decision—accept, deny, dispute, strategy change, and payout—is stored on-chain for public review."
           }
         ]
       },
       applications: {
         title: "10. Practical Applications",
         paragraphs: [
-          "The protocol supports term life, mortgage payoff, income protection, and funeral coverage. Each product pays when predefined vital data confirms the qualifying event, enabling fast, transparent family protection.",
-          "Families choose Riska for simple rules, few steps, and fast results. Products disclose triggers and data sources up front so buyers know exactly what is covered.",
-          "World Chain verification lets community programs or employers sponsor coverage knowing that subsidies reach unique households, reducing leakage from bots and duplicate identities."
+          "The first application is Riska 30: a long-duration policy for people who want family protection while building a future payout stream.",
+          "Families choose the product because the outcome is direct: if the holder dies before maturity, beneficiaries receive support; if the holder completes the term, the holder receives programmed income.",
+          "Employers, unions, and communities can sponsor premiums for verified members while the policy state remains auditable."
         ]
       },
       faq: {
@@ -586,30 +941,30 @@ export const dictionaries: Record<Language, Dictionary> = {
         items: [
           {
             question: "How are prices set?",
-            answer: "By expected payouts plus margin and fees: π = qS + ρ + κ. Pools publish each component."
+            answer: "The base plan publishes a 30 USDC monthly premium, 12-month waiting period, 80% beneficiary formula before maturity, 90% beneficiary formula after maturity, and 10-year holder payout after maturity."
           },
           {
             question: "What if data feeds fail?",
-            answer: "Multiple feeds and a dispute window reduce single-source risk. Operators stake RSK and can be slashed for misconduct."
+            answer: "The MVP uses approved verifiers. Production should use multiple reporters, dispute windows, and bonded verification before large-scale deployment."
           },
           {
             question: "Can a pool run out of funds?",
-            answer: "Capacity and buffers are enforced by contracts. Issuance halts before unsafe exposure."
+            answer: "Protected principal and beneficiary obligations are tracked as liabilities. Yield strategy exposure must be capped, monitored, and backed by emergency withdrawal and loss-accounting rules."
           },
           {
-            question: "Where does RSK matter day-to-day?",
-            answer: "Staking for oracle honesty, governance voting, and deflationary retirement via protocol fees."
+            question: "Where does RISKA matter day-to-day?",
+            answer: "RISKA controls governance parameters, verifier sets, strategy allowlists, partner access, and the future decentralization path."
           },
           {
-            question: "Is this legal insurance?",
-            answer: "Riska provides parametric protection: clear triggers, fixed payouts, and transparency. Local compliance varies by jurisdiction and products can be configured accordingly."
+            question: "Is this a pension?",
+            answer: "The MVP is programmed income from accumulated balance, not a lifetime pension. Legal classification depends on jurisdiction and must be handled before public sale."
           }
         ]
       },
       conclusion: {
         title: "12. Conclusion",
         paragraphs: [
-          "Riska replaces friction and discretion with transparent rules and verifiable life-event data. By combining capital pools, objective vital proofs, and the RSK incentive model, the protocol aims to make family protection reliable, auditable, and open-access."
+          "Riska replaces vague long-term promises with explicit policy states: active contribution, beneficiary protection, maturity, programmed payout, and closure. The first product is intentionally scoped so the contract can be audited before expanding into more complex retirement or insurance structures."
         ]
       },
       references: {
@@ -626,17 +981,17 @@ export const dictionaries: Record<Language, Dictionary> = {
   },
   es: {
     metadata: {
-      title: "Riska.world – Seguros de vida peer-to-peer",
+      title: "Riska.world - Protección de vida + renta a 30 años",
       description:
-        "Riska presenta seguros de vida peer-to-peer donde contratos transparentes, reportes de oráculos y el token RSK alinean incentivos para una protección familiar confiable y auditable."
+        "Riska combina protección de vida con una póliza USDC a 30 años: después de 12 meses, los beneficiarios cobran por fórmula; al madurar, el titular cobra 100% del principal en 10 años."
     },
     navbar: {
       brand: "riska.world",
       links: [
-        { href: "#about", label: "Quiénes somos" },
-        { href: "#vision", label: "Visión" },
+        { href: "/#product", label: "Producto" },
+        { href: "/#vision", label: "Visión" },
         { href: "/docs", label: "Contratos" },
-        { href: "#stack", label: "Stack" },
+        { href: "/#stack", label: "Stack" },
         { href: "/whitepaper", label: "Libro blanco" }
       ],
       cta: "Acceder",
@@ -646,105 +1001,158 @@ export const dictionaries: Record<Language, Dictionary> = {
       }
     },
     hero: {
-      badge: "Fundación Riska · Noviembre 2025",
-      title: "Seguros de vida peer-to-peer con disparadores verificables.",
+      badge: "Riska 30 · Protección de vida + renta programada",
+      title: "30 USDC por mes. Si llegas a madurez, cobras 100%.",
       description:
-        "Las pólizas de vida, las primas y los pagos a beneficiarios se ejecutan mediante contratos deterministas, mientras reportes independientes de oráculos confirman eventos vitales. Riska hace que la protección familiar sea confiable, auditable y accesible globalmente para usuarios verificados en World Chain con acceso resistente a sibilas.",
+        "Riska convierte el seguro de vida en una póliza USDC de largo plazo. Después de 12 meses pagos, los beneficiarios verificados pueden cobrar 80% de las primas pagadas si el titular fallece antes de madurar. A los 30 años, el titular cobra 100% del principal en 10 años.",
       chips: [
-        "Contratos de vida transparentes",
-        "Eventos verificados por oráculos",
-        "Reservas respaldadas por RSK",
-        "Familias verificadas en World Chain"
+        "Prima mensual de 30 USDC",
+        "Espera de 12 meses",
+        "Fórmula de 80% a beneficiarios",
+        "100% del principal al madurar"
       ]
     },
     impactMetrics: {
-      title: "Objetivos de diseño",
+      title: "Reglas del producto",
       subtitle:
-        "Riska elimina cuellos de botella discrecionales al expresar la cobertura de vida como código y confirmar la verdad con datos verificables.",
+        "Una póliza, resultados publicados: soporte a beneficiarios después de la espera, renta programada cuando completa los 30 años.",
       body:
-        "Cada pool de vida publica qué garantiza, cómo calcula los pagos a beneficiarios y qué reportes confirman los eventos protegidos. La participación es abierta, la ejecución es determinista y los incentivos se alinean mediante la economía de RSK.",
+        "La promesa base está denominada en USDC: 80% de primas pagadas a beneficiarios por fallecimiento verificado desde el mes 12 hasta madurez, 90% del saldo maduro o restante después de madurar, y 100% del principal al titular si completa el plazo.",
       metrics: [
-        { label: "Capital y cobertura", value: "Participación abierta" },
-        { label: "Ejecución", value: "Determinista" },
-        { label: "Verdad del evento", value: "Oráculos objetivos" },
-        { label: "Gobernanza", value: "Transparente" },
-        { label: "Identidad de usuario", value: "Verificación en World Chain" }
+        { label: "Plazo de aporte", value: "30 años" },
+        { label: "Prima mensual", value: "30 USDC" },
+        { label: "Espera", value: "12 meses" },
+        { label: "Después de madurar", value: "Pago a 10 años" },
+        { label: "Términos", value: "Auditables" },
+        { label: "Identidad", value: "Humano verificado" }
       ]
     },
     aboutSections: {
       sections: [
         {
-          title: "Pools de riesgo públicos",
+          title: "Contrato de vida a 30 años",
           description:
-            "Los pools mantienen capital, publican qué cubren y expresan las pólizas como reglas transparentes auditables por cualquiera.",
+            "Cada póliza publica la prima de 30 USDC, fecha de madurez, espera, fórmula de beneficiarios y método de renta programada.",
           points: [
-            "Las pólizas de vida especifican suma asegurada, ventana de cobertura y evento habilitante",
-            "Ejemplos incluyen vida a término, protección de ingresos, cancelación de hipoteca y gastos funerarios",
-            "Intuición diaria: una promesa a tu familia con una regla clara que paga cuando se verifica"
+            "El titular aporta durante 30 años",
+            "El hash de los términos legales queda vinculado a la póliza on-chain",
+            "El estado es visible: activa, gracia, madura, en pago o cerrada"
           ]
         },
         {
-          title: "Ciclo de vida del usuario",
+          title: "Fase de protección familiar",
           description:
-            "Desde elegir un producto hasta el asentamiento automático, cada paso sigue lógica determinista reforzada por oráculos.",
+            "Antes de madurar, la póliza paga a beneficiarios solo bajo la fórmula publicada y después de verificar el fallecimiento.",
           points: [
-            "Selecciona un producto de vida con términos publicados",
-            "Paga la prima y recibe una póliza con timestamp",
-            "Los oráculos monitorean disparadores y ejecutan pagos automáticamente"
+            "Los beneficiarios se definen al crear la póliza",
+            "Los reportes de fallecimiento se verifican antes del pago",
+            "Desde el mes 12 hasta madurez, los beneficiarios cobran 80% de primas pagadas después de aprobación"
           ]
         },
         {
-          title: "Disciplina de capital",
+          title: "Fase de renta",
           description:
-            "Las primas cubren pérdida esperada, margen de riesgo y fees operativos, mientras los buffers de solvencia mantienen resiliencia.",
+            "Después de 30 años, la póliza madura y convierte el principal programado en pagos programados.",
           points: [
-            "Pérdida esperada: E[Li] = qiSi",
-            "Prima: πi = qiSi + ρi + κi",
-            "Regla de capital: P ≥ μ + z1−ασ"
+            "La madurez depende del tiempo y no requiere oráculo",
+            "El titular cobra 100% del principal programado en 120 pagos mensuales",
+            "Los beneficiarios cobran 90% del saldo maduro o restante si hay fallecimiento verificado después de madurar"
           ]
         }
       ]
     },
     valueGrid: {
-      title: "Componentes del sistema",
+      title: "Componentes del contrato",
       subtitle:
-        "Contratos deterministas, pruebas de oráculos e incentivos del token trabajan juntos para liquidaciones rápidas y transparentes.",
+        "El protocolo se enfoca en un producto defendible: protección de vida durante la acumulación y renta programada al madurar.",
       values: [
         {
-          title: "Contratos deterministas",
+          title: "Términos electrónicos",
           description:
-            "Las pólizas se ejecutan tal como están escritas, eliminando la aprobación discrecional y manteniendo reglas auditables."
+            "Un documento firmado define cobertura, beneficiarios, primas, madurez, calendario de pagos y disputas. Su hash queda on-chain."
         },
         {
-          title: "Reportes de oráculos",
+          title: "Principal y yield",
           description:
-            "Proveedores independientes envían evidencia firmada; los reportes coincidentes finalizan eventos y los desacuerdos abren disputas acotadas."
+            "La prima mensual de 30 USDC es principal protegido para la promesa base. La economía del protocolo viene de estrategias de yield permitidas y se contabiliza aparte."
         },
         {
-          title: "Reclamos instantáneos",
+          title: "Fórmula de beneficiarios",
           description:
-            "Una vez confirmado el evento, los pagos se liquidan al instante y las disputas siguen rutinas publicadas."
+            "Antes de 12 meses pagos no hay pago de póliza. Desde el mes 12 hasta madurez, los beneficiarios verificados reciben 80% de primas pagadas."
         },
         {
-          title: "Economía RSK",
+          title: "Renta programada",
           description:
-            "Proveedores de liquidez, operadores de datos y usuarios se alinean mediante staking, fees y retiro deflacionario del token."
+            "Después de 30 años, 100% del principal programado se convierte en retiros fijos durante 10 años."
         },
         {
-          title: "Acceso verificado en World Chain",
+          title: "Acceso verificado",
           description:
-            "Los usuarios prueban que son humanos únicos mediante la verificación en World Chain, manteniendo la apertura del sistema y frenando el abuso sibila."
+            "World Chain limita abuso por pólizas duplicadas mientras mantiene un onboarding nativo con wallet."
         }
       ]
     },
-    contracts: {
-      title: "Contratos desplegados",
+    retirementProduct: {
+      badge: "Contrato Riska 30",
+      title: "Una póliza de vida que se transforma en renta después de 30 años.",
       subtitle:
-        "Los módulos on-chain de Riska viven en World Chain. Edita lib/contracts.ts y la lista se actualiza al instante.",
+        "Riska 30 mantiene la promesa explícita: 30 USDC por mes, espera de 12 meses, 80% a beneficiarios antes de madurez y 100% del principal al titular al madurar.",
+      timelineTitle: "Ciclo de vida de la póliza",
+      timeline: [
+        {
+          label: "Años 0-30",
+          description: "El titular paga 30 USDC por mes. El principal se acumula hacia la promesa de madurez a 30 años."
+        },
+        {
+          label: "Si ocurre fallecimiento",
+          description: "Después de 12 meses pagos, un reclamo de fallecimiento verificado paga a beneficiarios 80% de primas pagadas antes de madurez."
+        },
+        {
+          label: "Año 30",
+          description: "La póliza madura por tiempo. No se requiere un oráculo de fallecimiento para habilitar la fase de renta."
+        },
+        {
+          label: "Después de madurar",
+          description: "El titular cobra 100% del principal programado en 10 años; fallecimiento verificado deriva 90% del saldo restante a beneficiarios."
+        }
+      ],
+      economicsTitle: "Economía de la póliza",
+      economics: [
+        {
+          label: "Principal protegido",
+          value: "30 USDC/mes",
+          description: "La base usada para fórmulas de beneficiarios y pago de madurez."
+        },
+        {
+          label: "Estrategia de yield",
+          value: "Ingreso del protocolo",
+          description: "Los fondos pueden prestarse en protocolos permitidos para generar yield destinado a reservas y operación."
+        },
+        {
+          label: "Gobernanza RISKA",
+          value: "100.000 supply",
+          description: "El token sin decimales empieza centralizado y transferible, con camino futuro de descentralización."
+        }
+      ],
+      contractNote:
+        "Los contratos productivos deben reescribirse alrededor de World ID, KYC, múltiples beneficiarios, contabilidad de yield, gobernanza upgradeable y la fórmula final de pagos."
+    },
+    contracts: {
+      title: "Contratos del protocolo",
+      subtitle:
+        "Los módulos on-chain de Riska apuntan a World Chain. Los contratos borrador pueden mostrarse antes del despliegue; los módulos desplegados incluyen enlaces al explorador.",
       addressLabel: "Dirección del contrato",
+      pendingLabel: "Despliegue pendiente",
       explorerLabel: "Ver en el explorador",
       docsLabel: "Documentación",
       items: [
+        {
+          id: "thirtyYearPolicy",
+          name: "RiskaThirtyYearPolicy",
+          description:
+            "Ciclo de vida MVP para aportes a 30 años, pago por fallecimiento, activación por madurez y renta programada."
+        },
         {
           id: "policyManager",
           name: "PolicyManager",
@@ -752,10 +1160,10 @@ export const dictionaries: Record<Language, Dictionary> = {
             "Emite NFTs de cobertura, gestiona el ciclo de vida de las pólizas y expone controles de suscripción."
         },
         {
-          id: "claimsBridge",
-          name: "ClaimsBridge",
+          id: "deathVerifier",
+          name: "DeathVerifier",
           description:
-            "Recibe atestaciones de oráculos, valida reportes y envía reclamos aprobados al vault."
+            "Recibe reportes verificados de fallecimiento, guarda hashes de evidencia y autoriza pagos a beneficiarios."
         },
         {
           id: "premiumVault",
@@ -765,11 +1173,188 @@ export const dictionaries: Record<Language, Dictionary> = {
         }
       ]
     },
+    contractDetail: {
+      backLabel: "Volver a contratos",
+      eyebrow: "Documentación del contrato",
+      addressLabel: "Dirección del contrato",
+      pendingAddressLabel: "Despliegue pendiente",
+      networkLabel: "Red",
+      statusLabel: "Estado",
+      explorerLabel: "Ver en el explorador",
+      responsibilitiesTitle: "Responsabilidades",
+      interfaceTitle: "Mapa de interfaz",
+      safeguardsTitle: "Controles de riesgo",
+      sourceTitle: "Código del contrato",
+      sourceIncludedLabel: "Código incluido en este sitio",
+      sourcePendingLabel: "Importación de código pendiente"
+    },
+    contractDocs: {
+      thirtyYearPolicy: {
+        title: "RiskaThirtyYearPolicy",
+        summary:
+          "El contrato MVP para Riska 30: una póliza de aportes a 30 años que protege beneficiarios antes de la madurez y paga al titular con retiros programados después de madurar.",
+        status: "Contrato borrador, pendiente de reescritura productiva, auditoría y despliegue.",
+        responsibilities: [
+          "Crear planes con prima, beneficio por fallecimiento, porcentajes de asignación, meses de pago y hash de términos.",
+          "Abrir pólizas con titular, beneficiario, fecha de madurez, fecha cubierta y saldo de retiro.",
+          "Cobrar primas y separar saldo de retiro, reserva de riesgo y fees del protocolo.",
+          "Liquidar reclamos de fallecimiento verificados antes de madurar y activar pagos programados al madurar."
+        ],
+        interfaceItems: [
+          {
+            name: "createPlan",
+            description: "Crea un plan de póliza con economía publicada y hash de los términos electrónicos."
+          },
+          {
+            name: "openPolicy",
+            description: "Inicia una póliza, registra beneficiario y cobra la primera prima."
+          },
+          {
+            name: "payPremium",
+            description: "Extiende la cobertura por uno o más períodos de pago y actualiza el saldo de retiro."
+          },
+          {
+            name: "reportDeath",
+            description: "Permite que el verificador aprobado envíe un hash de evidencia y liquide el pago al beneficiario."
+          },
+          {
+            name: "activateRetirement",
+            description: "Convierte una póliza madura en retiros programados para el titular."
+          },
+          {
+            name: "claimRetirementPayout",
+            description: "Libera el siguiente pago programado y cierra la póliza cuando se agota el saldo."
+          }
+        ],
+        safeguards: [
+          "Un guard de no reentrada cubre cobro de primas, reclamos, fondeo de reserva, retiros de fees y pagos.",
+          "Los beneficios por fallecimiento solo se liquidan si la liquidez de riesgo cubre el beneficio configurado.",
+          "Los saldos de retiro se registran como pasivos del protocolo y se separan del balance de fees.",
+          "Los términos del plan quedan anclados con un hash para auditar la versión legal aceptada."
+        ],
+        sourceNote:
+          "El código de abajo es la implementación MVP incluida en este repositorio. Debe auditarse antes de uso productivo."
+      },
+      policyManager: {
+        title: "PolicyManager",
+        summary:
+          "El módulo de registro y emisión de pólizas desplegadas. En Riska 30, es donde una póliza electrónica firmada se convierte en una referencia on-chain.",
+        status: "Módulo desplegado. La documentación Riska 30 describe el rol objetivo mientras importamos el código fuente.",
+        responsibilities: [
+          "Vincular titular, beneficiario, plan y hash de términos a un registro on-chain duradero.",
+          "Exponer el estado de ciclo de vida para que la app muestre si la cobertura está activa, en gracia, madura o cerrada.",
+          "Coordinar con el vault y los módulos de verificación cuando un reclamo o madurez cambia el estado.",
+          "Mantener metadata de pólizas accesible para wallets, exploradores e integraciones."
+        ],
+        interfaceItems: [
+          {
+            name: "Emisión de póliza",
+            description: "Crea el registro de cobertura después de que el usuario acepta el contrato electrónico y paga la prima requerida."
+          },
+          {
+            name: "Registro de beneficiario",
+            description: "Guarda o referencia el beneficiario elegido por el titular al crear la póliza."
+          },
+          {
+            name: "Estado de ciclo de vida",
+            description: "Publica el estado actual de la póliza para la web, exploradores e integraciones."
+          },
+          {
+            name: "Referencia de términos",
+            description: "Vincula la póliza al hash exacto del documento legal aceptado por el titular."
+          }
+        ],
+        safeguards: [
+          "La emisión debe estar limitada por reglas de suscripción, identidad verificada y capacidad del pool.",
+          "Los cambios de ciclo de vida deben emitir eventos para auditoría pública.",
+          "Los registros no deben guardar evidencia sensible directamente on-chain.",
+          "Los permisos administrativos deben migrar a timelocks o gobernanza antes de escalar."
+        ],
+        sourceNote:
+          "La dirección desplegada figura en esta página. El ABI verificado y el código fuente deberían importarse aquí cuando se finalice el set de contratos Riska 30."
+      },
+      deathVerifier: {
+        title: "DeathVerifier",
+        summary:
+          "El módulo de verificación que recibe reportes de fallecimiento, registra hashes de evidencia y autoriza pagos a beneficiarios bajo las reglas de la póliza.",
+        status: "Módulo desplegado. Esta página documenta el rol de verificación y el comportamiento objetivo para Riska 30.",
+        responsibilities: [
+          "Recibir reportes de fallecimiento sin almacenar documentos privados directamente on-chain.",
+          "Registrar el hash o referencia de la evidencia off-chain usada por el verificador.",
+          "Autorizar la liquidación del reclamo solo después del proceso de verificación.",
+          "Dejar una traza auditable para beneficiarios, gobernanza y futuras ventanas de disputa."
+        ],
+        interfaceItems: [
+          {
+            name: "Referencia de evidencia",
+            description: "Guarda una referencia criptográfica a los documentos o atestaciones usados en la verificación."
+          },
+          {
+            name: "Autorización de verificador",
+            description: "Restringe la autorización de liquidación a reporteros aprobados en el MVP."
+          },
+          {
+            name: "Señal de reclamo",
+            description: "Notifica al módulo de póliza que puede ejecutarse el pago al beneficiario."
+          },
+          {
+            name: "Camino de disputa",
+            description: "Permite evolucionar hacia quórum, reporteros con stake y ventanas de disputa."
+          }
+        ],
+        safeguards: [
+          "Documentos médicos, civiles o de identidad deben permanecer off-chain.",
+          "Los cambios de verificador deben pasar por gobernanza y emitir eventos.",
+          "Los reclamos grandes deben soportar múltiples reporteros y demora antes de liquidación final.",
+          "Las referencias de evidencia deben ser inmutables después de liquidar."
+        ],
+        sourceNote:
+          "La dirección desplegada figura en esta página. El código fuente verificado debe importarse antes de presentarlo como documentación productiva auditada."
+      },
+      premiumVault: {
+        title: "PremiumVault",
+        summary:
+          "El módulo de liquidez y contabilidad para primas, reservas, pasivos, fees y pagos. Esta es la página que reemplaza el enlace externo roto de premium-vault.",
+        status: "Módulo desplegado. La documentación objetivo de Riska 30 ahora vive internamente en /contracts/premium-vault.",
+        responsibilities: [
+          "Recibir flujos de primas desde los contratos de póliza y contabilizar a dónde pertenece cada unidad de capital.",
+          "Separar pasivos de retiro de la liquidez de riesgo usada para beneficios por fallecimiento.",
+          "Liberar pagos aprobados a beneficiarios, retiros por madurez y retiros permitidos de fees.",
+          "Exponer datos de reservas y pasivos para que la web muestre solvencia y capacidad de pago."
+        ],
+        interfaceItems: [
+          {
+            name: "Ingreso de primas",
+            description: "Recibe fondos desde flujos de póliza y los atribuye a saldo de retiro, reserva de riesgo y fees."
+          },
+          {
+            name: "Contabilidad de reservas",
+            description: "Rastrea el capital que respalda beneficios por fallecimiento separado de los pasivos de retiro."
+          },
+          {
+            name: "Liberación de pagos",
+            description: "Transfiere fondos solo cuando el módulo de póliza o verificador autorizó un reclamo o retiro programado."
+          },
+          {
+            name: "Retiro de fees",
+            description: "Permite retirar fees del protocolo únicamente desde el balance contable de fees."
+          }
+        ],
+        safeguards: [
+          "Los pasivos de retiro no deben tratarse como capital libre de riesgo.",
+          "Los pagos por fallecimiento deben fallar si la liquidez de riesgo no alcanza.",
+          "Los retiros de tesorería nunca deben tocar saldos de retiro de usuarios.",
+          "Las operaciones del vault deben emitir eventos por prima recibida, fondeo de reserva, pago y retiro de fees."
+        ],
+        sourceNote:
+          "La dirección desplegada aparece aquí con enlace al explorador. El archivo fuente todavía no está incluido en este repositorio, así que esta página documenta el comportamiento contable objetivo de Riska 30 hasta importar el código verificado."
+      }
+    },
     docsPage: {
       metadata: {
         title: "Documentación del protocolo Riska",
         description:
-          "Consulta direcciones de contratos, puntos de integración y enlaces a la documentación oficial de Riska."
+          "Consulta direcciones de contratos, documentación interna y puntos de integración de Riska."
       },
       hero: {
         badge: "Documentación",
@@ -777,7 +1362,7 @@ export const dictionaries: Record<Language, Dictionary> = {
         description:
           "Explora direcciones de contratos, recursos de integración y referencias para socios en World Chain.",
         primaryCta: "Ver direcciones de contratos",
-        secondaryCta: "Abrir documentación completa"
+        secondaryCta: "Abrir libro blanco"
       }
     },
     techStack: {
@@ -795,30 +1380,36 @@ export const dictionaries: Record<Language, Dictionary> = {
         },
         {
           title: "Auditabilidad",
-          description: "Cada decisión de reclamo—aceptar, negar, disputar—se registra para revisión pública y gobernanza."
+          description: "Cada reporte de fallecimiento, activación de madurez y evento de pago se registra para revisión pública y gobernanza."
         },
         {
           title: "Gobernanza",
-          description: "Los tenedores de RSK proponen cambios de parámetros con quórums transparentes, ventanas de disputa y ajustes de fees."
+          description: "La gobernanza RISKA empieza centralizada y luego puede expandirse con distribución transparente a partners y comunidad."
         }
       ]
     },
     callToAction: {
-      title: "Lee el whitepaper",
+      title: "Descarga el white paper de Riska 30",
       subtitle:
-        "Explora cómo los pools de capital de vida, las pruebas de oráculos y el modelo de incentivos RSK brindan protección familiar confiable y auditable.",
-      primary: "Abrir whitepaper",
+        "Preparado para evaluación de grants: tesis del producto, alineación con World Chain, ciclo de póliza, contrato, roadmap y riesgos.",
+      primary: "Abrir white paper",
       secondary: "Contactar a Fundación Riska"
     },
     footer: {
-      note: "© {year} riska.world · Seguros de vida peer-to-peer con datos verificables.",
+      note: "© {year} riska.world · Protección de vida con renta programada a 30 años.",
       worldChain: "World Chain",
       email: "hey@riska.world"
     },
     walletAuth: {
-      heading: "Consola de pólizas",
+      heading: "Consola Riska 30",
       description:
-        "Conecta una wallet para revisar pólizas de vida, monitorear eventos vitales confirmados por oráculos y seguir asentamientos deterministas en tiempo real.",
+        "Inicia sesión desde World App para revisar estado de póliza a 30 años, beneficiarios, historial de primas, fecha de madurez y estado de renta programada.",
+      miniApp: {
+        label: "Puente Mini App",
+        checking: "Detectando contexto de World App…",
+        installed: "World App detectada. Wallet Auth se verificará en el backend de Riska.",
+        browserFallback: "Modo navegador activo. Usa la wallet web como fallback para revisión local."
+      },
       statusLabel: "Estado",
       status: {
         connected: (address: string) => `Sesión conectada: ${address}`,
@@ -826,60 +1417,96 @@ export const dictionaries: Record<Language, Dictionary> = {
         disconnected: "No conectado"
       },
       chainId: (chainId: number) => `Chain ID: ${chainId}`,
+      mode: {
+        "world-app": "World App",
+        browser: "Wallet navegador"
+      },
       actions: {
-        connect: "Conectar wallet",
+        connectWorldApp: "Entrar con World App",
+        connectBrowser: "Conectar wallet web",
         connecting: "Conectando…",
         disconnect: "Desconectar"
       },
       messages: {
-        welcome: "Bienvenido a Riska: seguros de vida peer-to-peer reforzados por reglas transparentes.",
-        disconnected: "Sesión cerrada. Vuelve a conectar para gestionar pólizas de vida y reclamos de beneficiarios.",
-        error: "No se pudo conectar la wallet."
+        welcome: "Bienvenido a Riska 30. Wallet Auth fue completado y la sesión queda lista para el siguiente paso de onboarding.",
+        disconnected: "Sesión cerrada. Vuelve a conectar para gestionar pólizas, beneficiarios y pagos por madurez.",
+        error: "No se pudo conectar la wallet.",
+        nonceError: "No se pudo preparar el nonce de Wallet Auth.",
+        verifyError: "No se pudo verificar la firma de Wallet Auth.",
+        worldAppRequired: "Abre Riska dentro de World App para usar Wallet Auth de Mini App."
       }
+    },
+    worldIdGate: {
+      heading: "Un humano, una póliza",
+      description:
+        "Verifica Proof of Human con IDKit antes de activar una póliza. Riska guarda el nullifier de World ID en backend para que el mismo humano verificado no pueda reservar una segunda póliza.",
+      statusLabel: "Gate World ID",
+      statuses: {
+        locked: "Primero conecta una wallet para atar la prueba a esa dirección.",
+        ready: "Listo para pedir una prueba World ID para esta wallet.",
+        loading: "Preparando una solicitud World ID firmada…",
+        verified: "Humano único verificado. Esta wallet puede seguir a KYC y beneficiarios.",
+        error: "La verificación World ID necesita atención.",
+        notConfigured: "Falta configurar la app de World ID."
+      },
+      action: "Verificar humano",
+      actionLoading: "Preparando prueba…",
+      walletRequired: "Conecta Wallet Auth antes de pedir World ID.",
+      configMissing: "Configura NEXT_PUBLIC_WORLD_APP_ID antes de abrir IDKit.",
+      signatureError: "No se pudo crear la solicitud RP firmada.",
+      verifyError: "No se pudo verificar la prueba de World ID.",
+      duplicateError: "Este humano verificado ya está reservado para una póliza Riska.",
+      errorPrefix: "Error IDKit:",
+      signalLabel: (signal: string) => `Signal: ${signal}`,
+      proofLabel: (proofId: string) => `Nullifier reservado: ${proofId}`
     },
     whitepaper: {
       metadata: {
-        title: "Libro blanco de Riska — Un sistema de seguros de vida peer-to-peer",
+        title: "Libro blanco de Riska - Protección de vida con renta programada a 30 años",
         description:
-          "Explora cómo riska.world ofrece cobertura de vida transparente y automatizada con pools de capital peer-to-peer, eventos verificados por oráculos y la economía del token RSK."
+          "Explora cómo riska.world combina protección de vida, acumulación de primas, reclamos verificados por fallecimiento y pagos programados después de una madurez de 30 años."
       },
       header: {
         badge: "Fundación Riska",
-        title: "Riska: Un sistema de seguros de vida peer-to-peer",
+        title: "Riska: Protección de vida con renta programada a 30 años",
         date: "Noviembre 2025"
+      },
+      download: {
+        label: "Descargar white paper v2",
+        note: "Preparado para evaluación de grants en World Chain: tesis de Riska 30, ciclo contractual, hitos y alcance de riesgos."
       },
       abstract: {
         title: "Resumen",
         paragraphs: [
-          "Presentamos un protocolo de seguros de vida peer-to-peer en el que los riesgos familiares—fallecimiento prematuro, enfermedad terminal, interrupción de ingresos y gastos funerarios—se cubren con reglas públicas y datos verificables en lugar de procesos discrecionales. Las pólizas, primas y pagos a beneficiarios se gestionan con contratos transparentes; los eventos vitales se confirman con reportes independientes. Un token nativo (RSK) alinea incentivos entre familias, proveedores de liquidez y operadores de datos mediante un diseño deflacionario de comisiones, staking para la honestidad de los oráculos y gobernanza on-chain. El objetivo es simple: hacer que la protección de vida sea confiable, auditable y accesible globalmente.",
-          "Riska se integra con World Chain para anclar la participación a cuentas verificadas como humanas. La prueba de humanidad de World Chain aporta resistencia a sibilas, permite que los pools valoren el riesgo de vida sabiendo que cada titular es único y ofrece a los reguladores una superficie de cumplimiento familiar mientras mantiene los datos biométricos fuera de la cadena."
+          "Presentamos un contrato de protección de vida a 30 años con prima fija de 30 USDC mensuales. Si hay fallecimiento verificado después de la espera de 12 meses y antes de madurez, los beneficiarios cobran 80% de las primas pagadas. Si el titular completa el plazo, cobra 100% del principal programado mediante retiros durante 10 años.",
+          "Riska se integra con World Chain para anclar la participación a cuentas verificadas como humanas. La prueba de humanidad ayuda a frenar abuso por pólizas duplicadas sin guardar datos biométricos en el protocolo. Producción suma KYC con pasaporte y FaceID/liveness. Los reclamos por fallecimiento requieren reportero, verificación del Riska Team, hashes de evidencia y ventana de disputa."
         ]
       },
       introduction: {
         title: "1. Introducción",
         paragraphs: [
-          "El seguro de vida funciona cuando es sencillo comprarlo y confiable al momento de liquidar. Los sistemas heredados dependen de pasos opacos y aprobación discrecional. Riska elimina esos cuellos de botella al expresar la cobertura como código y la verdad de los eventos como datos verificables. Cualquiera puede leer las reglas y auditar las liquidaciones. Esto refleja la filosofía del dinero electrónico: reemplazar la discreción institucional por mecánicas transparentes y predecibles.",
-          "World Chain extiende esa filosofía a la identidad. Al autenticarse con una credencial verificada de World Chain, cada participante demuestra que es un humano único sin entregar datos personales al protocolo. Los pools pueden abrir el onboarding global, reducir el fraude y enfocar el capital de suscripción en hogares genuinos en lugar de bots."
+          "Riska se enfoca en un solo producto: una póliza de vida que se convierte en renta programada después de 30 años. Los productos tradicionales de vida y retiro suelen ser opacos en fees, reservas, valor de rescate y mecánica de pagos. Riska hace inspeccionables el estado de la póliza, historial de pagos, fecha de madurez y reglas de renta.",
+          "El contrato no intenta ser un sistema jubilatorio completo en el lanzamiento. Implementa un producto acotado: pagar una fórmula publicada a beneficiarios antes de madurez y devolver el principal programado al titular después de madurar. Las estrategias de yield pueden financiar la economía del protocolo, pero deben separarse de la promesa base de principal."
         ],
         goalsTitle: "Objetivos de diseño",
         goals: [
-          "Participación abierta en capital y cobertura.",
-          "Ejecución determinista de los términos de la póliza.",
-          "Verificación objetiva de los eventos.",
-          "Incentivos y gobernanza claros.",
-          "Superficie mínima para el abuso."
+          "Hacer explícitos el plazo de 30 años, la madurez y el calendario de pagos.",
+          "Separar principal protegido, reservas de yield, tesorería y obligaciones a beneficiarios.",
+          "Pagar a beneficiarios bajo la espera de 12 meses y fórmula de 80% cuando se verifica fallecimiento antes de madurez.",
+          "Pagar al titular 100% del principal programado mediante retiros después de madurar.",
+          "Versionar términos legales mediante hashes de documentos."
         ]
       },
       systemOverview: {
         title: "2. Visión general del sistema",
         paragraphs: [
-          "Los participantes interactúan mediante pools públicos de vida. Un pool mantiene capital y publica qué cubre y cómo calcula los pagos a beneficiarios. Una póliza especifica la suma asegurada S (monto pagado cuando se activa), la ventana de cobertura T (período de vigencia) y el disparador θ (una condición definida por datos).",
-          "El acceso se ancla a usuarios verificados en World Chain. Cada titular firma transacciones con una credencial de prueba de humanidad, lo que brinda a los pools confianza en que los incentivos llegan a humanos únicos mientras se preserva la seudonimia on-chain.",
-          "Los ejemplos incluyen vida a término (aviso de defunción del registro civil), protección hipotecaria (certificación notarial más registro de defunción), gastos funerarios (constancia hospitalaria) y enfermedades críticas (diagnóstico de especialistas atestiguado por redes médicas)."
+          "Los participantes interactúan con un contrato de póliza a 30 años. Un plan define prima mensual de 30 USDC, espera de 12 meses, fórmula de pago a beneficiarios, duración de pagos, reglas de revisión por inactividad y hash del documento legal.",
+          "Antes de madurar, la póliza está activa mientras las primas estén al día o dentro del período de gracia. Si el titular fallece después de 12 meses pagos y el fallecimiento se verifica, los beneficiarios reciben 80% de las primas pagadas.",
+          "Al madurar, la póliza se convierte en renta programada. El titular activa pagos de retiro y el contrato libera 100% del principal programado en 120 retiros mensuales. Si hay fallecimiento verificado después de madurar, los beneficiarios reciben 90% del saldo maduro o restante."
         ],
         everydayIntuition: {
           title: "Intuición cotidiana",
-          body: "Una póliza de vida es una promesa con una regla clara. Cuando se verifica el evento, paga. Todos pueden ver la regla y revisar cómo se aplica."
+          body: "Riska 30 es una promesa con resultados publicados: después de la espera tu familia tiene una fórmula de pago, y si completas 30 años cobras el principal programado."
         }
       },
       userLifecycle: {
@@ -887,94 +1514,95 @@ export const dictionaries: Record<Language, Dictionary> = {
         steps: [
           {
             label: "Verifica identidad.",
-            description: "Autentícate con World Chain para confirmar que eres un humano único antes de interactuar con los pools."
+            description: "Autentícate con World ID y completa KYC antes de activar una póliza con dinero real."
           },
           {
-            label: "Selecciona producto.",
-            description: "Elige vida a término, protección de ingresos, cancelación de hipoteca o cobertura de gastos finales con términos publicados."
+            label: "Acepta términos de póliza.",
+            description: "Revisa prima, espera, fórmula de beneficiarios, fecha de madurez, duración de pagos, beneficiarios y hash de términos."
           },
-          { label: "Paga la prima.", description: "El contrato emite una póliza con marca de tiempo para la ventana T." },
-          { label: "Monitoreo de datos.", description: "Los oráculos vigilan el disparador θ." },
-          { label: "Liquidación.", description: "Si θ se confirma dentro de T, el pago se ejecuta automáticamente." }
+          { label: "Paga la prima.", description: "El contrato abre la póliza y contabiliza el pago mensual USDC como principal protegido." },
+          { label: "Mantén cobertura.", description: "Los pagos programados mantienen activa la póliza durante el plazo de aporte de 30 años." },
+          { label: "Cobra resultado.", description: "Los beneficiarios cobran bajo la fórmula publicada tras fallecimiento verificado, o el titular cobra 100% del principal después de madurar." }
         ],
         examples: {
           title: "Ejemplos concretos",
           items: [
             {
-              label: "Vida a término:",
-              description: "Alicia contrata $250 mil. Cuando el registro civil publica una defunción verificada dentro de T, los oráculos la certifican y la póliza paga a sus beneficiarios."
+              label: "Antes de madurar:",
+              description: "Alicia paga primas durante 12 años y fallece con cobertura. Un verificador confirma el evento y sus beneficiarios reciben 80% de las primas pagadas."
             },
             {
-              label: "Protección hipotecaria:",
-              description: "Un acreedor recibe fondos cuando un notario confirma el saldo pendiente y se verifica el registro de defunción vinculado."
+              label: "Al madurar:",
+              description: "Bruno completa 30 años de pagos. La póliza madura y activa 120 pagos mensuales de 90 USDC."
             },
             {
-              label: "Gastos funerarios:",
-              description: "Una wallet familiar recibe un estipendio fijo cuando se confirma la constancia hospitalaria de fallecimiento."
+              label: "Durante el cobro:",
+              description: "Carla empieza a recibir pagos de retiro. Si fallece antes de distribuir todo el saldo, 90% del saldo restante puede ir a sus beneficiarios después de verificación."
             },
             {
-              label: "Protección de ingresos:",
-              description: "Si una red médica certifica una enfermedad crítica que cumple los criterios publicados, los beneficios mensuales se envían a la wallet beneficiaria."
+              label: "Pagos omitidos:",
+              description: "Si un titular omite pagos durante 12 meses, la póliza puede entrar en revisión por inactividad. La inactividad sola no prueba fallecimiento ni autoriza pagos."
             }
           ]
         }
       },
       capital: {
-        title: "4. Capital y solvencia",
+        title: "4. Principal, yield y solvencia",
         paragraphs: [
-          "Los pools deben permanecer solventes incluso en meses desfavorables. Las primas deben reflejar los pagos esperados más un colchón. La pérdida esperada de una póliza equivale a la probabilidad de reclamo multiplicada por el monto a pagar, E[Li] = qiSi. En N pólizas, μ = Σ qiSi. Las primas totales deben cubrir esta expectativa en el tiempo.",
-          "Las primas incluyen pérdida esperada más margen de riesgo ρi y costos operativos κi: πi = qiSi + ρi + κi. Los pools también mantienen un buffer de solvencia para que el capital P cumpla P ≥ μ + z1−ασ, manteniendo la probabilidad de insolvencia por debajo de α."
+          "Cada prima de 30 USDC es principal protegido para la promesa base de la póliza. El ingreso del protocolo debería venir del spread de yield, subsidio de tesorería, subsidio de sponsors o fees externos explícitos, no de reducir el principal protegido.",
+          "Las estrategias con yield agregan riesgo y requieren contabilidad separada. El sistema debe exponer pasivos de principal protegido, tesorería, reservas de yield, exposición por estrategia, liquidez disponible y obligaciones a beneficiarios."
         ],
         example: {
-          title: "Mini ejemplo ilustrativo",
-          body: "Un pool de vida a término paga 100.000 dólares con q = 0,2 %. El pago esperado por póliza es 200 dólares. Si fees y margen suman 40 dólares, la prima es 240 dólares. Vender 10.000 pólizas implica pagos esperados de 2 millones; el capital y los buffers absorben picos de mortalidad infrecuentes."
+          title: "Ejemplo base",
+          body: "Un titular que paga 30 USDC durante 360 meses aporta 10.800 USDC. Al madurar, cobra 10.800 USDC en 120 pagos, o 90 USDC por mes."
         }
       },
       eventVerification: {
-        title: "5. Verificación de eventos",
+        title: "5. Verificación de fallecimiento",
         paragraphs: [
-          "Los datos confiables son esenciales en seguros de vida paramétricos. Los oráculos envían reportes firmados con tipo de evento e, timestamp t y hash de evidencia h—certificados de defunción, registros civiles o constancias médicas. El contrato espera una ventana corta Δ para múltiples reportes; si un quórum coincide, el evento se confirma. Los conflictos abren una disputa acotada."
+          "Los datos confiables son esenciales para la protección de beneficiarios. Un período de 12 meses sin pago de primas o sin reclamar pagos puede disparar revisión por inactividad, pero la inactividad sola no prueba fallecimiento. Un reportero debe enviar el aviso, Riska Team debe verificarlo, y el sistema debe registrar hash de evidencia y ventana de disputa antes de liquidar."
         ],
         plainLanguage: {
           title: "Vista en lenguaje sencillo",
-          body: "Varios observadores independientes confirman el mismo evento de vida. Cuando concuerdan, el reclamo se paga a los beneficiarios. Cuando discrepan, el sistema se pausa brevemente y lo resuelve siguiendo reglas publicadas."
+          body: "El contrato no decide por sí mismo si una persona falleció. Registra reportes verificados y aplica la fórmula de pago publicada."
         }
       },
       claims: {
-        title: "6. Reclamos y disputas",
+        title: "6. Madurez y pagos",
         paragraphs: [
-          "Una vez verificados, los pagos se ejecutan de inmediato. Si los oráculos discrepan, una ventana de disputa permite re-reportar. Los proveedores de datos que informan mal arriesgan los bonos que pusieron en stake. Todas las decisiones de reclamos quedan registradas on-chain para auditoría."
+          "La madurez es determinista: después de 30 años, la póliza puede activarse para pagos programados. El titular cobra 100% del principal programado durante 10 años en lugar de una renta vitalicia.",
+          "Si hay fallecimiento verificado después de madurar pero antes de activar, o durante la etapa de cobro, los beneficiarios reciben 90% del saldo maduro o restante."
         ]
       },
       incentives: {
-        title: "7. Incentivos económicos y flujo de capital (RSK)",
-        intro: "El token RSK alinea incentivos entre proveedores de liquidez, operadores de datos y familias.",
+        title: "7. Incentivos económicos y flujo de capital (RISKA)",
+        intro: "El token RISKA empieza como gobernanza centralizada para parámetros del protocolo, distribución empresarial y futura descentralización.",
         points: [
           {
-            label: "Proveedores de liquidez:",
-            description: "Aportan capital a los pools y ganan primas mientras las reglas de solvencia y los límites de capacidad protegen su posición."
+            label: "Fundación Riska:",
+            description: "Controla inicialmente los 100.000 tokens y usa la gobernanza para gestionar parámetros, upgrades y acceso de partners."
           },
           {
-            label: "Operadores de datos:",
-            description: "Hacen staking de RSK como bono. Reportar con honestidad genera fees; la mala conducta puede ser castigada."
+            label: "Verificadores:",
+            description: "Riska Team verifica reportes de fallecimiento al inicio; luego los conjuntos de verificadores pueden expandirse y respaldarse con bonos mediante gobernanza."
           },
           {
-            label: "Familias:",
-            description: "Pagan primas de vida publicadas y reciben pagos automáticos a beneficiarios cuando se verifican los eventos."
+            label: "Titulares y familias:",
+            description: "Aportan hacia renta futura mientras mantienen protección de beneficiarios antes de la madurez."
           }
         ],
         feeParagraph:
-          "Una parte de las comisiones del protocolo compra y retira RSK con el tiempo, vinculando el uso con una oferta decreciente. Si las comisiones totales de un período son F y la fracción β se destina al retiro, el monto retirado es Δretire = βF / P, donde P es el precio de RSK al liquidar. La oferta circulante se actualiza como St+1 = St − Δretire.",
+          "RISKA tiene oferta fija de 100.000 tokens, 0 decimales y transferibilidad desde el día 1. La economía del protocolo se espera desde estrategias de yield, subsidio de tesorería, subsidio de sponsors o fees explícitos, no desde reducir el principal protegido de los titulares.",
         example: {
-          title: "Ejemplo práctico",
-          body: "Si un pool procesa 1.000.000 de dólares en primas con un fee del protocolo de 1% (F = 10.000 dólares) y β = 0,5, entonces 5.000 dólares compran y retiran RSK. Con P = 2 dólares, se retiran alrededor de 2.500 RSK en ese período."
+          title: "Postura de gobernanza",
+          body: "Como el owner/fundación controla todo RISKA al inicio, la gobernanza empieza centralizada. El camino de descentralización debe comunicarse antes de presentar Riska como gobernada por comunidad."
         }
       },
       governance: {
-        title: "8. Calibración de riesgo y gobernanza",
+        title: "8. Riesgo de yield y gobernanza",
         paragraphs: [
-          "Los pools publican capacidad, utilización y reclamos recientes. La emisión se detiene cuando se excederían límites seguros. El margen M y el objetivo α se definen por tipo de producto, y los riesgos correlacionados reciben ajustes conservadores a ρi.",
-          "La gobernanza permite que los tenedores de RSK propongan cambios de parámetros—quórum, ventanas de disputa, fracciones de fees—y actualizaciones con retrasos temporales para que los participantes reaccionen. Todos los cambios permanecen on-chain y auditables."
+          "Los planes publican pasivos de principal, utilización, exposición por estrategia, liquidez disponible, pagos a beneficiarios y estado de reservas de yield. La emisión o el despliegue de yield debe detenerse cuando se excederían límites seguros.",
+          "La gobernanza controla verificadores, allowlists de estrategias de yield, límites, timelocks de upgrades, ruteo de fees y acciones de emergencia. Incluso centralizada, la administración debe usar multisig, timelock y eventos públicos."
         ]
       },
       security: {
@@ -982,11 +1610,11 @@ export const dictionaries: Record<Language, Dictionary> = {
         points: [
           {
             label: "Minimizar confianza:",
-            description: "Los contratos son mínimos y no contienen backdoors privilegiadas. Los oráculos son diversos y están respaldados por bonos."
+            description: "Los contratos deben minimizar acciones privilegiadas, usar controles de emergencia acotados y rutear upgrades mediante gobernanza transparente."
           },
           {
             label: "Minimización de datos:",
-            description: "Solo las referencias necesarias de pólizas y reclamos viven on-chain mientras la evidencia permanece off-chain con pruebas criptográficas."
+            description: "Solo referencias necesarias de pólizas, aprobación KYC y reportes de fallecimiento viven on-chain mientras pasaporte y FaceID quedan off-chain con pruebas criptográficas."
           },
           {
             label: "Verificación humana:",
@@ -994,16 +1622,16 @@ export const dictionaries: Record<Language, Dictionary> = {
           },
           {
             label: "Auditabilidad:",
-            description: "Cada decisión—aceptar, negar, disputar—se almacena on-chain para revisión pública."
+            description: "Cada decisión—aceptar, negar, disputar, cambiar estrategia y pagar—se almacena on-chain para revisión pública."
           }
         ]
       },
       applications: {
         title: "10. Aplicaciones prácticas",
         paragraphs: [
-          "El protocolo admite vida a término, cancelación hipotecaria, protección de ingresos y gastos funerarios. Cada producto paga cuando los datos vitales predefinidos confirman el evento habilitante, permitiendo protección familiar rápida y transparente.",
-          "Las familias eligen Riska por reglas simples, pocos pasos y resultados rápidos. Los productos revelan disparadores y fuentes de datos desde el inicio para que los compradores sepan exactamente qué está cubierto.",
-          "La verificación en World Chain permite que programas comunitarios o empleadores patrocinen coberturas sabiendo que los subsidios llegan a hogares únicos, reduciendo fugas por bots o identidades duplicadas."
+          "La primera aplicación es Riska 30: una póliza de largo plazo para personas que quieren protección familiar mientras construyen un flujo de pagos futuro.",
+          "Las familias eligen el producto porque el resultado es directo: si el titular fallece antes de madurar, los beneficiarios reciben soporte; si completa el plazo, el titular recibe renta programada.",
+          "Empleadores, sindicatos y comunidades pueden patrocinar primas para miembros verificados mientras el estado de la póliza permanece auditable."
         ]
       },
       faq: {
@@ -1011,30 +1639,30 @@ export const dictionaries: Record<Language, Dictionary> = {
         items: [
           {
             question: "¿Cómo se fijan los precios?",
-            answer: "Por pagos esperados más margen y fees: π = qS + ρ + κ. Los pools publican cada componente."
+            answer: "El plan base publica prima mensual de 30 USDC, espera de 12 meses, fórmula de 80% a beneficiarios antes de madurez, fórmula de 90% después de madurez y pago al titular durante 10 años."
           },
           {
             question: "¿Qué ocurre si fallan las fuentes de datos?",
-            answer: "Múltiples feeds y una ventana de disputa reducen el riesgo de una sola fuente. Los operadores ponen RSK en stake y pueden ser penalizados por mala conducta."
+            answer: "El MVP usa verificadores aprobados. Producción debería usar múltiples reporteros, ventanas de disputa y verificación con bonos antes de escalar."
           },
           {
             question: "¿Un pool puede quedarse sin fondos?",
-            answer: "La capacidad y los buffers se hacen cumplir con contratos. La emisión se detiene antes de una exposición insegura."
+            answer: "El principal protegido y las obligaciones a beneficiarios se registran como pasivos. La exposición de yield debe tener límites, monitoreo, retiro de emergencia y reglas de pérdida."
           },
           {
-            question: "¿Dónde importa RSK en el día a día?",
-            answer: "En el staking para la honestidad de los oráculos, el voto de gobernanza y el retiro deflacionario mediante las comisiones del protocolo."
+            question: "¿Dónde importa RISKA en el día a día?",
+            answer: "RISKA controla parámetros de gobernanza, verificadores, allowlists de estrategias, acceso de partners y el camino futuro de descentralización."
           },
           {
-            question: "¿Esto es un seguro legal?",
-            answer: "Riska ofrece protección paramétrica: disparadores claros, pagos fijos y transparencia. El cumplimiento local varía por jurisdicción y los productos pueden configurarse en consecuencia."
+            question: "¿Esto es una jubilación?",
+            answer: "El producto usa renta programada desde principal acumulado, no una renta vitalicia ni jubilación estatal. La clasificación legal depende de la jurisdicción y debe resolverse antes de venta pública."
           }
         ]
       },
       conclusion: {
         title: "12. Conclusión",
         paragraphs: [
-          "Riska reemplaza la fricción y la discreción con reglas transparentes y datos verificables de eventos de vida. Al combinar pools de capital, pruebas vitales objetivas y el modelo de incentivos RSK, el protocolo busca que la protección familiar sea confiable, auditable y de acceso abierto."
+          "Riska reemplaza promesas vagas de largo plazo con estados explícitos: aporte activo, protección de beneficiarios, madurez, renta programada y cierre. El primer producto queda acotado a propósito para poder auditar el contrato antes de expandirse a estructuras de retiro o seguro más complejas."
         ]
       },
       references: {
