@@ -277,6 +277,8 @@ const copy = {
           tokenAmount: "Token amount",
           tokenVaultNote:
             "These tokens are separate from USDC payout math. The holder can withdraw them in parts with no fee, and if death settlement happens they pass 100% to beneficiaries.",
+          tokenVaultClosed: "This policy is not active for token vault actions.",
+          tokenVaultLocked: (amount: string) => `Unlock the token vault by funding the remaining ${amount} USDC minimum.`,
           tokenVault: "Extra token vault",
           withdrawExtra: "Withdraw extra",
           withdrawExtraAmount: "Extra withdrawal amount",
@@ -442,6 +444,8 @@ const copy = {
           tokenAmount: "Monto del token",
           tokenVaultNote:
             "Estos tokens quedan separados del cálculo de pago en USDC. El titular puede retirarlos en partes sin fee y, si hay liquidación por muerte, pasan 100% a beneficiarios.",
+          tokenVaultClosed: "Esta póliza no está activa para acciones de bóveda.",
+          tokenVaultLocked: (amount: string) => `Para desbloquear la bóveda faltan ${amount} USDC del mínimo.`,
           tokenVault: "Bóveda de tokens extra",
           withdrawExtra: "Retirar extra",
           withdrawExtraAmount: "Monto de extra a retirar",
@@ -1404,6 +1408,14 @@ function PolicyControlPanel({
   const canDeposit = policy ? status === 1 : false;
   const canWithdrawExtra = policy ? canUseHolderAction && policy.remainingExtraPrincipal > 0n : false;
   const canUseTokenVault = policy ? canUseHolderAction && (minimumFunded || status === 2) : false;
+  const tokenVaultShortfall = policy && policy.remainingMinimumPrincipal < MINIMUM_POLICY_PRINCIPAL
+    ? MINIMUM_POLICY_PRINCIPAL - policy.remainingMinimumPrincipal
+    : 0n;
+  const tokenVaultMessage = policy && !canUseTokenVault
+    ? canUseHolderAction
+      ? text.tokenVaultLocked(formatUsdcAmount(tokenVaultShortfall))
+      : text.tokenVaultClosed
+    : null;
   const auxiliaryTokenOptions = getTestnetAuxiliaryTokenOptions(deployment);
   const normalizedTokenAddress = tokenAddress.trim().toLowerCase();
   const hasTokenAddress = isWalletAddress(tokenAddress);
@@ -1518,6 +1530,11 @@ function PolicyControlPanel({
               </p>
             </div>
             <p className="mt-2 text-sm leading-6 text-[#66746e]">{text.tokenVaultNote}</p>
+            {tokenVaultMessage && (
+              <p className="mt-2 border border-amber-200 bg-amber-50 px-3 py-2 text-sm leading-6 text-amber-900">
+                {tokenVaultMessage}
+              </p>
+            )}
 
             {policy.auxiliaryTokens.length > 0 && (
               <div className="mt-3 grid gap-2 md:grid-cols-2">
