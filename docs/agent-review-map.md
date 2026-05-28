@@ -55,7 +55,7 @@ Current purpose:
 - Mobile-first Riska enrollment wizard and product entry point.
 - Wallet Auth, World ID reservation, beneficiary setup, quote review, and terms/payment readiness.
 - World Chain Sepolia issuance using the active `RiskaPolicyManager`.
-- Testnet dashboard for minimum funded amount, extra principal, auxiliary token custody, partial extra withdrawal, monthly payout estimate, heartbeat, payout activation, monthly claim, claim-all, reusable policy state, beneficiary report, and beneficiary claim.
+- Testnet dashboard for minimum funded amount, extra principal, auxiliary token custody, partial extra withdrawal, monthly payout estimate, heartbeat, payout activation, monthly claim, claim-all, reusable policy state, beneficiary report, beneficiary claim, and 100% auxiliary-token beneficiary settlement.
 
 Review focus:
 
@@ -75,6 +75,7 @@ Files:
 Review focus:
 
 - Keep the markdown source and PDF synchronized.
+- Keep auxiliary-token language synchronized: custody-only after USDC minimum, no payout impact, no fee, no death-fee base, and 100% to beneficiaries on death settlement.
 - Keep legal disclaimers aligned with actual product status.
 
 ### `/docs`
@@ -148,6 +149,7 @@ Current capabilities:
 - Allows configured beneficiaries to report death after the policy is at least `12 * 30 days` old.
 - Allows death claim only after another `12 * 30 days` with no holder interaction.
 - Settles death through `RiskaPremiumVault`.
+- Settles stored auxiliary token balances 100% to beneficiaries with no protocol fee.
 
 Current limitations:
 
@@ -201,6 +203,7 @@ Current capabilities:
 - Tracks `protocolReserveBalance` from retained death fees.
 - Pays holders for monthly claims, partial extra withdrawals, auxiliary token withdrawals, and claim-all.
 - Pays beneficiaries by reading splits from `RiskaBeneficiaryRegistry`.
+- Pays auxiliary token balances 100% to beneficiaries on death settlement and keeps those balances outside protocol reserve accounting.
 
 Review focus:
 
@@ -221,6 +224,7 @@ Base model:
 - Extra principal can be withdrawn in parts with no fee while the policy is active or in payout.
 - Auxiliary non-USDC ERC20 tokens can be deposited after the USDC minimum is covered.
 - Auxiliary tokens do not count toward USDC payout math and are never fee-bearing.
+- Auxiliary token balances pass 100% to beneficiaries on death settlement by the configured beneficiary shares.
 - Holder monthly payout has no fee.
 - Holder claim-all has no fee and resets the policy to active if the holder is alive.
 - Death report can only be made by a configured beneficiary.

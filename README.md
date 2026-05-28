@@ -12,7 +12,7 @@ The product combines an electronic policy document with a smart-contract lifecyc
 - Holder payout can start once the minimum is fully funded.
 - Holder payout is `total remaining principal / 120` monthly payments, with final dust paid on the last claim.
 - Holder can withdraw extra principal in parts with no fee.
-- Holder can deposit and withdraw non-USDC ERC20 tokens after the USDC minimum is covered; these tokens do not count toward monthly payout and carry no protocol fee.
+- Holder can deposit and withdraw non-USDC ERC20 tokens after the USDC minimum is covered; these tokens do not count toward monthly payout, carry no protocol fee, and pass 100% to beneficiaries on death settlement.
 - Holder can claim all remaining principal with no fee; after a living holder empties the balance, the same policy can be funded and activated again.
 - Holder `heartbeat` proves life and cancels pending beneficiary death reports.
 - Beneficiary death claims retain 20% only from remaining minimum principal; extra principal and auxiliary ERC20 tokens go 100% to beneficiaries.
@@ -30,6 +30,10 @@ The product combines an electronic policy document with a smart-contract lifecyc
 9. If the holder does not interact for 12 months after the report, any configured beneficiary can claim.
 10. Death settlement pays 100% of stored non-USDC ERC20 tokens to beneficiaries with no protocol fee.
 11. If the holder interacts with the contract, the pending death report is cancelled.
+
+## Canonical Auxiliary Token Rule
+
+Non-USDC ERC20 tokens are custody-only policy assets. They can be deposited only after the 10,800 USDC minimum is covered, can be withdrawn in parts by the living holder with no fee, never count toward USDC monthly payout, never enter the death-fee base, and are distributed 100% to beneficiaries by the configured beneficiary shares on death settlement.
 
 ## Current Smart Contracts
 

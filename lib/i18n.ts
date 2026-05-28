@@ -76,7 +76,7 @@ const contractDocsEn = {
       { name: "activatePayout", description: "Snapshots monthly payout over 120 months once the minimum is funded." },
       { name: "claimMonthly", description: "Pays the next holder payout with no fee." },
       { name: "withdrawExtra", description: "Withdraws part of the extra principal with no fee and reschedules payout if needed." },
-      { name: "depositToken", description: "Stores a non-USDC ERC20 token after the USDC minimum is covered." },
+      { name: "depositToken", description: "Stores a non-USDC ERC20 token after the USDC minimum is covered; it stays outside payout math and passes 100% to beneficiaries on death settlement." },
       { name: "withdrawToken", description: "Withdraws part of a stored non-USDC ERC20 token with no fee." },
       { name: "claimAll", description: "Withdraws all remaining holder principal with no fee and keeps the policy reusable." },
       { name: "heartbeat", description: "Records life interaction without withdrawing money." },
@@ -131,7 +131,7 @@ const contractDocsEn = {
       { name: "collectPremium", description: "Collects USDC from a holder and increases principal liability." },
       { name: "payHolder", description: "Releases principal to the holder." },
       { name: "settleBeneficiaryPayout", description: "Releases beneficiary payout and accounts retained reserve." },
-      { name: "collectAuxiliaryToken", description: "Collects a non-USDC ERC20 token for policy custody." },
+      { name: "collectAuxiliaryToken", description: "Collects a non-USDC ERC20 token for policy custody outside payout and fee math." },
       { name: "payAuxiliaryTokenHolder", description: "Releases a stored auxiliary token back to the holder." },
       { name: "settleAuxiliaryTokenBeneficiaries", description: "Pays stored auxiliary token balances to beneficiaries with no fee." }
     ],
@@ -167,7 +167,7 @@ const contractDocsEs = {
       { name: "activatePayout", description: "Fija el pago mensual sobre 120 meses cuando el minimo esta fondeado." },
       { name: "claimMonthly", description: "Paga el siguiente mes al titular sin fee." },
       { name: "withdrawExtra", description: "Retira parte del principal extra sin fee y reprograma pagos si hace falta." },
-      { name: "depositToken", description: "Guarda un token ERC20 no-USDC despues de cubrir el minimo USDC." },
+      { name: "depositToken", description: "Guarda un token ERC20 no-USDC despues de cubrir el minimo USDC; queda fuera del calculo mensual y pasa 100% a beneficiarios en liquidacion por muerte." },
       { name: "withdrawToken", description: "Retira parte de un token ERC20 guardado sin fee." },
       { name: "claimAll", description: "Retira todo el principal restante sin fee y deja la poliza reutilizable." },
       { name: "heartbeat", description: "Registra interaccion de vida sin retirar dinero." },
@@ -222,7 +222,7 @@ const contractDocsEs = {
       { name: "collectPremium", description: "Cobra USDC y aumenta el pasivo de principal." },
       { name: "payHolder", description: "Libera principal al titular." },
       { name: "settleBeneficiaryPayout", description: "Libera pago a beneficiarios y contabiliza reserva retenida." },
-      { name: "collectAuxiliaryToken", description: "Cobra un token ERC20 no-USDC para custodia de poliza." },
+      { name: "collectAuxiliaryToken", description: "Cobra un token ERC20 no-USDC para custodia de poliza fuera del calculo de pago y fee." },
       { name: "payAuxiliaryTokenHolder", description: "Libera un token auxiliar guardado de vuelta al titular." },
       { name: "settleAuxiliaryTokenBeneficiaries", description: "Paga tokens auxiliares guardados a beneficiarios sin fee." }
     ],
@@ -344,12 +344,12 @@ export const dictionaries = {
       badge: "Riska 30 contract",
       title: "A policy account that can become programmed income.",
       subtitle:
-        "The minimum policy is 10,800 USDC. Once funded, the holder can activate 120 monthly payments, store other ERC20 tokens, withdraw extra in parts, claim all, or keep interacting with heartbeat.",
+        "The minimum policy is 10,800 USDC. Once funded, the holder can activate 120 monthly payments, store other ERC20 tokens, withdraw extra in parts, claim all, or keep interacting with heartbeat. Stored ERC20 tokens pass 100% to beneficiaries on death settlement.",
       timelineTitle: "Policy lifecycle",
       timeline: [
         { label: "Open", description: "Verify as human, configure beneficiaries, accept terms, and pay the first 30 USDC unit." },
         { label: "Fund", description: "Deposit any amount before payout activation; the minimum fills first and extra principal follows." },
-        { label: "Choose payout", description: "Activate monthly payout, custody other tokens, withdraw extra in parts, or claim all principal once the minimum is funded." },
+        { label: "Choose payout", description: "Activate monthly payout, custody other tokens, withdraw extra in parts, or claim all principal once the minimum is funded. Custodied tokens pass 100% to beneficiaries on death settlement." },
         { label: "Beneficiary notice", description: "A beneficiary report plus 12 months without holder interaction can unlock death settlement." }
       ],
       economicsTitle: "Policy economics",
@@ -555,7 +555,7 @@ export const dictionaries = {
           { label: "Verify identity.", description: "Authenticate with Wallet Auth and World ID before continuing." },
           { label: "Set beneficiaries.", description: "Choose wallets and percentages that sum to 100%." },
           { label: "Open policy.", description: "Accept terms and pay the first 30 USDC testnet unit." },
-          { label: "Fund or withdraw.", description: "Deposit before payout activation, store auxiliary tokens after the USDC minimum, then activate monthly payout, withdraw extra in parts, or claim all." },
+          { label: "Fund or withdraw.", description: "Deposit before payout activation, store auxiliary tokens after the USDC minimum, then activate monthly payout, withdraw extra in parts, or claim all. Auxiliary tokens pass 100% to beneficiaries on death settlement." },
           { label: "Heartbeat.", description: "Interact without withdrawing to cancel a pending death notice." }
         ],
         examples: {
@@ -768,12 +768,12 @@ export const dictionaries = {
       badge: "Contrato Riska 30",
       title: "Una cuenta de poliza que puede convertirse en renta programada.",
       subtitle:
-        "La poliza minima es 10,800 USDC. Cuando esta fondeada, el titular puede activar 120 pagos, guardar otros ERC20, retirar extra en partes, cobrar todo o seguir usando heartbeat.",
+        "La poliza minima es 10,800 USDC. Cuando esta fondeada, el titular puede activar 120 pagos, guardar otros ERC20, retirar extra en partes, cobrar todo o seguir usando heartbeat. Los ERC20 guardados pasan 100% a beneficiarios en liquidacion por muerte.",
       timelineTitle: "Ciclo de vida",
       timeline: [
         { label: "Abrir", description: "Verificar humanidad, configurar beneficiarios, aceptar terminos y pagar la primera unidad de 30 USDC." },
         { label: "Fondear", description: "Depositar cualquier monto antes de activar pagos; primero se llena el minimo y luego el extra." },
-        { label: "Elegir cobro", description: "Activar pagos mensuales, custodiar otros tokens, retirar extra en partes o retirar todo el principal cuando el minimo esta fondeado." },
+        { label: "Elegir cobro", description: "Activar pagos mensuales, custodiar otros tokens, retirar extra en partes o retirar todo el principal cuando el minimo esta fondeado. Los tokens custodiados pasan 100% a beneficiarios en liquidacion por muerte." },
         { label: "Aviso beneficiario", description: "Reporte de beneficiario mas 12 meses sin interaccion puede habilitar liquidacion." }
       ],
       economicsTitle: "Economia de la poliza",
@@ -963,7 +963,7 @@ export const dictionaries = {
           { label: "Verifica identidad.", description: "Autenticate con Wallet Auth y World ID antes de continuar." },
           { label: "Define beneficiarios.", description: "Elige wallets y porcentajes que suman 100%." },
           { label: "Abre poliza.", description: "Acepta terminos y paga la primera unidad testnet de 30 USDC." },
-          { label: "Fondea o retira.", description: "Deposita antes de activar pagos, guarda tokens auxiliares despues del minimo USDC; luego activa pagos, retira extra en partes o cobra todo." },
+          { label: "Fondea o retira.", description: "Deposita antes de activar pagos, guarda tokens auxiliares despues del minimo USDC; luego activa pagos, retira extra en partes o cobra todo. Los tokens auxiliares pasan 100% a beneficiarios en liquidacion por muerte." },
           { label: "Heartbeat.", description: "Interactua sin retirar para cancelar un aviso de muerte pendiente." }
         ],
         examples: {

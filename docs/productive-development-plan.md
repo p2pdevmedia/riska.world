@@ -53,13 +53,22 @@ monthlyPayout = totalPrincipal / 120
 
 The final monthly claim pays any dust left by integer division. If the holder withdraws extra principal after payout activation, the remaining balance is divided across the remaining payout months.
 
+Canonical auxiliary token rule:
+
+- Non-USDC ERC20 tokens are custody-only policy assets.
+- They can be deposited only after the 10,800 USDC minimum is covered.
+- They can be withdrawn in parts by the living holder with no fee.
+- They never count toward `remainingMinimumPrincipal`, `remainingExtraPrincipal`, `totalPrincipal`, or monthly payout.
+- They never enter the death-fee base.
+- On death settlement, every tracked auxiliary token balance is distributed 100% to beneficiaries using the configured beneficiary shares.
+
 ## 3. Holder Actions
 
 - `deposit(policyId, amount)`: deposits any USDC amount before payout activation.
 - `activatePayout(policyId)`: allowed once the minimum principal is fully funded.
 - `claimMonthly(policyId)`: pays the next monthly amount with no fee.
 - `withdrawExtra(policyId, amount)`: lets the holder withdraw part of `remainingExtraPrincipal` with no fee; during payout it reschedules the remaining monthly amount.
-- `depositToken(policyId, token, amount)`: stores a non-USDC ERC20 token after the USDC minimum is covered; the token is custody-only and does not affect payout math.
+- `depositToken(policyId, token, amount)`: stores a non-USDC ERC20 token after the USDC minimum is covered; the token is custody-only, does not affect payout math, and passes 100% to beneficiaries on death settlement.
 - `withdrawToken(policyId, token, amount)`: withdraws part of a stored non-USDC token balance with no fee.
 - `claimAll(policyId)`: pays all remaining holder principal with no fee and resets the same policy to an active zero-balance state.
 - `heartbeat(policyId)`: records holder interaction and cancels any pending death report.
@@ -103,6 +112,7 @@ Examples:
 - Upgradeability must be explicit: proxy type, upgrade admin, delay, rollback plan, and storage layout tests.
 - Non-payment or missed claims must not mark a user as dead by itself.
 - Beneficiary payout requires beneficiary report plus the 12-month no-interaction window.
+- Auxiliary token balances must remain outside the death-fee base and pass 100% to beneficiaries on death settlement.
 - Holder heartbeat must remain a simple, low-cost way to cancel a false or stale report.
 - Principal liabilities, protocol reserve, yield reserve, and treasury accounting must stay separate.
 - Yield deployment must use strict allowlists, caps per protocol, emergency withdrawal paths, loss accounting, and monitoring.
@@ -115,7 +125,7 @@ Current testnet modules:
 - `RiskaPolicyManager`: creates policies, enforces flexible lifecycle, partial extra withdrawals, auxiliary token custody, reusable living depletion, and module coordination.
 - `RiskaPolicyMath`: constants and payout math.
 - `RiskaBeneficiaryRegistry`: manages beneficiaries and percentages.
-- `RiskaPremiumVault`: holds USDC, auxiliary ERC20 tokens, and separates principal liability from protocol reserve.
+- `RiskaPremiumVault`: holds USDC and auxiliary ERC20 tokens, separates principal liability from protocol reserve, and pays auxiliary token balances 100% to beneficiaries on death settlement.
 
 Future production modules:
 
@@ -146,7 +156,7 @@ Future production modules:
 
 - Integrate World ID verification in production mode.
 - Build World App compatible onboarding and dashboard.
-- Add policy state, minimum progress, extra principal, auxiliary token custody, partial extra withdrawal, heartbeat, payout actions, reusable-policy state, and beneficiary death report state.
+- Add policy state, minimum progress, extra principal, auxiliary token custody, partial extra withdrawal, heartbeat, payout actions, reusable-policy state, beneficiary death report state, and clear 100% auxiliary-token beneficiary settlement copy.
 - Keep a clearly labeled simulation/training mode for grant reviewers and users not ready to transact.
 - Collect grant metrics: verified starts, quote completion, beneficiary completion, policy opens, dashboard return rate, and trust feedback.
 

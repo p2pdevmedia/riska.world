@@ -121,7 +121,7 @@ const copy = {
       badge: "Riska 30",
       title: "Flexible life protection for verified humans.",
       body:
-        "Riska is a World Chain USDC policy account. Any verified human can fund the 10,800 USDC minimum over time, add or withdraw extra principal, store other ERC20 tokens after the minimum, and activate programmed income when ready.",
+        "Riska is a World Chain USDC policy account. Any verified human can fund the 10,800 USDC minimum over time, add or withdraw extra principal, store other ERC20 tokens after the minimum, and pass those tokens 100% to beneficiaries on death settlement.",
       primary: "Start application",
       secondary: "Read policy rules",
       cards: [
@@ -281,7 +281,7 @@ const copy = {
       badge: "Riska 30",
       title: "Protección flexible para humanos verificados.",
       body:
-        "Riska es una cuenta de póliza USDC en World Chain. Cualquier humano verificado puede fondear el mínimo de 10,800 USDC con el tiempo, sumar o retirar principal extra, guardar otros ERC20 después del mínimo y activar renta programada cuando quiera.",
+        "Riska es una cuenta de póliza USDC en World Chain. Cualquier humano verificado puede fondear el mínimo de 10,800 USDC con el tiempo, sumar o retirar principal extra, guardar otros ERC20 después del mínimo y hacer que esos tokens pasen 100% a beneficiarios en liquidación por muerte.",
       primary: "Empezar solicitud",
       secondary: "Ver reglas",
       cards: [

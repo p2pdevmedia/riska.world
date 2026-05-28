@@ -40,7 +40,7 @@ Core product rule:
 2. Deposits fill the 10,800 USDC minimum first.
 3. Extra deposits above 10,800 USDC become extra principal.
 4. Once the minimum is funded, the holder can activate 120 monthly payments.
-5. After the USDC minimum is covered, the holder can store non-USDC ERC20 tokens as auxiliary token custody.
+5. After the USDC minimum is covered, the holder can store non-USDC ERC20 tokens as auxiliary token custody; those balances stay outside payout math and death-fee math.
 6. The holder can withdraw extra principal or auxiliary tokens in parts, claim monthly, claim all remaining USDC principal, or heartbeat.
 7. If the holder empties the policy while alive, the same policy resets to active and can be funded again.
 8. A beneficiary can report death after the policy is at least 12 months old.
@@ -99,6 +99,7 @@ If the holder does not interact during the report window, beneficiaries can clai
 ```text
 retainedFee = remainingMinimumPrincipal * 20%
 beneficiaryPayout = remainingExtraPrincipal + remainingMinimumPrincipal - retainedFee
+auxiliaryTokenBeneficiaryPayout[token] = auxiliaryTokenBalance[token]
 ```
 
 Auxiliary ERC20 token balances are distributed 100% to beneficiaries according to the same beneficiary percentages. They are not included in the death-fee base and do not pay a protocol fee.
@@ -126,6 +127,8 @@ Base examples:
 | 10,800 minimum + 0 extra | 8,640 USDC | 2,160 USDC |
 | 10,800 minimum + 1,000 extra | 9,640 USDC | 2,160 USDC |
 | 10,710 minimum + 1,190 extra | 9,758 USDC | 2,142 USDC |
+
+Any stored auxiliary ERC20 token balance is added on top of the USDC beneficiary payout and distributed 100% to beneficiaries. For example, if the policy holds 500 units of another ERC20, beneficiaries receive all 500 units by their configured shares and the protocol reserve receives none of that token.
 
 ## 6. Death Notice Reliability
 
@@ -161,7 +164,7 @@ The electronic policy should define:
 
 - Holder and beneficiary rights.
 - Minimum policy principal and deposit rules.
-- Extra principal and auxiliary token treatment.
+- Extra principal and auxiliary token treatment, including no fee, no payout-math impact, no death-fee base, and 100% auxiliary-token distribution to beneficiaries on death settlement.
 - Payout activation, partial extra withdrawal, auxiliary token withdrawal, claim-all, and policy reuse rights.
 - Heartbeat and death notice rules.
 - Death fee base and beneficiary payout formula.
@@ -193,7 +196,7 @@ The grant-stage product should not depend on token speculation. The strongest gr
 - Build the Riska 30 landing page and downloadable white paper.
 - Implement wallet connection, World ID path, beneficiary setup, and policy preview.
 - Deploy flexible policy contracts on World Chain Sepolia.
-- Add dashboard actions for deposit, auxiliary token custody, partial extra withdrawal, heartbeat, payout activation, monthly claim, claim-all, death report, and death claim.
+- Add dashboard actions for deposit, auxiliary token custody, partial extra withdrawal, heartbeat, payout activation, monthly claim, claim-all, death report, death claim, and clear auxiliary-token beneficiary settlement state.
 
 ### Phase 2: Production Mini App Demo
 
@@ -236,7 +239,7 @@ Using policy funds in lending or yield protocols introduces smart-contract risk,
 
 Riska 30 narrows the original Riska vision into a product that is easier to explain, prototype, audit, and evaluate for grant funding.
 
-The promise is direct: any verified human can open a policy, fund the minimum over time, add or withdraw extra principal, custody other tokens after the USDC minimum is covered, and choose when to activate programmed income. If they empty the policy while alive, they can fund the same policy again. Beneficiaries have a transparent death-notice path that depends on time and holder interaction rather than a hidden manual process.
+The promise is direct: any verified human can open a policy, fund the minimum over time, add or withdraw extra principal, custody other tokens after the USDC minimum is covered, and choose when to activate programmed income. If they empty the policy while alive, they can fund the same policy again. Beneficiaries have a transparent death-notice path that depends on time and holder interaction rather than a hidden manual process, and stored auxiliary tokens pass 100% to them on death settlement.
 
 The next milestone is a credible, verifiable demo: a working policy lifecycle, a clear user interface, a downloadable white paper, and a grant application grounded in measurable progress.
 
