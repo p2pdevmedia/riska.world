@@ -10,7 +10,7 @@
 
 Riska 30 is a transparent policy account for World ID verified humans. Any verified human can open a policy, configure beneficiaries, and fund a 10,800 USDC minimum over time or upfront. Deposits above the minimum become extra principal, increasing the holder's future monthly payout. Extra principal can be withdrawn in parts with no fee. Once the USDC minimum is covered, the holder can also custody non-USDC ERC20 tokens in the policy; those auxiliary tokens do not change payout math, carry no Riska fee, and pass 100% to beneficiaries on death settlement.
 
-The beneficiary flow is intentionally simple: a configured beneficiary can report death only after the policy has existed for 12 months. If the holder does not interact with the contract for another 12 months, beneficiaries can claim. A holder heartbeat, deposit, auxiliary token action, beneficiary update, monthly claim, or claim-all cancels the pending report. The protocol fee on death claims is 20% of remaining minimum principal only; extra principal and auxiliary tokens are not fee-bearing.
+The beneficiary flow is intentionally simple: a configured beneficiary can report death only after the policy has existed for 12 months. If the holder does not interact with the contract for another 12 months, beneficiaries can claim. A holder heartbeat, deposit, auxiliary token action, beneficiary update, monthly claim, or claim-all cancels the pending report. Claim-all and death settlement retain 20% of remaining minimum principal only; extra principal and auxiliary tokens are not fee-bearing.
 
 This paper describes the product, policy lifecycle, capital model, World Chain fit, grant-aligned implementation roadmap, and the compliance boundaries required before public sale.
 
@@ -24,7 +24,7 @@ Riska reframes the product around explicit state:
 - The minimum policy is 10,800 USDC.
 - Extra deposits increase future monthly payout and can be withdrawn in parts.
 - Other ERC20 tokens can be stored after the USDC minimum is covered; they stay separate from payout math, have no Riska fee, and pass 100% to beneficiaries on death settlement.
-- Holder withdrawals have no fee.
+- Holder monthly claims, partial extra withdrawals, and auxiliary token withdrawals have no fee; claim-all retains 20% only from remaining minimum principal.
 - Beneficiary death claims require a 12-month notice window with no holder interaction.
 - Fees are charged only on death claims and only on remaining minimum principal.
 
@@ -40,8 +40,8 @@ Core product rule:
 2. Deposits fill the 10,800 USDC minimum first.
 3. Extra deposits above 10,800 USDC become extra principal.
 4. Once the minimum is funded, the holder can activate 120 monthly payments.
-5. After the USDC minimum is covered, the holder can store non-USDC ERC20 tokens as auxiliary token custody; those balances stay outside payout math and death-fee math.
-6. The holder can withdraw extra principal or auxiliary tokens in parts, claim monthly, claim all remaining USDC principal, or heartbeat.
+5. After the USDC minimum is covered, the holder can store non-USDC ERC20 tokens as auxiliary token custody; those balances stay outside payout math and minimum-fee math.
+6. The holder can withdraw extra principal or auxiliary tokens in parts, claim monthly, claim all remaining USDC principal with the minimum-principal fee, or heartbeat.
 7. If the holder empties the policy while alive, the same policy resets to active and can be funded again.
 8. A beneficiary can report death after the policy is at least 12 months old.
 9. Beneficiaries can claim only after 12 more months with no holder interaction.
@@ -88,6 +88,10 @@ If extra principal is withdrawn during payout, the remaining principal is divide
 
 The holder can interact without withdrawing funds. Heartbeat updates the holder's last-interaction timestamp and cancels a pending beneficiary death report.
 
+### Holder Claim-All
+
+If the holder withdraws the full remaining USDC balance in one action, Riska retains 20% only from the remaining minimum principal. Any extra principal is paid 100% to the holder. After claim-all, the living holder's policy returns to an active zero-balance state and can be funded again.
+
 ### Beneficiary Death Notice
 
 A configured beneficiary can report death only after the policy has existed for `12 * 30 days`. The report starts a no-interaction window of another `12 * 30 days`.
@@ -102,7 +106,7 @@ beneficiaryPayout = remainingExtraPrincipal + remainingMinimumPrincipal - retain
 auxiliaryTokenBeneficiaryPayout[token] = auxiliaryTokenBalance[token]
 ```
 
-Auxiliary ERC20 token balances are distributed 100% to beneficiaries according to the same beneficiary percentages. They are not included in the death-fee base and do not pay a protocol fee.
+Auxiliary ERC20 token balances are distributed 100% to beneficiaries according to the same beneficiary percentages. They are not included in the minimum-principal fee base and do not pay a protocol fee.
 
 ### Reusable or Closed
 
@@ -117,10 +121,10 @@ The base model treats deposited USDC as policy principal. Yield and protocol eco
 | Minimum principal | Funds the base policy promise | Tracked per policy until paid out or death-settled |
 | Extra principal | Increases future holder payout and beneficiary death payout | Tracked separately and never fee-bearing |
 | Auxiliary ERC20 tokens | Lets the holder custody other token balances once the USDC minimum is covered | Tracked per token, excluded from USDC payout math, never fee-bearing, and paid 100% to beneficiaries on death settlement |
-| Protocol reserve | Receives retained death fee from remaining minimum principal | Tracked separately in the vault |
+| Protocol reserve | Receives retained claim-all and death fees from remaining minimum principal | Tracked separately in the vault |
 | Yield reserve | Future source for operations, risk buffers, audits, and growth | Must be separated from principal liabilities |
 
-Base examples:
+Base examples for claim-all or death settlement:
 
 | Holder balance at death | Beneficiary payout | Protocol reserve |
 | ---: | ---: | ---: |
@@ -143,7 +147,7 @@ Sensitive evidence should stay off-chain. On-chain state should remain limited t
 Current testnet modules:
 
 - `RiskaPolicyManager`: flexible policy lifecycle, deposits, partial extra withdrawals, auxiliary token custody, payout activation, holder claims, heartbeat, beneficiary death notice, and death claim.
-- `RiskaPolicyMath`: constants and math for minimum principal, payout months, and death fee.
+- `RiskaPolicyMath`: constants and math for minimum principal, payout months, and the minimum-principal fee.
 - `RiskaBeneficiaryRegistry`: beneficiary accounts and basis-point shares.
 - `RiskaPremiumVault`: USDC custody, auxiliary ERC20 token custody, principal liability, holder payouts, beneficiary payouts, and protocol reserve.
 
@@ -164,10 +168,10 @@ The electronic policy should define:
 
 - Holder and beneficiary rights.
 - Minimum policy principal and deposit rules.
-- Extra principal and auxiliary token treatment, including no fee, no payout-math impact, no death-fee base, and 100% auxiliary-token distribution to beneficiaries on death settlement.
+- Extra principal and auxiliary token treatment, including no fee, no payout-math impact, no minimum-fee base, and 100% auxiliary-token distribution to beneficiaries on death settlement.
 - Payout activation, partial extra withdrawal, auxiliary token withdrawal, claim-all, and policy reuse rights.
 - Heartbeat and death notice rules.
-- Death fee base and beneficiary payout formula.
+- Claim-all/death fee base and payout formula.
 - Beneficiary updates.
 - Yield strategy risks and whether yield belongs to the protocol, reserve, or policyholder.
 - Jurisdiction and compliance disclosures.

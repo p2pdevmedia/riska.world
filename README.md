@@ -13,9 +13,9 @@ The product combines an electronic policy document with a smart-contract lifecyc
 - Holder payout is `total remaining principal / 120` monthly payments, with final dust paid on the last claim.
 - Holder can withdraw extra principal in parts with no fee.
 - Holder can deposit and withdraw non-USDC ERC20 tokens after the USDC minimum is covered; these tokens do not count toward monthly payout, carry no protocol fee, and pass 100% to beneficiaries on death settlement.
-- Holder can claim all remaining principal with no fee; after a living holder empties the balance, the same policy can be funded and activated again.
+- Holder can claim all remaining USDC principal early; Riska retains 20% only from the remaining minimum principal, extra principal has no fee, and the same policy can be funded and activated again.
 - Holder `heartbeat` proves life and cancels pending beneficiary death reports.
-- Beneficiary death claims retain 20% only from remaining minimum principal; extra principal and auxiliary ERC20 tokens go 100% to beneficiaries.
+- Beneficiary death claims also retain 20% only from remaining minimum principal; extra principal and auxiliary ERC20 tokens go 100% to beneficiaries.
 
 ## Product Flow
 
@@ -24,7 +24,7 @@ The product combines an electronic policy document with a smart-contract lifecyc
 3. Any amount above 10,800 USDC becomes extra principal and increases the future monthly payout estimate.
 4. Once the minimum is fully funded, the holder can activate 120 monthly payouts.
 5. After the USDC minimum is covered, the holder can deposit other ERC20 tokens as auxiliary token custody.
-6. The holder can withdraw extra principal or auxiliary tokens in parts, claim monthly, claim all USDC principal, or send a heartbeat without withdrawing.
+6. The holder can withdraw extra principal or auxiliary tokens in parts, claim monthly, claim all USDC principal with the minimum-principal fee, or send a heartbeat without withdrawing.
 7. If the holder withdraws the full living USDC balance, the policy resets to an active zero-balance state and can be funded again.
 8. A configured beneficiary can report death only after the policy has existed for 12 months.
 9. If the holder does not interact for 12 months after the report, any configured beneficiary can claim.
@@ -33,7 +33,7 @@ The product combines an electronic policy document with a smart-contract lifecyc
 
 ## Canonical Auxiliary Token Rule
 
-Non-USDC ERC20 tokens are custody-only policy assets. They can be deposited only after the 10,800 USDC minimum is covered, can be withdrawn in parts by the living holder with no fee, never count toward USDC monthly payout, never enter the death-fee base, and are distributed 100% to beneficiaries by the configured beneficiary shares on death settlement.
+Non-USDC ERC20 tokens are custody-only policy assets. They can be deposited only after the 10,800 USDC minimum is covered, can be withdrawn in parts by the living holder with no fee, never count toward USDC monthly payout, never enter the minimum-principal fee base, and are distributed 100% to beneficiaries by the configured beneficiary shares on death settlement.
 
 ## Current Smart Contracts
 

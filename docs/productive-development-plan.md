@@ -23,12 +23,12 @@ Riska is a flexible USDC policy account for verified humans.
 - Non-USDC token custody: holder can deposit and withdraw other ERC20 tokens after the USDC minimum is covered; beneficiaries receive those token balances 100% on death settlement.
 - Holder payout: available once the minimum is fully funded.
 - Payout duration: 120 monthly payments.
-- Claim-all: holder can withdraw all remaining principal with no fee after the minimum is funded or once payout is active; living holder depletion resets the same policy to active and reusable.
+- Claim-all: holder can withdraw all remaining principal after the minimum is funded or once payout is active; Riska retains 20% only from remaining minimum principal, extra principal has no fee, and living holder depletion resets the same policy to active and reusable.
 - Heartbeat: holder can prove life without claiming money for that month.
 - Beneficiaries: multiple beneficiaries with configurable percentages.
 - Beneficiary changes: holder may change beneficiaries while the policy is active or in payout.
 - Death flow: a configured beneficiary reports death, waits 12 months, and can claim only if the holder does not interact.
-- Death fee: 20% of remaining minimum principal only; extra principal and auxiliary ERC20 tokens go 100% to beneficiaries.
+- Minimum-principal fee: claim-all and death settlement retain 20% of remaining minimum principal only; extra principal and auxiliary ERC20 tokens are not fee-bearing.
 - Main death flow: beneficiary report plus 12 months without holder interaction.
 - Current audit stage: AI-agent review, internal hardening, testnet deployment, and staging user testing.
 
@@ -59,7 +59,7 @@ Canonical auxiliary token rule:
 - They can be deposited only after the 10,800 USDC minimum is covered.
 - They can be withdrawn in parts by the living holder with no fee.
 - They never count toward `remainingMinimumPrincipal`, `remainingExtraPrincipal`, `totalPrincipal`, or monthly payout.
-- They never enter the death-fee base.
+- They never enter the minimum-principal fee base.
 - On death settlement, every tracked auxiliary token balance is distributed 100% to beneficiaries using the configured beneficiary shares.
 
 ## 3. Holder Actions
@@ -70,7 +70,7 @@ Canonical auxiliary token rule:
 - `withdrawExtra(policyId, amount)`: lets the holder withdraw part of `remainingExtraPrincipal` with no fee; during payout it reschedules the remaining monthly amount.
 - `depositToken(policyId, token, amount)`: stores a non-USDC ERC20 token after the USDC minimum is covered; the token is custody-only, does not affect payout math, and passes 100% to beneficiaries on death settlement.
 - `withdrawToken(policyId, token, amount)`: withdraws part of a stored non-USDC token balance with no fee.
-- `claimAll(policyId)`: pays all remaining holder principal with no fee and resets the same policy to an active zero-balance state.
+- `claimAll(policyId)`: pays all remaining holder principal minus 20% of remaining minimum principal, leaves extra principal fee-free, and resets the same policy to an active zero-balance state.
 - `heartbeat(policyId)`: records holder interaction and cancels any pending death report.
 - `updateBeneficiaries(policyId, beneficiaries, sharesBps)`: updates beneficiary splits and cancels any pending death report.
 
@@ -94,6 +94,13 @@ retainedFee = remainingMinimumPrincipal * 20%
 beneficiaryPayout = remainingExtraPrincipal + remainingMinimumPrincipal - retainedFee
 ```
 
+Holder claim-all uses the same minimum-principal fee base:
+
+```text
+retainedFee = remainingMinimumPrincipal * 20%
+holderPayout = remainingExtraPrincipal + remainingMinimumPrincipal - retainedFee
+```
+
 Auxiliary ERC20 tokens are separate from USDC principal. On death settlement, every stored auxiliary token balance is sent 100% to beneficiaries according to the same beneficiary percentages, with no protocol fee.
 
 Examples:
@@ -112,7 +119,7 @@ Examples:
 - Upgradeability must be explicit: proxy type, upgrade admin, delay, rollback plan, and storage layout tests.
 - Non-payment or missed claims must not mark a user as dead by itself.
 - Beneficiary payout requires beneficiary report plus the 12-month no-interaction window.
-- Auxiliary token balances must remain outside the death-fee base and pass 100% to beneficiaries on death settlement.
+- Auxiliary token balances must remain outside the minimum-principal fee base and pass 100% to beneficiaries on death settlement.
 - Holder heartbeat must remain a simple, low-cost way to cancel a false or stale report.
 - Principal liabilities, protocol reserve, yield reserve, and treasury accounting must stay separate.
 - Yield deployment must use strict allowlists, caps per protocol, emergency withdrawal paths, loss accounting, and monitoring.

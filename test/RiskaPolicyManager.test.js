@@ -252,7 +252,7 @@ describe("RiskaPolicyManager", function () {
     expect(await ctx.premiumVault.totalPrincipalLiability()).to.equal(0);
   });
 
-  it("lets the holder claim all remaining principal with no fee and reuse the policy", async function () {
+  it("lets the holder claim all remaining principal with a minimum-only fee and reuse the policy", async function () {
     const ctx = await deployFixture();
     const policyId = await openPolicy(ctx);
 
@@ -262,9 +262,9 @@ describe("RiskaPolicyManager", function () {
     await ctx.manager.connect(ctx.holder).claimAll(policyId);
     const after = await ctx.token.balanceOf(ctx.holder.address);
 
-    expect(after - before).to.equal(usdc("12000"));
+    expect(after - before).to.equal(usdc("9840"));
     expect(await ctx.premiumVault.totalPrincipalLiability()).to.equal(0);
-    expect(await ctx.premiumVault.protocolReserveBalance()).to.equal(0);
+    expect(await ctx.premiumVault.protocolReserveBalance()).to.equal(usdc("2160"));
 
     const policy = await ctx.manager.policies(policyId);
     expect(policy.status).to.equal(STATUS.Active);
@@ -284,6 +284,28 @@ describe("RiskaPolicyManager", function () {
     await expect(
       ctx.manager.connect(ctx.holder).openPolicy([ctx.beneficiaryA.address], [10_000], termsHash)
     ).to.be.revertedWith("POLICY_EXISTS");
+  });
+
+  it("charges claim-all only on the remaining minimum after payout has started", async function () {
+    const ctx = await deployFixture();
+    const policyId = await openPolicy(ctx);
+
+    await fundMinimum(ctx, policyId, "1200");
+    await ctx.manager.connect(ctx.holder).activatePayout(policyId);
+    await ctx.manager.connect(ctx.holder).claimMonthly(policyId);
+
+    const before = await ctx.token.balanceOf(ctx.holder.address);
+    await ctx.manager.connect(ctx.holder).claimAll(policyId);
+    const after = await ctx.token.balanceOf(ctx.holder.address);
+
+    expect(after - before).to.equal(usdc("9758"));
+    expect(await ctx.premiumVault.totalPrincipalLiability()).to.equal(0);
+    expect(await ctx.premiumVault.protocolReserveBalance()).to.equal(usdc("2142"));
+
+    const policy = await ctx.manager.policies(policyId);
+    expect(policy.status).to.equal(STATUS.Active);
+    expect(policy.remainingMinimumPrincipal).to.equal(0);
+    expect(policy.remainingExtraPrincipal).to.equal(0);
   });
 
   it("lets the holder withdraw extra principal in parts with no fee", async function () {

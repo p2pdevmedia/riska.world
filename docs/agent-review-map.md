@@ -10,7 +10,7 @@ Core project files:
 - `README.md`: high-level project overview.
 - `docs/riska-whitepaper-v2.md`: grant-oriented whitepaper source.
 - `docs/productive-development-plan.md`: captured product decisions, calculations, risks, and roadmap.
-- `contracts/RiskaPolicyMath.sol`: source of truth for flexible policy constants and death-fee math.
+- `contracts/RiskaPolicyMath.sol`: source of truth for flexible policy constants and minimum-principal fee math.
 - `contracts/RiskaPolicyManager.sol`: active policy lifecycle manager for flexible deposits, partial extra withdrawals, auxiliary token custody, payout activation, holder claims, heartbeat, beneficiary death notice, and death claim.
 - `contracts/RiskaBeneficiaryRegistry.sol`: beneficiary storage module with share validation, duplicate protection, and manager-only writes.
 - `contracts/RiskaPremiumVault.sol`: USDC and auxiliary ERC20 custody module with principal liability accounting, protocol reserve tracking, and manager-only payout operations.
@@ -75,7 +75,7 @@ Files:
 Review focus:
 
 - Keep the markdown source and PDF synchronized.
-- Keep auxiliary-token language synchronized: custody-only after USDC minimum, no payout impact, no fee, no death-fee base, and 100% to beneficiaries on death settlement.
+- Keep auxiliary-token language synchronized: custody-only after USDC minimum, no payout impact, no fee, no minimum-principal fee base, and 100% to beneficiaries on death settlement.
 - Keep legal disclaimers aligned with actual product status.
 
 ### `/docs`
@@ -117,7 +117,7 @@ Current capabilities:
 - Defines `MINIMUM_POLICY_PRINCIPAL = 10,800 USDC`.
 - Defines `PAYOUT_MONTHS = 120`.
 - Defines death payout as 80% of remaining minimum principal plus 100% of remaining extra principal and 100% of stored auxiliary ERC20 balances.
-- Defines retained death fee as 20% of remaining minimum principal.
+- Defines retained claim-all/death fee as 20% of remaining minimum principal.
 - Validates beneficiary share percentages sum to 100%.
 
 Review focus:
@@ -142,7 +142,7 @@ Current capabilities:
 - Pays monthly claims with final dust on the last claim.
 - Allows partial extra-principal withdrawals with no holder fee.
 - Allows auxiliary non-USDC ERC20 token deposits and withdrawals after the USDC minimum is covered.
-- Allows claim-all with no holder fee and resets living holder depletion to an active reusable policy.
+- Allows claim-all with a 20% retained fee only on remaining minimum principal and resets living holder depletion to an active reusable policy.
 - Allows heartbeat without withdrawing funds.
 - Allows holder beneficiary updates while active or in payout.
 - Cancels pending death notices on holder actions.
@@ -165,7 +165,7 @@ Review focus:
 - Confirm vault liability accounting across deposits, extra withdrawals, auxiliary token custody, holder payouts, claim-all, policy reuse, and death settlement.
 - Confirm no unauthorized beneficiary report or claim.
 - Confirm every holder action cancels the pending death notice.
-- Confirm death fee never touches extra principal or auxiliary token balances, and auxiliary tokens pass fully to beneficiaries on death settlement.
+- Confirm claim-all/death fee never touches extra principal or auxiliary token balances, and auxiliary tokens pass fully to beneficiaries on death settlement.
 - Confirm dust routing for monthly payouts and beneficiary splits.
 
 ### `RiskaBeneficiaryRegistry`
@@ -200,7 +200,7 @@ Current capabilities:
 - Allows only the configured policy manager to collect deposits and release payouts.
 - Tracks `totalPrincipalLiability`.
 - Tracks auxiliary token liability per token address.
-- Tracks `protocolReserveBalance` from retained death fees.
+- Tracks `protocolReserveBalance` from retained claim-all and death fees.
 - Pays holders for monthly claims, partial extra withdrawals, auxiliary token withdrawals, and claim-all.
 - Pays beneficiaries by reading splits from `RiskaBeneficiaryRegistry`.
 - Pays auxiliary token balances 100% to beneficiaries on death settlement and keeps those balances outside protocol reserve accounting.
@@ -226,12 +226,12 @@ Base model:
 - Auxiliary tokens do not count toward USDC payout math and are never fee-bearing.
 - Auxiliary token balances pass 100% to beneficiaries on death settlement by the configured beneficiary shares.
 - Holder monthly payout has no fee.
-- Holder claim-all has no fee and resets the policy to active if the holder is alive.
+- Holder claim-all retains 20% only from remaining minimum principal and resets the policy to active if the holder is alive.
 - Death report can only be made by a configured beneficiary.
 - Death report is allowed only after policy age reaches `12 * 30 days`.
 - Death claim requires another `12 * 30 days` with no holder interaction.
 - Any holder action cancels a pending death report.
-- Death fee is 20% of remaining minimum principal only.
+- Death settlement also retains 20% of remaining minimum principal only.
 - Multiple beneficiaries must sum to 100%.
 - RISKA token supply is exactly 100,000, has 0 decimals, and is transferable from day 1.
 

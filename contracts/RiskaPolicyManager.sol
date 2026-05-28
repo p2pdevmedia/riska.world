@@ -67,7 +67,7 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
     event PayoutActivated(uint256 indexed policyId, uint256 monthlyPayoutAmount, uint256 totalPrincipal);
     event PayoutRescheduled(uint256 indexed policyId, uint256 monthlyPayoutAmount, uint256 totalPrincipal, uint256 remainingMonths);
     event MonthlyClaimed(uint256 indexed policyId, uint256 amount, uint16 payoutsMade);
-    event ClaimAll(uint256 indexed policyId, uint256 amount);
+    event ClaimAll(uint256 indexed policyId, uint256 payout, uint256 retainedFee);
     event ExtraWithdrawn(uint256 indexed policyId, address indexed holder, uint256 amount);
     event AuxiliaryTokenDeposited(uint256 indexed policyId, address indexed holder, address indexed token, uint256 amount);
     event AuxiliaryTokenWithdrawn(uint256 indexed policyId, address indexed holder, address indexed token, uint256 amount);
@@ -215,8 +215,15 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
             "MINIMUM_NOT_FUNDED"
         );
 
-        uint256 amount = _totalPrincipal(policy);
-        require(amount > 0, "NO_PRINCIPAL");
+        uint256 remainingMinimumPrincipal = policy.remainingMinimumPrincipal;
+        uint256 remainingExtraPrincipal = policy.remainingExtraPrincipal;
+        uint256 releasedPrincipal = remainingMinimumPrincipal + remainingExtraPrincipal;
+        require(releasedPrincipal > 0, "NO_PRINCIPAL");
+
+        (uint256 payout, uint256 retainedFee) = RiskaPolicyMath.minimumFeePayout(
+            remainingMinimumPrincipal,
+            remainingExtraPrincipal
+        );
 
         _recordHolderInteraction(policyId, policy);
 
@@ -224,9 +231,9 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
         policy.remainingExtraPrincipal = 0;
         _resetPayout(policy);
 
-        premiumVault.payHolder(policyId, policy.holder, amount);
+        premiumVault.settleHolderClaimAll(policyId, policy.holder, releasedPrincipal, payout);
 
-        emit ClaimAll(policyId, amount);
+        emit ClaimAll(policyId, payout, retainedFee);
         emit PolicyStatusUpdated(policyId, PolicyStatus.Active);
     }
 

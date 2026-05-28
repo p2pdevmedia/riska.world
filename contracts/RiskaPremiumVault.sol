@@ -24,6 +24,7 @@ contract RiskaPremiumVault is Ownable, Pausable, ReentrancyGuard {
     event PolicyManagerUpdated(address indexed policyManager);
     event PremiumCollected(uint256 indexed policyId, address indexed holder, uint256 amount);
     event HolderPaid(uint256 indexed policyId, address indexed holder, uint256 amount);
+    event HolderClaimAllSettled(uint256 indexed policyId, address indexed holder, uint256 payout, uint256 retained);
     event BeneficiariesPaid(uint256 indexed policyId, uint256 payout, uint256 retained);
     event AuxiliaryTokenCollected(uint256 indexed policyId, address indexed holder, address indexed token, uint256 amount);
     event AuxiliaryTokenHolderPaid(uint256 indexed policyId, address indexed holder, address indexed token, uint256 amount);
@@ -87,6 +88,30 @@ contract RiskaPremiumVault is Ownable, Pausable, ReentrancyGuard {
         paymentToken.safeTransfer(holder, amount);
 
         emit HolderPaid(policyId, holder, amount);
+    }
+
+    function settleHolderClaimAll(uint256 policyId, address holder, uint256 releasedPrincipal, uint256 payout)
+        external
+        onlyPolicyManager
+        whenNotPaused
+        nonReentrant
+    {
+        require(policyId != 0, "INVALID_POLICY");
+        require(holder != address(0), "INVALID_HOLDER");
+        require(payout <= releasedPrincipal, "PAYOUT_EXCEEDS_RELEASED");
+        require(releasedPrincipal <= totalPrincipalLiability, "INSUFFICIENT_LIABILITY");
+
+        totalPrincipalLiability -= releasedPrincipal;
+
+        uint256 retained = releasedPrincipal - payout;
+        protocolReserveBalance += retained;
+
+        if (payout > 0) {
+            paymentToken.safeTransfer(holder, payout);
+            emit HolderPaid(policyId, holder, payout);
+        }
+
+        emit HolderClaimAllSettled(policyId, holder, payout, retained);
     }
 
     function settleBeneficiaryPayout(uint256 policyId, uint256 releasedPrincipal, uint256 payout)

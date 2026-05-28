@@ -222,7 +222,7 @@ const copy = {
           ["Minimum first", "10,800 USDC"],
           ["Extra deposits", "100% principal"],
           ["Holder payout", "120 months"],
-          ["Death fee", "20% of minimum only"]
+          ["Claim-all/death fee", "20% of minimum only"]
         ]
       },
       confirm: {
@@ -250,6 +250,7 @@ const copy = {
           actionError: "Action failed",
           activate: "Activate payout",
           claimAll: "Claim all",
+          claimAllFeeNote: "Claim all retains 20% of the remaining minimum principal. Extra USDC is paid 100%.",
           claimDeath: "Claim death",
           claimMonthly: "Claim monthly",
           claimableAt: "Claimable after",
@@ -386,7 +387,7 @@ const copy = {
           ["Primero mínimo", "10,800 USDC"],
           ["Depósitos extra", "100% principal"],
           ["Pago titular", "120 meses"],
-          ["Fee muerte", "20% solo mínimo"]
+          ["Fee claim-all/muerte", "20% solo mínimo"]
         ]
       },
       confirm: {
@@ -414,6 +415,7 @@ const copy = {
           actionError: "La acción falló",
           activate: "Activar pagos",
           claimAll: "Cobrar todo",
+          claimAllFeeNote: "Cobrar todo retiene 20% del mínimo restante. El extra USDC se paga 100%.",
           claimDeath: "Cobrar muerte",
           claimMonthly: "Cobrar mes",
           claimableAt: "Cobrable desde",
@@ -1612,6 +1614,10 @@ function PolicyControlPanel({
             </div>
             {tokenAddressInvalid && <p className="mt-2 text-sm text-red-700">{text.tokenAddressInvalid}</p>}
           </div>
+
+          <p className="mt-3 border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900">
+            {text.claimAllFeeNote}
+          </p>
 
           <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             <PolicyActionButton

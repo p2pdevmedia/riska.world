@@ -227,7 +227,7 @@ function QuoteScreen() {
       <RuleRow icon={Percent} label="Minimo primero" value="10,800" />
       <RuleRow icon={HeartHandshake} label="Extra principal" value="100%" />
       <RuleRow icon={CircleDollarSign} label="Pago titular" value="120 meses" />
-      <RuleRow icon={Users} label="Fee muerte" value="20% minimo" />
+      <RuleRow icon={Users} label="Fee total/muerte" value="20% minimo" />
     </div>
   );
 }

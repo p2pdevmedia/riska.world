@@ -16,13 +16,21 @@ library RiskaPolicyMath {
         return principal / PAYOUT_MONTHS;
     }
 
-    function deathPayout(uint256 remainingMinimumPrincipal, uint256 remainingExtraPrincipal)
+    function minimumFeePayout(uint256 remainingMinimumPrincipal, uint256 remainingExtraPrincipal)
         internal
         pure
         returns (uint256 payout, uint256 retainedFee)
     {
         retainedFee = (remainingMinimumPrincipal * DEATH_FEE_BPS) / BPS_DENOMINATOR;
         payout = remainingExtraPrincipal + remainingMinimumPrincipal - retainedFee;
+    }
+
+    function deathPayout(uint256 remainingMinimumPrincipal, uint256 remainingExtraPrincipal)
+        internal
+        pure
+        returns (uint256 payout, uint256 retainedFee)
+    {
+        return minimumFeePayout(remainingMinimumPrincipal, remainingExtraPrincipal);
     }
 
     function validateBeneficiaryShares(uint16[] memory sharesBps) internal pure returns (bool) {

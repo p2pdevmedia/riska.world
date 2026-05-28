@@ -51,6 +51,20 @@ function writeDeployment(networkName, deployment) {
   console.log(`Deployment saved to ${latestPath}`);
 }
 
+function readLatestDeployment(networkName) {
+  const latestPath = path.join(__dirname, "..", "deployments", networkName, "latest.json");
+
+  if (!fs.existsSync(latestPath)) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(fs.readFileSync(latestPath, "utf8"));
+  } catch {
+    return null;
+  }
+}
+
 function contractRecord(deployedContract) {
   return {
     address: deployedContract.address,
@@ -88,6 +102,7 @@ async function main() {
   const mockUsdcMintAmount = process.env.MOCK_USDC_MINT_AMOUNT || DEFAULT_MOCK_USDC_MINT_AMOUNT;
   const deployTestHelpers = process.env.DEPLOY_TEST_HELPERS === "true";
 
+  const previousDeployment = readLatestDeployment("worldchain-sepolia");
   const mockUsdc = await deployContract("MockUSDC");
   const beneficiaryRegistry = await deployContract("RiskaBeneficiaryRegistry");
   const premiumVault = await deployContract("RiskaPremiumVault", [mockUsdc.address, beneficiaryRegistry.address]);
@@ -140,7 +155,13 @@ async function main() {
       recipient: mockUsdcMintRecipient,
       amount: mockUsdcMintAmount,
       transactionHash: mockUsdcMintTx
-    }
+    },
+    ...(previousDeployment?.testAuxiliaryTokens
+      ? { testAuxiliaryTokens: previousDeployment.testAuxiliaryTokens }
+      : {}),
+    ...(previousDeployment?.testAuxiliaryMint
+      ? { testAuxiliaryMint: previousDeployment.testAuxiliaryMint }
+      : {})
   };
 
   if (process.env.SKIP_DEPLOYMENT_WRITE === "true") {
