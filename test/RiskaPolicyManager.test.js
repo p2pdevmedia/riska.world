@@ -71,6 +71,14 @@ async function reportAfterPolicyAge(ctx, policyId, reporter = ctx.beneficiaryA) 
 }
 
 describe("RiskaPolicyManager", function () {
+  it("keeps MockUSDC minting under the deployer instead of user wallets", async function () {
+    const ctx = await deployFixture();
+
+    await expect(ctx.token.connect(ctx.holder).mint(ctx.holder.address, usdc("1")))
+      .to.be.revertedWithCustomError(ctx.token, "OwnableUnauthorizedAccount")
+      .withArgs(ctx.holder.address);
+  });
+
   it("opens a policy directly from the holder wallet without an admin gate", async function () {
     const ctx = await deployFixture();
 

@@ -134,7 +134,9 @@ npm run contracts:deploy:worldchain-sepolia
 The deploy script publishes `MockUSDC`, the modular Riska policy contracts, the
 legacy verifier, and the legacy `RiskaThirtyYearPolicy`. It wires the active
 policy manager only into the beneficiary registry and premium vault. Successful
-deployments are saved under `deployments/worldchain-sepolia/`.
+deployments are saved under `deployments/worldchain-sepolia/`. Test wallets must
+already hold MockUSDC before opening or funding a policy; the app never mints
+test funds during the user flow.
 
 ## Stack
 

@@ -171,18 +171,19 @@ const contractDocsEn = {
     status: "Testnet only. No production value.",
     responsibilities: [
       "Represent USDC-style accounting in test flows.",
-      "Allow wallets to mint test funds.",
+      "Hold pre-funded test balances for policy testing.",
       "Support ERC-20 allowances for vault deposits."
     ],
     interfaceItems: [
       { name: "decimals", description: "Returns 6." },
-      { name: "mint", description: "Mints test tokens." },
+      { name: "mint", description: "Owner-only testnet funding helper. The app does not call it." },
       { name: "approve", description: "Approves the vault for deposits." },
       { name: "balanceOf", description: "Reads wallet test balance." }
     ],
     safeguards: [
       "Mock token only.",
-      "Open minting is intentional for testnet.",
+      "Wallets must be funded before interacting with the policy contract.",
+      "The app never mints MockUSDC during policy issuance or deposits.",
       "Production must use an allowlisted payment token."
     ],
     sourceNote: "The local source below is the mock token used in test deployments."
@@ -306,18 +307,19 @@ const contractDocsEs = {
     status: "Solo testnet. Sin valor productivo.",
     responsibilities: [
       "Representar contabilidad estilo USDC en pruebas.",
-      "Permitir mintear fondos de prueba.",
+      "Mantener balances de prueba prefondados para probar polizas.",
       "Soportar allowances ERC-20 para depositos al vault."
     ],
     interfaceItems: [
       { name: "decimals", description: "Devuelve 6." },
-      { name: "mint", description: "Mintea tokens de prueba." },
+      { name: "mint", description: "Helper de fondeo solo para owner en testnet. La app no lo llama." },
       { name: "approve", description: "Aprueba al vault para depositos." },
       { name: "balanceOf", description: "Lee el balance de prueba." }
     ],
     safeguards: [
       "Token mock solamente.",
-      "El minteo abierto es intencional para testnet.",
+      "La wallet debe estar fondeada antes de interactuar con el contrato de poliza.",
+      "La app nunca mintea MockUSDC durante la emision ni durante depositos.",
       "Produccion debe usar un token de pago allowlisted."
     ],
     sourceNote: "El codigo local de abajo es el mock usado en despliegues de prueba."

@@ -1620,7 +1620,6 @@ function getTestnetStepLabel(step: TestnetIssuanceStatus) {
     checking_usdc: "Checking USDC",
     issued: "Policy issued",
     loading_contracts: "Loading contracts",
-    minting_usdc: "Minting test USDC",
     opening_policy: "Opening policy",
     switching_network: "Switching network"
   };
@@ -1664,7 +1663,6 @@ function getPolicyActionStatusLabel(status: TestnetPolicyActionStatus) {
     confirming_transaction: "Confirming transaction",
     issued: "Policy issued",
     loading_contracts: "Loading contracts",
-    minting_usdc: "Minting test USDC",
     opening_policy: "Opening policy",
     refreshing_policy: "Refreshing policy",
     sending_transaction: "Sending transaction",

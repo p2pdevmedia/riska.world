@@ -63,7 +63,7 @@ Review focus:
 
 - Copy must match the current flexible model: any verified human can open, minimum is 10,800 USDC, extra principal is not fee-bearing, holder actions cancel death reports, and beneficiary payout waits 12 months after report.
 - World ID uses app/backend verification; current persistence remains demo/in-process until a database is added.
-- Testnet MockUSDC is not real USDC and has no production value.
+- Testnet MockUSDC is not real USDC and has no production value; test wallets must be funded before the app can approve or deposit.
 - Real-money production still needs legal clearance, external audit, multisig/timelock, and monitoring.
 
 ### `/whitepaper`

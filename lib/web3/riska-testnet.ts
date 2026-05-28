@@ -30,7 +30,6 @@ export type TestnetIssuanceStatus =
   | "loading_contracts"
   | "switching_network"
   | "checking_usdc"
-  | "minting_usdc"
   | "approving_usdc"
   | "opening_policy"
   | "issued";
@@ -54,7 +53,6 @@ export type TestnetIssuanceResult = {
   policyId: string;
   txHashes: {
     approval?: Hash;
-    mint?: Hash;
     openPolicy: Hash;
   };
 };
@@ -122,16 +120,6 @@ const erc20Abi = [
     name: "balanceOf",
     outputs: [{ name: "", type: "uint256" }],
     stateMutability: "view",
-    type: "function"
-  },
-  {
-    inputs: [
-      { name: "to", type: "address" },
-      { name: "amount", type: "uint256" }
-    ],
-    name: "mint",
-    outputs: [],
-    stateMutability: "nonpayable",
     type: "function"
   }
 ] as const;
@@ -381,7 +369,7 @@ export async function issueTestnetPolicy({
     throw new Error("Beneficiary shares must total 100% before issuing a policy.");
   }
 
-  const txHashes = await ensureMockUsdcAndAllowance({
+  const txHashes = await ensureMockUsdcBalanceAndAllowance({
     account,
     amount: FIRST_PREMIUM,
     contracts,
@@ -414,7 +402,6 @@ export async function issueTestnetPolicy({
     policyId: policyId.toString(),
     txHashes: {
       approval: txHashes.approval,
-      mint: txHashes.mint,
       openPolicy: openPolicyHash
     }
   };
@@ -447,7 +434,7 @@ export async function runTestnetPolicyAction({
       throw new Error("Deposit amount must be greater than 0 USDC.");
     }
 
-    await ensureMockUsdcAndAllowance({
+    await ensureMockUsdcBalanceAndAllowance({
       account,
       amount: parsedAmount,
       contracts,
@@ -572,7 +559,7 @@ async function getConnectedAccount(
   return account;
 }
 
-async function ensureMockUsdcAndAllowance({
+async function ensureMockUsdcBalanceAndAllowance({
   account,
   amount,
   contracts,
@@ -587,7 +574,7 @@ async function ensureMockUsdcAndAllowance({
   const walletClient = await createWorldchainSepoliaWalletClient();
 
   onStatus?.("checking_usdc");
-  let [balance, allowance] = await Promise.all([
+  const [balance, allowance] = await Promise.all([
     publicClient.readContract({
       abi: erc20Abi,
       address: contracts.mockUsdc,
@@ -603,26 +590,9 @@ async function ensureMockUsdcAndAllowance({
   ]);
 
   if (balance < amount) {
-    const amountToMint = amount - balance;
-    onStatus?.("minting_usdc");
-    txHashes.mint = await walletClient.writeContract({
-      abi: erc20Abi,
-      account,
-      address: contracts.mockUsdc,
-      args: [account, amountToMint],
-      functionName: "mint"
-    });
-    await publicClient.waitForTransactionReceipt({ hash: txHashes.mint });
-    balance = await publicClient.readContract({
-      abi: erc20Abi,
-      address: contracts.mockUsdc,
-      args: [account],
-      functionName: "balanceOf"
-    });
-
-    if (balance < amount) {
-      throw new Error(`This wallet needs at least ${formatUsdcAmount(amount)} MockUSDC.`);
-    }
+    throw new Error(
+      `This wallet needs ${formatUsdcAmount(amount)} MockUSDC before interacting with the policy contract. Current balance: ${formatUsdcAmount(balance)} MockUSDC.`
+    );
   }
 
   if (allowance < amount) {
