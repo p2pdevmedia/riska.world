@@ -36,6 +36,7 @@ export type TestnetIssuanceStatus =
 
 export type TestnetPolicyAction =
   | "deposit"
+  | "withdrawExtra"
   | "activatePayout"
   | "claimMonthly"
   | "claimAll"
@@ -163,6 +164,16 @@ const policyManagerAbi = [
   {
     inputs: [{ name: "policyId", type: "uint256" }],
     name: "claimAll",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function"
+  },
+  {
+    inputs: [
+      { name: "policyId", type: "uint256" },
+      { name: "amount", type: "uint256" }
+    ],
+    name: "withdrawExtra",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function"
@@ -445,18 +456,20 @@ export async function runTestnetPolicyAction({
   const id = BigInt(policyId);
   let hash: Hash;
 
-  if (action === "deposit") {
+  if (action === "deposit" || action === "withdrawExtra") {
     const parsedAmount = parseUnits(amount ?? "0", 6);
     if (parsedAmount <= 0n) {
-      throw new Error("Deposit amount must be greater than 0 USDC.");
+      throw new Error("Amount must be greater than 0 USDC.");
     }
 
-    await ensureMockUsdcBalanceAndAllowance({
-      account,
-      amount: parsedAmount,
-      contracts,
-      onStatus
-    });
+    if (action === "deposit") {
+      await ensureMockUsdcBalanceAndAllowance({
+        account,
+        amount: parsedAmount,
+        contracts,
+        onStatus
+      });
+    }
 
     onStatus?.("sending_transaction");
     hash = await walletClient.writeContract({
@@ -464,7 +477,7 @@ export async function runTestnetPolicyAction({
       account,
       address: contracts.policyManager,
       args: [id, parsedAmount],
-      functionName: "deposit"
+      functionName: action
     });
   } else if (action === "activatePayout") {
     onStatus?.("sending_transaction");

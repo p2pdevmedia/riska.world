@@ -1,6 +1,6 @@
 # Riska Productive Development Plan
 
-**Date:** May 27, 2026
+**Date:** May 28, 2026
 **Status:** Flexible policy account model for Spark Grant, staging tests, and audit-readiness
 **Product name:** Riska
 **Token / app / foundation name:** RISKA
@@ -18,10 +18,10 @@ Riska is a flexible USDC policy account for verified humans.
 - Minimum policy unit: 30 USDC.
 - Minimum model: `30 USDC * 360 = 10,800 USDC`.
 - Deposits: any holder deposit fills the minimum first; amounts above 10,800 USDC become extra principal.
-- Extra principal: increases future monthly payout and is not fee-bearing.
+- Extra principal: increases future monthly payout, can be withdrawn in parts at any time while the policy is active or in payout, and is not fee-bearing.
 - Holder payout: available once the minimum is fully funded.
 - Payout duration: 120 monthly payments.
-- Claim-all: holder can withdraw all remaining principal with no fee after the minimum is funded or once payout is active.
+- Claim-all: holder can withdraw all remaining principal with no fee after the minimum is funded or once payout is active; living holder depletion resets the same policy to active and reusable.
 - Heartbeat: holder can prove life without claiming money for that month.
 - Beneficiaries: multiple beneficiaries with configurable percentages.
 - Beneficiary changes: holder may change beneficiaries while the policy is active or in payout.
@@ -49,18 +49,19 @@ totalPrincipal = remainingMinimumPrincipal + remainingExtraPrincipal
 monthlyPayout = totalPrincipal / 120
 ```
 
-The final monthly claim pays any dust left by integer division.
+The final monthly claim pays any dust left by integer division. If the holder withdraws extra principal after payout activation, the remaining balance is divided across the remaining payout months.
 
 ## 3. Holder Actions
 
 - `deposit(policyId, amount)`: deposits any USDC amount before payout activation.
 - `activatePayout(policyId)`: allowed once the minimum principal is fully funded.
 - `claimMonthly(policyId)`: pays the next monthly amount with no fee.
-- `claimAll(policyId)`: pays all remaining holder principal with no fee.
+- `withdrawExtra(policyId, amount)`: lets the holder withdraw part of `remainingExtraPrincipal` with no fee; during payout it reschedules the remaining monthly amount.
+- `claimAll(policyId)`: pays all remaining holder principal with no fee and resets the same policy to an active zero-balance state.
 - `heartbeat(policyId)`: records holder interaction and cancels any pending death report.
 - `updateBeneficiaries(policyId, beneficiaries, sharesBps)`: updates beneficiary splits and cancels any pending death report.
 
-Deposits after payout activation are not allowed in the current model. A future version can add top-ups during payout only after new accounting and UX rules are specified.
+Deposits after payout activation are not allowed in the current model. Extra-principal withdrawals are allowed before or during payout. A future version can add top-ups during payout only after new accounting and UX rules are specified.
 
 ## 4. Beneficiary Death Flow
 
@@ -105,7 +106,7 @@ Examples:
 
 Current testnet modules:
 
-- `RiskaPolicyManager`: creates policies, enforces flexible lifecycle, coordinates modules.
+- `RiskaPolicyManager`: creates policies, enforces flexible lifecycle, partial extra withdrawals, reusable living depletion, and module coordination.
 - `RiskaPolicyMath`: constants and payout math.
 - `RiskaBeneficiaryRegistry`: manages beneficiaries and percentages.
 - `RiskaPremiumVault`: holds USDC and separates principal liability from protocol reserve.
@@ -139,7 +140,7 @@ Future production modules:
 
 - Integrate World ID verification in production mode.
 - Build World App compatible onboarding and dashboard.
-- Add policy state, minimum progress, extra principal, heartbeat, payout actions, and beneficiary death report state.
+- Add policy state, minimum progress, extra principal, partial extra withdrawal, heartbeat, payout actions, reusable-policy state, and beneficiary death report state.
 - Keep a clearly labeled simulation/training mode for grant reviewers and users not ready to transact.
 - Collect grant metrics: verified starts, quote completion, beneficiary completion, policy opens, dashboard return rate, and trust feedback.
 
@@ -160,7 +161,6 @@ Future production modules:
 
 ## 8. Remaining Questions
 
-- Confirm whether claim-all should remain available immediately after minimum funding in every jurisdiction.
 - Confirm whether future versions allow deposits after payout activation.
 - Confirm whether beneficiaries can be updated during payout in production or only before payout.
 - Confirm fiat on-ramp provider.

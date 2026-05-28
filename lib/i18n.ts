@@ -58,12 +58,14 @@ const contractDocsEn = {
   policyManager: {
     title: "RiskaPolicyManager",
     summary:
-      "The active flexible policy manager for opening policies, deposits, payout activation, holder claims, heartbeat, beneficiary death notice, and death claim.",
+      "The active flexible policy manager for opening policies, deposits, partial extra withdrawals, payout activation, holder claims, heartbeat, beneficiary death notice, and death claim.",
     status: "Deployed on World Chain Sepolia for test flows. Not audited for production funds.",
     responsibilities: [
       "Open one policy per holder after app-level World ID verification.",
       "Allocate deposits first to the 10,800 USDC minimum and then to extra principal.",
+      "Let holders withdraw extra principal in parts with no fee.",
       "Activate 120 monthly payouts once the minimum is funded.",
+      "Reset living holder depletion to an active reusable policy.",
       "Cancel pending death reports whenever the holder interacts.",
       "Allow configured beneficiaries to claim after a report plus 12 months without holder interaction."
     ],
@@ -72,13 +74,14 @@ const contractDocsEn = {
       { name: "deposit", description: "Adds USDC before payout activation, filling minimum principal first." },
       { name: "activatePayout", description: "Snapshots monthly payout over 120 months once the minimum is funded." },
       { name: "claimMonthly", description: "Pays the next holder payout with no fee." },
-      { name: "claimAll", description: "Withdraws all remaining holder principal with no fee." },
+      { name: "withdrawExtra", description: "Withdraws part of the extra principal with no fee and reschedules payout if needed." },
+      { name: "claimAll", description: "Withdraws all remaining holder principal with no fee and keeps the policy reusable." },
       { name: "heartbeat", description: "Records life interaction without withdrawing money." },
       { name: "reportDeath", description: "Lets a configured beneficiary start the 12-month notice window." },
       { name: "claimDeath", description: "Pays beneficiaries after the no-interaction window." }
     ],
     safeguards: [
-      "Deposits are closed after payout activation.",
+      "New deposits are closed after payout activation; extra withdrawals remain allowed.",
       "Death fee applies only to remaining minimum principal.",
       "Extra principal is never fee-bearing.",
       "Beneficiary reports cannot be claimed while the holder keeps interacting."
@@ -114,7 +117,7 @@ const contractDocsEn = {
     responsibilities: [
       "Collect USDC deposits from holders.",
       "Track total principal liability.",
-      "Pay holder monthly claims and claim-all withdrawals.",
+      "Pay holder monthly claims, partial extra withdrawals, and claim-all withdrawals.",
       "Pay beneficiaries according to registry shares.",
       "Track retained death fee as protocol reserve."
     ],
@@ -136,12 +139,14 @@ const contractDocsEs = {
   policyManager: {
     title: "RiskaPolicyManager",
     summary:
-      "Manager flexible activo para abrir polizas, depositar, activar pagos, cobrar, enviar heartbeat, reportar muerte y liquidar beneficiarios.",
+      "Manager flexible activo para abrir polizas, depositar, retirar extra en partes, activar pagos, cobrar, enviar heartbeat, reportar muerte y liquidar beneficiarios.",
     status: "Desplegado en World Chain Sepolia para pruebas. No auditado para fondos productivos.",
     responsibilities: [
       "Abrir una poliza por holder despues de la verificacion World ID en la app.",
       "Asignar depositos primero al minimo de 10,800 USDC y luego a principal extra.",
+      "Permitir retiros parciales del principal extra sin fee.",
       "Activar 120 pagos mensuales cuando el minimo esta fondeado.",
+      "Reiniciar una poliza vaciada por un titular vivo para que pueda volver a usarse.",
       "Cancelar reportes de muerte pendientes cada vez que el titular interactua.",
       "Permitir que beneficiarios configurados cobren despues de reporte y 12 meses sin interaccion del titular."
     ],
@@ -150,13 +155,14 @@ const contractDocsEs = {
       { name: "deposit", description: "Agrega USDC antes de activar pagos, llenando primero el minimo." },
       { name: "activatePayout", description: "Fija el pago mensual sobre 120 meses cuando el minimo esta fondeado." },
       { name: "claimMonthly", description: "Paga el siguiente mes al titular sin fee." },
-      { name: "claimAll", description: "Retira todo el principal restante del titular sin fee." },
+      { name: "withdrawExtra", description: "Retira parte del principal extra sin fee y reprograma pagos si hace falta." },
+      { name: "claimAll", description: "Retira todo el principal restante sin fee y deja la poliza reutilizable." },
       { name: "heartbeat", description: "Registra interaccion de vida sin retirar dinero." },
       { name: "reportDeath", description: "Permite que un beneficiario configurado inicie la ventana de 12 meses." },
       { name: "claimDeath", description: "Paga beneficiarios despues de la ventana sin interaccion." }
     ],
     safeguards: [
-      "Los depositos cierran despues de activar pagos.",
+      "Los depositos nuevos cierran despues de activar pagos; los retiros de extra siguen permitidos.",
       "El fee de muerte aplica solo al minimo restante.",
       "El principal extra nunca paga fee.",
       "Los reportes de beneficiarios no pueden cobrarse si el titular sigue interactuando."
@@ -192,7 +198,7 @@ const contractDocsEs = {
     responsibilities: [
       "Cobrar depositos USDC desde holders.",
       "Rastrear pasivo total de principal.",
-      "Pagar cobros mensuales y claim-all al titular.",
+      "Pagar cobros mensuales, retiros parciales de extra y claim-all al titular.",
       "Pagar beneficiarios segun porcentajes del registry.",
       "Registrar el fee retenido de muerte como reserva."
     ],
@@ -215,7 +221,7 @@ export const dictionaries = {
     metadata: {
       title: "Riska.world - Flexible protection for verified humans",
       description:
-        "Riska lets verified humans open a flexible USDC policy, fund a 10,800 USDC minimum over time, add extra principal, and use heartbeat-based beneficiary protection."
+        "Riska lets verified humans open a flexible USDC policy, fund a 10,800 USDC minimum, withdraw extra principal in parts, and use heartbeat-based beneficiary protection."
     },
     navbar: {
       brand: "RISKA",
@@ -232,7 +238,7 @@ export const dictionaries = {
       badge: "Riska 30 · Flexible USDC policy",
       title: "Any verified human can open a policy.",
       description:
-        "Fund the 10,800 USDC minimum over time or upfront. Extra deposits increase future monthly payout, and beneficiaries can claim only after a death report plus 12 months without holder interaction.",
+        "Fund the 10,800 USDC minimum over time or upfront. Extra deposits increase future monthly payout and can be withdrawn in parts. Beneficiaries can claim only after a death report plus 12 months without holder interaction.",
       chips: [
         "10,800 USDC minimum",
         "30 USDC base unit",
@@ -244,7 +250,7 @@ export const dictionaries = {
       title: "Product rules",
       subtitle: "One policy account, visible balances, and clear holder or beneficiary outcomes.",
       body:
-        "Deposits fill the minimum first, extra principal is not fee-bearing, holder withdrawals have no fee, and death fees touch only remaining minimum principal.",
+        "Deposits fill the minimum first, extra principal can be withdrawn in parts without fee, holder withdrawals have no fee, and death fees touch only remaining minimum principal.",
       metrics: [
         { label: "Minimum policy", value: "10,800 USDC" },
         { label: "Base unit", value: "30 USDC" },
@@ -270,6 +276,7 @@ export const dictionaries = {
           description: "Once the minimum is funded, the holder decides when to start or withdraw.",
           points: [
             "Activate 120 monthly payments",
+            "Withdraw extra principal in parts without fee",
             "Claim all remaining principal with no fee",
             "Use heartbeat to prove life without claiming that month"
           ]
@@ -299,7 +306,7 @@ export const dictionaries = {
         },
         {
           title: "Holder payout",
-          description: "After the minimum is funded, the holder can activate 120 monthly payments or claim all remaining principal."
+          description: "After the minimum is funded, the holder can activate 120 monthly payments, withdraw extra principal in parts, or claim all remaining principal."
         },
         {
           title: "Beneficiary payout",
@@ -315,12 +322,12 @@ export const dictionaries = {
       badge: "Riska 30 contract",
       title: "A policy account that can become programmed income.",
       subtitle:
-        "The minimum policy is 10,800 USDC. Once funded, the holder can activate 120 monthly payments, claim all, or keep interacting with heartbeat.",
+        "The minimum policy is 10,800 USDC. Once funded, the holder can activate 120 monthly payments, withdraw extra in parts, claim all, or keep interacting with heartbeat.",
       timelineTitle: "Policy lifecycle",
       timeline: [
         { label: "Open", description: "Verify as human, configure beneficiaries, accept terms, and pay the first 30 USDC unit." },
         { label: "Fund", description: "Deposit any amount before payout activation; the minimum fills first and extra principal follows." },
-        { label: "Choose payout", description: "Activate monthly payout or claim all principal once the minimum is funded." },
+        { label: "Choose payout", description: "Activate monthly payout, withdraw extra in parts, or claim all principal once the minimum is funded." },
         { label: "Beneficiary notice", description: "A beneficiary report plus 12 months without holder interaction can unlock death settlement." }
       ],
       economicsTitle: "Policy economics",
@@ -333,7 +340,7 @@ export const dictionaries = {
         {
           label: "Extra principal",
           value: "No fee",
-          description: "Extra deposits increase monthly payout and pass fully to beneficiaries if death settlement happens."
+          description: "Extra deposits increase monthly payout, can be withdrawn in parts, and pass fully to beneficiaries if death settlement happens."
         },
         {
           label: "Death fee",
@@ -483,7 +490,7 @@ export const dictionaries = {
       abstract: {
         title: "Abstract",
         paragraphs: [
-          "Riska 30 is a flexible USDC policy account for World ID verified humans. The holder funds a 10,800 USDC minimum over time or upfront, and any extra principal increases future monthly payout.",
+          "Riska 30 is a flexible USDC policy account for World ID verified humans. The holder funds a 10,800 USDC minimum over time or upfront, and any extra principal increases future monthly payout while remaining withdrawable in parts.",
           "Beneficiaries can claim only after a death report plus 12 months without holder interaction. A heartbeat, deposit, beneficiary update, monthly claim, or claim-all cancels the pending report."
         ]
       },
@@ -497,7 +504,7 @@ export const dictionaries = {
         goals: [
           "Let any verified human open one policy.",
           "Separate minimum principal from extra principal.",
-          "Give holders no-fee monthly payout, claim-all, and heartbeat actions.",
+          "Give holders no-fee monthly payout, partial extra withdrawal, claim-all, and heartbeat actions.",
           "Give beneficiaries a transparent report-and-wait path.",
           "Keep legal terms versioned through document hashes."
         ]
@@ -511,7 +518,7 @@ export const dictionaries = {
         ],
         everydayIntuition: {
           title: "Everyday Intuition",
-          body: "The holder can keep funding, start income after the minimum is funded, withdraw all principal, or simply heartbeat to say they are alive."
+          body: "The holder can keep funding, start income after the minimum is funded, withdraw extra in parts, withdraw all principal, or simply heartbeat to say they are alive. If they empty the policy while alive, they can fund it again."
         }
       },
       userLifecycle: {
@@ -520,14 +527,14 @@ export const dictionaries = {
           { label: "Verify identity.", description: "Authenticate with Wallet Auth and World ID before continuing." },
           { label: "Set beneficiaries.", description: "Choose wallets and percentages that sum to 100%." },
           { label: "Open policy.", description: "Accept terms and pay the first 30 USDC testnet unit." },
-          { label: "Fund or withdraw.", description: "Deposit before payout activation, then activate monthly payout or claim all." },
+          { label: "Fund or withdraw.", description: "Deposit before payout activation, then activate monthly payout, withdraw extra in parts, or claim all." },
           { label: "Heartbeat.", description: "Interact without withdrawing to cancel a pending death notice." }
         ],
         examples: {
           title: "Concrete Examples",
           items: [
             { label: "Minimum funded:", description: "A holder with 10,800 USDC can activate 120 baseline payments." },
-            { label: "Extra principal:", description: "A holder with 12,000 USDC gets a higher monthly estimate." },
+            { label: "Extra principal:", description: "A holder with 12,000 USDC gets a higher monthly estimate and can withdraw part of the extra." },
             { label: "Death claim:", description: "Beneficiaries receive extra principal plus 80% of the remaining minimum." },
             { label: "False report:", description: "A holder heartbeat cancels the report immediately." }
           ]
@@ -557,7 +564,7 @@ export const dictionaries = {
       claims: {
         title: "6. Holder and Beneficiary Claims",
         paragraphs: [
-          "Holder monthly claims and claim-all withdrawals have no fee.",
+          "Holder monthly claims, partial extra withdrawals, and claim-all withdrawals have no fee.",
           "Beneficiary death claims pay according to beneficiary shares after the no-interaction window."
         ]
       },
@@ -604,7 +611,7 @@ export const dictionaries = {
         items: [
           { question: "Who can open a policy?", answer: "Any World ID verified human in the supported flow." },
           { question: "When can the holder start payout?", answer: "After the 10,800 USDC minimum is fully funded." },
-          { question: "Do extra deposits pay a fee?", answer: "No. Extra principal is not fee-bearing." },
+          { question: "Do extra deposits pay a fee?", answer: "No. Extra principal is not fee-bearing and can be withdrawn in parts by the holder." },
           { question: "Who can report death?", answer: "Only a configured beneficiary." },
           { question: "Is this a public insurance launch?", answer: "No. Real-money production needs legal clearance and external audit." }
         ]
@@ -612,7 +619,7 @@ export const dictionaries = {
       conclusion: {
         title: "12. Conclusion",
         paragraphs: [
-          "Riska replaces vague long-term promises with explicit policy balances, holder controls, beneficiary notice, and auditable settlement."
+          "Riska replaces vague long-term promises with explicit policy balances, reusable holder controls, beneficiary notice, and auditable settlement."
         ]
       },
       references: {
@@ -629,7 +636,7 @@ export const dictionaries = {
     metadata: {
       title: "Riska.world - Proteccion flexible para humanos verificados",
       description:
-        "Riska permite que humanos verificados abran una poliza USDC flexible, fondeen un minimo de 10,800 USDC, sumen principal extra y usen heartbeat para proteger el flujo de beneficiarios."
+        "Riska permite que humanos verificados abran una poliza USDC flexible, fondeen un minimo de 10,800 USDC, retiren extra en partes y usen heartbeat para proteger el flujo de beneficiarios."
     },
     navbar: {
       brand: "RISKA",
@@ -646,7 +653,7 @@ export const dictionaries = {
       badge: "Riska 30 · Poliza USDC flexible",
       title: "Cualquier humano verificado puede abrir una poliza.",
       description:
-        "Fondea el minimo de 10,800 USDC con el tiempo o por adelantado. Los depositos extra aumentan el pago mensual futuro, y los beneficiarios solo cobran despues de reporte y 12 meses sin interaccion del titular.",
+        "Fondea el minimo de 10,800 USDC con el tiempo o por adelantado. Los depositos extra aumentan el pago mensual futuro y se pueden retirar en partes. Los beneficiarios solo cobran despues de reporte y 12 meses sin interaccion del titular.",
       chips: [
         "Minimo 10,800 USDC",
         "Unidad base 30 USDC",
@@ -658,7 +665,7 @@ export const dictionaries = {
       title: "Reglas del producto",
       subtitle: "Una cuenta de poliza, saldos visibles y resultados claros.",
       body:
-        "Los depositos llenan primero el minimo, el extra no paga fee, los retiros del titular no tienen fee y el fee de muerte toca solo el minimo restante.",
+        "Los depositos llenan primero el minimo, el extra se puede retirar en partes sin fee, los retiros del titular no tienen fee y el fee de muerte toca solo el minimo restante.",
       metrics: [
         { label: "Poliza minima", value: "10,800 USDC" },
         { label: "Unidad base", value: "30 USDC" },
@@ -684,6 +691,7 @@ export const dictionaries = {
           description: "Cuando el minimo esta fondeado, el titular decide si cobra o espera.",
           points: [
             "Activar 120 pagos mensuales",
+            "Retirar extra en partes sin fee",
             "Retirar todo el principal sin fee",
             "Usar heartbeat para probar vida sin cobrar ese mes"
           ]
@@ -713,7 +721,7 @@ export const dictionaries = {
         },
         {
           title: "Pago titular",
-          description: "Despues de fondear el minimo, el titular puede activar 120 pagos mensuales o retirar todo."
+          description: "Despues de fondear el minimo, el titular puede activar 120 pagos mensuales, retirar extra en partes o retirar todo."
         },
         {
           title: "Pago beneficiarios",
@@ -729,18 +737,18 @@ export const dictionaries = {
       badge: "Contrato Riska 30",
       title: "Una cuenta de poliza que puede convertirse en renta programada.",
       subtitle:
-        "La poliza minima es 10,800 USDC. Cuando esta fondeada, el titular puede activar 120 pagos, cobrar todo o seguir usando heartbeat.",
+        "La poliza minima es 10,800 USDC. Cuando esta fondeada, el titular puede activar 120 pagos, retirar extra en partes, cobrar todo o seguir usando heartbeat.",
       timelineTitle: "Ciclo de vida",
       timeline: [
         { label: "Abrir", description: "Verificar humanidad, configurar beneficiarios, aceptar terminos y pagar la primera unidad de 30 USDC." },
         { label: "Fondear", description: "Depositar cualquier monto antes de activar pagos; primero se llena el minimo y luego el extra." },
-        { label: "Elegir cobro", description: "Activar pagos mensuales o retirar todo el principal cuando el minimo esta fondeado." },
+        { label: "Elegir cobro", description: "Activar pagos mensuales, retirar extra en partes o retirar todo el principal cuando el minimo esta fondeado." },
         { label: "Aviso beneficiario", description: "Reporte de beneficiario mas 12 meses sin interaccion puede habilitar liquidacion." }
       ],
       economicsTitle: "Economia de la poliza",
       economics: [
         { label: "Principal minimo", value: "10,800 USDC", description: "Base requerida antes de activar pago al titular." },
-        { label: "Principal extra", value: "Sin fee", description: "Aumenta el pago mensual y pasa completo a beneficiarios si hay liquidacion." },
+        { label: "Principal extra", value: "Sin fee", description: "Aumenta el pago mensual, se puede retirar en partes y pasa completo a beneficiarios si hay liquidacion." },
         { label: "Fee muerte", value: "20% del minimo", description: "Se cobra solo sobre el minimo restante durante liquidacion por muerte." }
       ],
       contractNote:
@@ -885,7 +893,7 @@ export const dictionaries = {
       abstract: {
         title: "Resumen",
         paragraphs: [
-          "Riska 30 es una cuenta de poliza USDC flexible para humanos verificados por World ID. El titular fondea un minimo de 10,800 USDC con el tiempo o por adelantado, y el principal extra aumenta el pago mensual futuro.",
+          "Riska 30 es una cuenta de poliza USDC flexible para humanos verificados por World ID. El titular fondea un minimo de 10,800 USDC con el tiempo o por adelantado, y el principal extra aumenta el pago mensual futuro mientras sigue retirable en partes.",
           "Los beneficiarios solo pueden cobrar despues de un reporte y 12 meses sin interaccion del titular. Heartbeat, deposito, cambio de beneficiarios, cobro mensual o claim-all cancelan el reporte pendiente."
         ]
       },
@@ -899,7 +907,7 @@ export const dictionaries = {
         goals: [
           "Permitir que cualquier humano verificado abra una poliza.",
           "Separar principal minimo de principal extra.",
-          "Dar al titular pagos mensuales sin fee, claim-all y heartbeat.",
+          "Dar al titular pagos mensuales sin fee, retiro parcial de extra, claim-all y heartbeat.",
           "Dar a beneficiarios una ruta transparente de reporte y espera.",
           "Versionar terminos legales mediante hashes."
         ]
@@ -913,7 +921,7 @@ export const dictionaries = {
         ],
         everydayIntuition: {
           title: "Intuicion cotidiana",
-          body: "El titular puede seguir fondeando, empezar renta cuando el minimo esta listo, retirar todo o enviar heartbeat para decir que esta vivo."
+          body: "El titular puede seguir fondeando, empezar renta cuando el minimo esta listo, retirar extra en partes, retirar todo o enviar heartbeat para decir que esta vivo. Si vacia la poliza estando vivo, puede fondearla otra vez."
         }
       },
       userLifecycle: {
@@ -922,14 +930,14 @@ export const dictionaries = {
           { label: "Verifica identidad.", description: "Autenticate con Wallet Auth y World ID antes de continuar." },
           { label: "Define beneficiarios.", description: "Elige wallets y porcentajes que suman 100%." },
           { label: "Abre poliza.", description: "Acepta terminos y paga la primera unidad testnet de 30 USDC." },
-          { label: "Fondea o retira.", description: "Deposita antes de activar pagos; luego activa pagos mensuales o cobra todo." },
+          { label: "Fondea o retira.", description: "Deposita antes de activar pagos; luego activa pagos mensuales, retira extra en partes o cobra todo." },
           { label: "Heartbeat.", description: "Interactua sin retirar para cancelar un aviso de muerte pendiente." }
         ],
         examples: {
           title: "Ejemplos concretos",
           items: [
             { label: "Minimo fondeado:", description: "Un titular con 10,800 USDC puede activar 120 pagos base." },
-            { label: "Principal extra:", description: "Un titular con 12,000 USDC obtiene un estimado mensual mayor." },
+            { label: "Principal extra:", description: "Un titular con 12,000 USDC obtiene un estimado mensual mayor y puede retirar parte del extra." },
             { label: "Cobro muerte:", description: "Beneficiarios reciben extra mas 80% del minimo restante." },
             { label: "Reporte falso:", description: "Un heartbeat del titular cancela el reporte al instante." }
           ]
@@ -959,7 +967,7 @@ export const dictionaries = {
       claims: {
         title: "6. Cobros del titular y beneficiarios",
         paragraphs: [
-          "Los cobros mensuales y claim-all del titular no tienen fee.",
+          "Los cobros mensuales, retiros parciales de extra y claim-all del titular no tienen fee.",
           "Los cobros de beneficiarios se pagan segun porcentajes despues de la ventana sin interaccion."
         ]
       },
@@ -1006,7 +1014,7 @@ export const dictionaries = {
         items: [
           { question: "Quien puede abrir una poliza?", answer: "Cualquier humano verificado por World ID en el flujo soportado." },
           { question: "Cuando puede cobrar el titular?", answer: "Cuando el minimo de 10,800 USDC esta completamente fondeado." },
-          { question: "El extra paga fee?", answer: "No. El principal extra no paga fee." },
+          { question: "El extra paga fee?", answer: "No. El principal extra no paga fee y el titular puede retirarlo en partes." },
           { question: "Quien puede reportar muerte?", answer: "Solo un beneficiario configurado." },
           { question: "Esto es un lanzamiento publico de seguro?", answer: "No. Produccion con dinero real requiere legal y auditoria externa." }
         ]
@@ -1014,7 +1022,7 @@ export const dictionaries = {
       conclusion: {
         title: "12. Conclusion",
         paragraphs: [
-          "Riska reemplaza promesas vagas por saldos explicitos, controles del titular, aviso de beneficiarios y liquidacion auditable."
+          "Riska reemplaza promesas vagas por saldos explicitos, controles reutilizables del titular, aviso de beneficiarios y liquidacion auditable."
         ]
       },
       references: {

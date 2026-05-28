@@ -60,8 +60,10 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
     event PolicyStatusUpdated(uint256 indexed policyId, PolicyStatus status);
     event BeneficiariesUpdated(uint256 indexed policyId);
     event PayoutActivated(uint256 indexed policyId, uint256 monthlyPayoutAmount, uint256 totalPrincipal);
+    event PayoutRescheduled(uint256 indexed policyId, uint256 monthlyPayoutAmount, uint256 totalPrincipal, uint256 remainingMonths);
     event MonthlyClaimed(uint256 indexed policyId, uint256 amount, uint16 payoutsMade);
     event ClaimAll(uint256 indexed policyId, uint256 amount);
+    event ExtraWithdrawn(uint256 indexed policyId, address indexed holder, uint256 amount);
     event Heartbeat(uint256 indexed policyId, address indexed holder, uint256 timestamp);
     event DeathReported(uint256 indexed policyId, address indexed reporter, uint256 claimableAt);
     event DeathReportCancelled(uint256 indexed policyId);
@@ -181,18 +183,18 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
         _recordHolderInteraction(policyId, policy);
         _drawdown(policy, amount);
         policy.payoutsMade += 1;
+        uint16 payoutsMade = policy.payoutsMade;
 
         if (finalPayout || _totalPrincipal(policy) == 0) {
-            policy.status = PolicyStatus.Closed;
-            policy.nextPayoutAt = 0;
-            emit PolicyStatusUpdated(policyId, PolicyStatus.Closed);
+            _resetPayout(policy);
+            emit PolicyStatusUpdated(policyId, PolicyStatus.Active);
         } else {
             policy.nextPayoutAt += PAYMENT_PERIOD;
         }
 
         premiumVault.payHolder(policyId, policy.holder, amount);
 
-        emit MonthlyClaimed(policyId, amount, policy.payoutsMade);
+        emit MonthlyClaimed(policyId, amount, payoutsMade);
     }
 
     function claimAll(uint256 policyId) external whenNotPaused nonReentrant {
@@ -212,13 +214,32 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
 
         policy.remainingMinimumPrincipal = 0;
         policy.remainingExtraPrincipal = 0;
-        policy.status = PolicyStatus.Closed;
-        policy.nextPayoutAt = 0;
+        _resetPayout(policy);
 
         premiumVault.payHolder(policyId, policy.holder, amount);
 
         emit ClaimAll(policyId, amount);
-        emit PolicyStatusUpdated(policyId, PolicyStatus.Closed);
+        emit PolicyStatusUpdated(policyId, PolicyStatus.Active);
+    }
+
+    function withdrawExtra(uint256 policyId, uint256 amount) external whenNotPaused nonReentrant {
+        Policy storage policy = policies[policyId];
+        require(policy.holder == msg.sender, "ONLY_HOLDER");
+        require(policy.status == PolicyStatus.Active || policy.status == PolicyStatus.PayoutActive, "POLICY_CLOSED");
+        require(amount > 0, "INVALID_AMOUNT");
+        require(amount <= policy.remainingExtraPrincipal, "EXTRA_EXCEEDS_BALANCE");
+
+        _recordHolderInteraction(policyId, policy);
+
+        policy.remainingExtraPrincipal -= amount;
+
+        if (policy.status == PolicyStatus.PayoutActive) {
+            _reschedulePayout(policyId, policy);
+        }
+
+        premiumVault.payHolder(policyId, policy.holder, amount);
+
+        emit ExtraWithdrawn(policyId, policy.holder, amount);
     }
 
     function heartbeat(uint256 policyId) external whenNotPaused {
@@ -305,6 +326,11 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
     function monthlyPayoutEstimate(uint256 policyId) external view returns (uint256) {
         Policy storage policy = policies[policyId];
         require(policy.holder != address(0), "POLICY_NOT_FOUND");
+
+        if (policy.status == PolicyStatus.PayoutActive) {
+            return policy.monthlyPayoutAmount;
+        }
+
         return RiskaPolicyMath.monthlyPayout(_totalPrincipal(policy));
     }
 
@@ -365,6 +391,34 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
     function _recordHolderInteraction(uint256 policyId, Policy storage policy) private {
         policy.lastHolderInteractionAt = block.timestamp;
         _cancelDeathNotice(policyId);
+    }
+
+    function _resetPayout(Policy storage policy) private {
+        policy.status = PolicyStatus.Active;
+        policy.payoutsMade = 0;
+        policy.monthlyPayoutAmount = 0;
+        policy.nextPayoutAt = 0;
+    }
+
+    function _reschedulePayout(uint256 policyId, Policy storage policy) private {
+        uint256 totalBalance = _totalPrincipal(policy);
+
+        if (totalBalance == 0) {
+            _resetPayout(policy);
+            emit PolicyStatusUpdated(policyId, PolicyStatus.Active);
+            return;
+        }
+
+        uint256 remainingMonths = RiskaPolicyMath.PAYOUT_MONTHS - policy.payoutsMade;
+        uint256 monthlyAmount = totalBalance / remainingMonths;
+
+        if (monthlyAmount == 0) {
+            monthlyAmount = totalBalance;
+        }
+
+        policy.monthlyPayoutAmount = monthlyAmount;
+
+        emit PayoutRescheduled(policyId, monthlyAmount, totalBalance, remainingMonths);
     }
 
     function _cancelDeathNotice(uint256 policyId) private {

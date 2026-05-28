@@ -230,11 +230,13 @@ describe("RiskaPolicyManager", function () {
 
     expect(after - before).to.equal(usdc("90") + 1n);
     policy = await ctx.manager.policies(policyId);
-    expect(policy.status).to.equal(STATUS.Closed);
+    expect(policy.status).to.equal(STATUS.Active);
+    expect(policy.payoutsMade).to.equal(0);
+    expect(policy.monthlyPayoutAmount).to.equal(0);
     expect(await ctx.premiumVault.totalPrincipalLiability()).to.equal(0);
   });
 
-  it("lets the holder claim all remaining principal with no fee", async function () {
+  it("lets the holder claim all remaining principal with no fee and reuse the policy", async function () {
     const ctx = await deployFixture();
     const policyId = await openPolicy(ctx);
 
@@ -249,7 +251,65 @@ describe("RiskaPolicyManager", function () {
     expect(await ctx.premiumVault.protocolReserveBalance()).to.equal(0);
 
     const policy = await ctx.manager.policies(policyId);
-    expect(policy.status).to.equal(STATUS.Closed);
+    expect(policy.status).to.equal(STATUS.Active);
+    expect(policy.remainingMinimumPrincipal).to.equal(0);
+    expect(policy.remainingExtraPrincipal).to.equal(0);
+    expect(policy.payoutsMade).to.equal(0);
+    expect(policy.monthlyPayoutAmount).to.equal(0);
+
+    await ctx.manager.connect(ctx.holder).deposit(policyId, usdc("10800"));
+    await ctx.manager.connect(ctx.holder).activatePayout(policyId);
+
+    const reactivatedPolicy = await ctx.manager.policies(policyId);
+    expect(reactivatedPolicy.status).to.equal(STATUS.PayoutActive);
+    expect(reactivatedPolicy.monthlyPayoutAmount).to.equal(usdc("90"));
+    expect(await ctx.manager.policyOf(ctx.holder.address)).to.equal(policyId);
+
+    await expect(
+      ctx.manager.connect(ctx.holder).openPolicy([ctx.beneficiaryA.address], [10_000], termsHash)
+    ).to.be.revertedWith("POLICY_EXISTS");
+  });
+
+  it("lets the holder withdraw extra principal in parts with no fee", async function () {
+    const ctx = await deployFixture();
+    const policyId = await openPolicy(ctx);
+
+    await fundMinimum(ctx, policyId, "1200");
+
+    const before = await ctx.token.balanceOf(ctx.holder.address);
+    await ctx.manager.connect(ctx.holder).withdrawExtra(policyId, usdc("450"));
+    const after = await ctx.token.balanceOf(ctx.holder.address);
+
+    expect(after - before).to.equal(usdc("450"));
+    expect(await ctx.premiumVault.totalPrincipalLiability()).to.equal(usdc("11550"));
+    expect(await ctx.premiumVault.protocolReserveBalance()).to.equal(0);
+
+    const policy = await ctx.manager.policies(policyId);
+    expect(policy.status).to.equal(STATUS.Active);
+    expect(policy.remainingMinimumPrincipal).to.equal(usdc("10800"));
+    expect(policy.remainingExtraPrincipal).to.equal(usdc("750"));
+  });
+
+  it("reschedules payout when extra principal is withdrawn during payout", async function () {
+    const ctx = await deployFixture();
+    const policyId = await openPolicy(ctx);
+
+    await fundMinimum(ctx, policyId, "1200");
+    await ctx.manager.connect(ctx.holder).activatePayout(policyId);
+    await ctx.manager.connect(ctx.holder).claimMonthly(policyId);
+
+    let policy = await ctx.manager.policies(policyId);
+    expect(policy.monthlyPayoutAmount).to.equal(usdc("100"));
+    expect(policy.remainingExtraPrincipal).to.equal(usdc("1190"));
+
+    await ctx.manager.connect(ctx.holder).withdrawExtra(policyId, usdc("590"));
+
+    policy = await ctx.manager.policies(policyId);
+    expect(policy.status).to.equal(STATUS.PayoutActive);
+    expect(policy.remainingExtraPrincipal).to.equal(usdc("600"));
+    expect(policy.monthlyPayoutAmount).to.equal(usdc("95.042016"));
+    expect(await ctx.manager.monthlyPayoutEstimate(policyId)).to.equal(usdc("95.042016"));
+    expect(await ctx.premiumVault.totalPrincipalLiability()).to.equal(usdc("11310"));
   });
 
   it("only configured beneficiaries can report death", async function () {
@@ -314,6 +374,13 @@ describe("RiskaPolicyManager", function () {
     await fundMinimum(ctx, policyId, "1200");
     await reportAfterPolicyAge(ctx, policyId);
     await ctx.manager.connect(ctx.holder).claimAll(policyId);
+    expect((await ctx.manager.deathNotices(policyId)).active).to.equal(false);
+
+    ctx = await deployFixture();
+    policyId = await openPolicy(ctx);
+    await fundMinimum(ctx, policyId, "1200");
+    await reportAfterPolicyAge(ctx, policyId);
+    await ctx.manager.connect(ctx.holder).withdrawExtra(policyId, usdc("1"));
     expect((await ctx.manager.deathNotices(policyId)).active).to.equal(false);
   });
 

@@ -120,7 +120,7 @@ const copy = {
       badge: "Riska 30",
       title: "Flexible life protection for verified humans.",
       body:
-        "Riska is a World Chain USDC policy account. Any verified human can fund the 10,800 USDC minimum over time, add extra principal, and activate programmed income when ready.",
+        "Riska is a World Chain USDC policy account. Any verified human can fund the 10,800 USDC minimum over time, add or withdraw extra principal, and activate programmed income when ready.",
       primary: "Start application",
       secondary: "Read policy rules",
       cards: [
@@ -132,7 +132,7 @@ const copy = {
         {
           icon: CircleDollarSign,
           title: "Flexible income",
-          body: "Once the minimum is funded, the holder can start 120 monthly payments or claim the remaining balance."
+          body: "Once the minimum is funded, the holder can start 120 monthly payments, withdraw extra in parts, or claim the remaining balance."
         },
         {
           icon: Fingerprint,
@@ -162,11 +162,11 @@ const copy = {
       eyebrow: "Riska 30 rules",
       title: "The promise is visible before the user signs.",
       body:
-        "Any verified human can open a policy. Deposits fill the 10,800 USDC minimum first, extra deposits increase future monthly payout, and beneficiaries can claim only after 12 months without holder interaction.",
+        "Any verified human can open a policy. Deposits fill the 10,800 USDC minimum first, extra deposits increase future monthly payout and can be withdrawn in parts, and beneficiaries can claim only after 12 months without holder interaction.",
       items: [
         "World ID verification is completed before policy issuance",
         "Beneficiaries must total 100%",
-        "Extra deposits are not fee-bearing",
+        "Extra deposits can be withdrawn without fee",
         "Holder heartbeat cancels pending death reports"
       ]
     },
@@ -179,7 +179,7 @@ const copy = {
       ready: "Ready",
       required: "Required",
       step: (index: number) => `Step ${index + 1} of ${steps.length}`,
-      submit: "Open test policy",
+      submit: "Open policy",
       submitted: "Policy issued",
       steps: {
         beneficiaries: { meta: "Beneficiaries", title: "Beneficiary allocation" },
@@ -226,14 +226,14 @@ const copy = {
         network: "Network",
         proof: "Human proof",
         submitted:
-          "Test policy opened on World Chain Sepolia.",
-        testnetConfigured: "Testnet contracts ready",
+          "Policy opened on World Chain.",
+        testnetConfigured: "Network ready",
         testnetExisting: "Policy found for this wallet",
         testnetLookup: "Checking this wallet for an existing policy",
-        testnetMissing: "Testnet contracts pending deployment",
+        testnetMissing: "Network unavailable",
         testnetPolicy: "Policy ID",
-        testnetTitle: "World Chain Sepolia issuance",
-        testnetTx: "Open policy tx",
+        testnetTitle: "World Chain deployment",
+        testnetTx: "Transaction",
         terms: "I accept the Riska 30 policy terms.",
         termsHash: "Terms hash",
         risk: "I understand the payout rules and smart-contract audit requirement before user funds are activated.",
@@ -259,7 +259,9 @@ const copy = {
           refresh: "Refresh",
           reportDeath: "Report death",
           status: "Status",
-          title: "Your policy"
+          title: "Your policy",
+          withdrawExtra: "Withdraw extra",
+          withdrawExtraAmount: "Extra withdrawal amount"
         }
       }
     }
@@ -267,42 +269,42 @@ const copy = {
   es: {
     welcome: {
       badge: "Riska 30",
-      title: "Proteccion flexible para humanos verificados.",
+      title: "Protección flexible para humanos verificados.",
       body:
-        "Riska es una cuenta de poliza USDC en World Chain. Cualquier humano verificado puede fondear el minimo de 10,800 USDC con el tiempo, sumar principal extra y activar renta programada cuando quiera.",
+        "Riska es una cuenta de póliza USDC en World Chain. Cualquier humano verificado puede fondear el mínimo de 10,800 USDC con el tiempo, sumar o retirar principal extra y activar renta programada cuando quiera.",
       primary: "Empezar solicitud",
       secondary: "Ver reglas",
       cards: [
         {
           icon: HeartHandshake,
-          title: "Proteccion familiar",
-          body: "Los beneficiarios pueden cobrar solo despues de reportar fallecimiento y esperar 12 meses sin interaccion del titular."
+          title: "Protección familiar",
+          body: "Los beneficiarios pueden cobrar solo después de reportar fallecimiento y esperar 12 meses sin interacción del titular."
         },
         {
           icon: CircleDollarSign,
           title: "Renta flexible",
-          body: "Cuando el minimo esta fondeado, el titular puede activar 120 pagos mensuales o retirar el saldo restante."
+          body: "Cuando el mínimo está fondeado, el titular puede activar 120 pagos mensuales, retirar extra en partes o retirar el saldo restante."
         },
         {
           icon: Fingerprint,
-          title: "Un humano, una poliza",
-          body: "World ID y la wallet reservan un cupo de poliza para cada humano verificado."
+          title: "Un humano, una póliza",
+          body: "World ID y la wallet reservan un cupo de póliza para cada humano verificado."
         }
       ],
       facts: [
-        ["Minimo", "10,800 USDC"],
+        ["Mínimo", "10,800 USDC"],
         ["Unidad base", "30 USDC"],
         ["Pagos", "120 meses"],
         ["Red", "World Chain"]
       ]
     },
     hero: {
-      badge: "Solicitud de poliza en World Chain",
+      badge: "Solicitud de póliza en World Chain",
       title: "Inscribite en Riska 30.",
       body:
-        "Completa el flujo real de solicitud: wallet, World ID, beneficiarios, cotizacion flexible y consentimiento firmado antes de emitir.",
+        "Completa el flujo real de solicitud: wallet, World ID, beneficiarios, cotización flexible y consentimiento firmado antes de emitir.",
       metrics: [
-        ["Poliza minima", "10,800 USDC"],
+        ["Póliza mínima", "10,800 USDC"],
         ["Calendario", "120 meses"],
         ["Aviso muerte", "12 meses"]
       ]
@@ -311,16 +313,16 @@ const copy = {
       eyebrow: "Reglas Riska 30",
       title: "La promesa queda visible antes de firmar.",
       body:
-        "Cualquier humano verificado puede abrir una poliza. Los depositos llenan primero el minimo de 10,800 USDC, el extra aumenta el pago mensual futuro y los beneficiarios solo cobran despues de 12 meses sin interaccion del titular.",
+        "Cualquier humano verificado puede abrir una póliza. Los depósitos llenan primero el mínimo de 10,800 USDC, el extra aumenta el pago mensual futuro y se puede retirar en partes, y los beneficiarios solo cobran después de 12 meses sin interacción del titular.",
       items: [
-        "La verificacion World ID se completa antes de emitir",
+        "La verificación World ID se completa antes de emitir",
         "Los beneficiarios deben sumar 100%",
-        "Los depositos extra no pagan fee",
+        "El extra se puede retirar sin fee",
         "El heartbeat del titular cancela reportes pendientes"
       ]
     },
     wizard: {
-      back: "Atras",
+      back: "Atrás",
       blocked: "Completa los campos requeridos para continuar.",
       complete: "Completo",
       continue: "Continuar",
@@ -328,21 +330,21 @@ const copy = {
       ready: "Listo",
       required: "Requerido",
       step: (index: number) => `Paso ${index + 1} de ${steps.length}`,
-      submit: "Abrir poliza testnet",
-      submitted: "Poliza emitida",
+      submit: "Abrir póliza",
+      submitted: "Póliza emitida",
       steps: {
-        beneficiaries: { meta: "Beneficiarios", title: "Asignacion de beneficiarios" },
-        confirm: { meta: "World Chain", title: "Revision y consentimiento" },
+        beneficiaries: { meta: "Beneficiarios", title: "Asignación de beneficiarios" },
+        confirm: { meta: "World Chain", title: "Revisión y consentimiento" },
         identity: { meta: "Wallet + World ID", title: "Humano verificado" },
-        quote: { meta: "30 USDC / mes", title: "Cotizacion de poliza" }
+        quote: { meta: "30 USDC / mes", title: "Cotización de póliza" }
       },
       identity: {
         instruction:
           "Conecta tu wallet y completa World ID. El wizard habilita el siguiente paso solo cuando queda reservado un humano verificado para esta wallet.",
         wallet: "Wallet conectada",
-        walletDetail: "Wallet Auth ata esta solicitud a una direccion de World Chain.",
+        walletDetail: "Wallet Auth ata esta solicitud a una dirección de World Chain.",
         worldId: "Humano reservado",
-        worldIdDetail: "World ID reserva un cupo de poliza para un humano verificado."
+        worldIdDetail: "World ID reserva un cupo de póliza para un humano verificado."
       },
       beneficiaries: {
         add: "Agregar beneficiario",
@@ -351,46 +353,46 @@ const copy = {
         namePlaceholder: "Nombre completo",
         remove: "Quitar beneficiario",
         share: "Porcentaje",
-        total: (value: number) => `Asignacion total: ${value}%`,
+        total: (value: number) => `Asignación total: ${value}%`,
         wallet: "Wallet",
-        walletInvalid: "Cada beneficiario necesita una wallet 0x valida.",
+        walletInvalid: "Cada beneficiario necesita una wallet 0x válida.",
         walletPlaceholder: "0x..."
       },
       quote: {
         payout: "Pago mensual estimado",
         premium: "Unidad base",
-        principal: "Poliza minima",
-        reviewed: "Revise la formula de la poliza.",
+        principal: "Póliza mínima",
+        reviewed: "Revisé la fórmula de la póliza.",
         rules: [
-          ["Primero minimo", "10,800 USDC"],
-          ["Depositos extra", "100% principal"],
+          ["Primero mínimo", "10,800 USDC"],
+          ["Depósitos extra", "100% principal"],
           ["Pago titular", "120 meses"],
-          ["Fee muerte", "20% solo minimo"]
+          ["Fee muerte", "20% solo mínimo"]
         ]
       },
       confirm: {
         application: "Solicitud",
-        checklist: ["World ID", "Beneficiarios", "Cotizacion"],
+        checklist: ["World ID", "Beneficiarios", "Cotización"],
         firstPayment: "Primer pago",
         network: "Red",
         proof: "Prueba humana",
         submitted:
-          "Poliza de prueba abierta en World Chain Sepolia.",
-        testnetConfigured: "Contratos testnet listos",
-        testnetExisting: "Poliza encontrada para esta wallet",
-        testnetLookup: "Buscando poliza existente para esta wallet",
-        testnetMissing: "Contratos testnet pendientes de deploy",
+          "Póliza abierta en World Chain.",
+        testnetConfigured: "Red lista",
+        testnetExisting: "Póliza encontrada para esta wallet",
+        testnetLookup: "Buscando póliza existente para esta wallet",
+        testnetMissing: "Red no disponible",
         testnetPolicy: "Policy ID",
-        testnetTitle: "Emision en World Chain Sepolia",
-        testnetTx: "Tx de apertura",
-        terms: "Acepto los terminos de la poliza Riska 30.",
-        termsHash: "Hash de terminos",
-        risk: "Entiendo las reglas de pago y el requisito de auditoria de contratos antes de activar fondos de usuarios.",
-        payment: "Autorizo preparar el primer pago de 30 USDC para el paso de emision.",
+        testnetTitle: "Despliegue en World Chain",
+        testnetTx: "Transacción",
+        terms: "Acepto los términos de la póliza Riska 30.",
+        termsHash: "Hash de términos",
+        risk: "Entiendo las reglas de pago y el requisito de auditoría de contratos antes de activar fondos de usuarios.",
+        payment: "Autorizo preparar el primer pago de 30 USDC para el paso de emisión.",
         wallet: "Wallet",
         policy: {
-          actionComplete: "Transaccion confirmada",
-          actionError: "La accion fallo",
+          actionComplete: "Transacción confirmada",
+          actionError: "La acción falló",
           activate: "Activar pagos",
           claimAll: "Cobrar todo",
           claimDeath: "Cobrar muerte",
@@ -401,14 +403,16 @@ const copy = {
           depositAmount: "Monto a depositar",
           extraPrincipal: "Principal extra",
           heartbeat: "Heartbeat",
-          minimumFunded: "Minimo fondeado",
+          minimumFunded: "Mínimo fondeado",
           monthlyEstimate: "Estimado mensual",
           noDeathNotice: "Sin reporte",
           payoutProgress: "Pagos",
           refresh: "Actualizar",
           reportDeath: "Reportar muerte",
           status: "Estado",
-          title: "Tu poliza"
+          title: "Tu póliza",
+          withdrawExtra: "Retirar extra",
+          withdrawExtraAmount: "Monto de extra a retirar"
         }
       }
     }
@@ -726,7 +730,7 @@ export function RiskaEnrollmentHome() {
                   <p className="mt-5 max-w-xl text-base leading-7 text-[#516159]">{content.hero.body}</p>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-3">
                   {content.hero.metrics.map(([label, value]) => (
                     <div key={label} className="border border-[#d9ded5] bg-white px-3 py-3">
                       <p className="text-xs text-[#6b766f]">{label}</p>
@@ -794,7 +798,7 @@ function WelcomeScreen({ content }: { content: (typeof copy)[Language] }) {
 
   return (
     <section className="border-b border-[#dce4d8] bg-[#f5f7f2]">
-      <div className="mx-auto grid min-h-[calc(100vh-69px)] max-w-7xl gap-10 px-5 py-10 md:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:py-14">
+      <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 md:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:py-20">
         <div className="max-w-3xl">
           <p className="text-sm font-semibold text-emerald-700">{welcome.badge}</p>
           <h1 className="mt-4 text-4xl font-semibold leading-tight md:text-6xl">
@@ -1152,7 +1156,7 @@ function ConfirmScreen({
         <SummaryFact label={text.wallet} value={state.walletSession ? shortAddress(state.walletSession.address) : "-"} />
         <SummaryFact label={text.proof} value={state.humanReservation ? shortProofId(state.humanReservation.nullifier) : "-"} />
         <SummaryFact label={text.firstPayment} value="30 USDC" />
-        <SummaryFact label={text.network} value={`World Chain Sepolia (${WORLDCHAIN_SEPOLIA_CHAIN_ID})`} />
+        <SummaryFact label={text.network} value="World Chain Sepolia" />
       </div>
 
       <div className="border border-[#ddd8ed] bg-[#f5f2ff] p-4">
@@ -1286,6 +1290,7 @@ function PolicyControlPanel({
   const text = content.wizard.confirm.policy;
   const [policy, setPolicy] = useState<RiskaTestnetPolicyView | null>(null);
   const [depositAmount, setDepositAmount] = useState("10770");
+  const [extraWithdrawAmount, setExtraWithdrawAmount] = useState("100");
   const [workingAction, setWorkingAction] = useState<TestnetPolicyAction | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusTone, setStatusTone] = useState("text-[#66746e]");
@@ -1324,7 +1329,12 @@ function PolicyControlPanel({
     try {
       await runTestnetPolicyAction({
         action,
-        amount: action === "deposit" ? depositAmount : undefined,
+        amount:
+          action === "deposit"
+            ? depositAmount
+            : action === "withdrawExtra"
+              ? extraWithdrawAmount
+              : undefined,
         holder: walletAddress,
         onStatus: (status) => {
           setStatusMessage(getPolicyActionStatusLabel(status));
@@ -1350,6 +1360,7 @@ function PolicyControlPanel({
   const canUseHolderAction = policy ? status === 1 || status === 2 : false;
   const minimumFunded = policy ? policy.remainingMinimumPrincipal >= MINIMUM_POLICY_PRINCIPAL : false;
   const canDeposit = policy ? status === 1 : false;
+  const canWithdrawExtra = policy ? canUseHolderAction && policy.remainingExtraPrincipal > 0n : false;
   const canActivate = policy ? status === 1 && minimumFunded : false;
   const canClaimMonthly = policy ? status === 2 : false;
   const canClaimAll = policy ? status === 2 || (status === 1 && minimumFunded) : false;
@@ -1421,6 +1432,27 @@ function PolicyControlPanel({
               disabled={!canDeposit || isWorking}
               icon={Send}
               label={text.deposit}
+              onClick={runAction}
+              workingAction={workingAction}
+            />
+          </div>
+
+          <div className="mt-2 grid gap-2 md:grid-cols-[1fr_auto]">
+            <input
+              aria-label={text.withdrawExtraAmount}
+              className="min-h-11 border border-[#e3e8df] bg-[#fbfcf8] px-3 text-sm outline-none focus:border-[#17231e]"
+              min="0"
+              max={policy ? formatUsdcAmount(policy.remainingExtraPrincipal) : undefined}
+              onChange={(event) => setExtraWithdrawAmount(event.target.value)}
+              step="0.000001"
+              type="number"
+              value={extraWithdrawAmount}
+            />
+            <PolicyActionButton
+              action="withdrawExtra"
+              disabled={!canWithdrawExtra || isWorking}
+              icon={HandCoins}
+              label={text.withdrawExtra}
               onClick={runAction}
               workingAction={workingAction}
             />
@@ -1763,7 +1795,8 @@ function getPolicyActionLabel(
     claimMonthly: text.claimMonthly,
     deposit: text.deposit,
     heartbeat: text.heartbeat,
-    reportDeath: text.reportDeath
+    reportDeath: text.reportDeath,
+    withdrawExtra: text.withdrawExtra
   };
 
   return labels[action];

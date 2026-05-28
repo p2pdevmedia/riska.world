@@ -25,8 +25,8 @@ export const contracts: ContractDefinition[] = [
     id: "policyManager",
     slug: "policy-manager",
     network: "World Chain Sepolia",
-    address: "0x8976d1e5617635a5Fdfe8c96bDFb3B71dE8C2780",
-    explorerUrl: `${worldchainSepoliaExplorer}/0x8976d1e5617635a5Fdfe8c96bDFb3B71dE8C2780`,
+    address: "0x34cbF7A191DeD947810D7095a9e0e08897f84c73",
+    explorerUrl: `${worldchainSepoliaExplorer}/0x34cbF7A191DeD947810D7095a9e0e08897f84c73`,
     sourceFile: "contracts/RiskaPolicyManager.sol",
     sourceIncluded: true
   },
@@ -34,8 +34,8 @@ export const contracts: ContractDefinition[] = [
     id: "beneficiaryRegistry",
     slug: "beneficiary-registry",
     network: "World Chain Sepolia",
-    address: "0x5e7246B3283558d8603Fdf4f84A6A1D33Eff9B84",
-    explorerUrl: `${worldchainSepoliaExplorer}/0x5e7246B3283558d8603Fdf4f84A6A1D33Eff9B84`,
+    address: "0xc96506624EffC7669d304C87695f9F1A860Fe539",
+    explorerUrl: `${worldchainSepoliaExplorer}/0xc96506624EffC7669d304C87695f9F1A860Fe539`,
     sourceFile: "contracts/RiskaBeneficiaryRegistry.sol",
     sourceIncluded: true
   },
@@ -43,8 +43,8 @@ export const contracts: ContractDefinition[] = [
     id: "premiumVault",
     slug: "premium-vault",
     network: "World Chain Sepolia",
-    address: "0x201E0E4eeA5a0517C8Df69ee4f84b7c366e4Dcb2",
-    explorerUrl: `${worldchainSepoliaExplorer}/0x201E0E4eeA5a0517C8Df69ee4f84b7c366e4Dcb2`,
+    address: "0xfe83d9f40528DD6e2EF0063949FC81621b421Bdc",
+    explorerUrl: `${worldchainSepoliaExplorer}/0xfe83d9f40528DD6e2EF0063949FC81621b421Bdc`,
     sourceFile: "contracts/RiskaPremiumVault.sol",
     sourceIncluded: true
   }

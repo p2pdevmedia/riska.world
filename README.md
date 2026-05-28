@@ -11,7 +11,8 @@ The product combines an electronic policy document with a smart-contract lifecyc
 - Deposits fill the minimum first, then extra principal.
 - Holder payout can start once the minimum is fully funded.
 - Holder payout is `total remaining principal / 120` monthly payments, with final dust paid on the last claim.
-- Holder can claim all remaining principal with no fee.
+- Holder can withdraw extra principal in parts with no fee.
+- Holder can claim all remaining principal with no fee; after a living holder empties the balance, the same policy can be funded and activated again.
 - Holder `heartbeat` proves life and cancels pending beneficiary death reports.
 - Beneficiary death claims retain 20% only from remaining minimum principal; extra principal goes 100% to beneficiaries.
 
@@ -21,10 +22,11 @@ The product combines an electronic policy document with a smart-contract lifecyc
 2. The holder deposits any amount over time; deposits fill the 10,800 USDC minimum first.
 3. Any amount above 10,800 USDC becomes extra principal and increases the future monthly payout estimate.
 4. Once the minimum is fully funded, the holder can activate 120 monthly payouts.
-5. The holder can claim monthly, claim all remaining principal, or send a heartbeat without withdrawing.
-6. A configured beneficiary can report death only after the policy has existed for 12 months.
-7. If the holder does not interact for 12 months after the report, any configured beneficiary can claim.
-8. If the holder interacts with the contract, the pending death report is cancelled.
+5. The holder can withdraw extra principal in parts, claim monthly, claim all remaining principal, or send a heartbeat without withdrawing.
+6. If the holder withdraws the full living balance, the policy resets to an active zero-balance state and can be funded again.
+7. A configured beneficiary can report death only after the policy has existed for 12 months.
+8. If the holder does not interact for 12 months after the report, any configured beneficiary can claim.
+9. If the holder interacts with the contract, the pending death report is cancelled.
 
 ## Current Smart Contracts
 
