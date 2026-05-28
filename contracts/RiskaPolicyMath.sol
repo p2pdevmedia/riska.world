@@ -3,34 +3,26 @@ pragma solidity ^0.8.24;
 
 library RiskaPolicyMath {
     uint16 internal constant BPS_DENOMINATOR = 10_000;
-    uint16 internal constant WAITING_PERIOD_MONTHS = 12;
-    uint16 internal constant CONTRIBUTION_MONTHS = 360;
-    uint16 internal constant RETIREMENT_PAYOUT_MONTHS = 120;
-    uint16 internal constant PRE_MATURITY_BENEFICIARY_BPS = 8_000;
-    uint16 internal constant POST_MATURITY_BENEFICIARY_BPS = 9_000;
+    uint16 internal constant MINIMUM_POLICY_MONTHS = 360;
+    uint16 internal constant PAYOUT_MONTHS = 120;
+    uint16 internal constant DEATH_BENEFICIARY_BPS = 8_000;
+    uint16 internal constant DEATH_FEE_BPS = 2_000;
 
     uint8 internal constant USDC_DECIMALS = 6;
-    uint256 internal constant MONTHLY_PREMIUM = 30 * 10 ** USDC_DECIMALS;
-    uint256 internal constant FULL_TERM_PRINCIPAL = MONTHLY_PREMIUM * CONTRIBUTION_MONTHS;
-    uint256 internal constant HOLDER_MONTHLY_PAYOUT = FULL_TERM_PRINCIPAL / RETIREMENT_PAYOUT_MONTHS;
+    uint256 internal constant MINIMUM_MONTHLY_UNIT = 30 * 10 ** USDC_DECIMALS;
+    uint256 internal constant MINIMUM_POLICY_PRINCIPAL = MINIMUM_MONTHLY_UNIT * MINIMUM_POLICY_MONTHS;
 
-    function paidPrincipal(uint16 paidMonths) internal pure returns (uint256) {
-        require(paidMonths <= CONTRIBUTION_MONTHS, "PAID_MONTHS_TOO_HIGH");
-        return uint256(paidMonths) * MONTHLY_PREMIUM;
+    function monthlyPayout(uint256 principal) internal pure returns (uint256) {
+        return principal / PAYOUT_MONTHS;
     }
 
-    function beneficiaryPayoutBeforeMaturity(uint16 paidMonths) internal pure returns (uint256) {
-        require(paidMonths < CONTRIBUTION_MONTHS, "USE_MATURED_PAYOUT");
-
-        if (paidMonths < WAITING_PERIOD_MONTHS) {
-            return 0;
-        }
-
-        return (paidPrincipal(paidMonths) * PRE_MATURITY_BENEFICIARY_BPS) / BPS_DENOMINATOR;
-    }
-
-    function beneficiaryPayoutAfterMaturity(uint256 remainingBalance) internal pure returns (uint256) {
-        return (remainingBalance * POST_MATURITY_BENEFICIARY_BPS) / BPS_DENOMINATOR;
+    function deathPayout(uint256 remainingMinimumPrincipal, uint256 remainingExtraPrincipal)
+        internal
+        pure
+        returns (uint256 payout, uint256 retainedFee)
+    {
+        retainedFee = (remainingMinimumPrincipal * DEATH_FEE_BPS) / BPS_DENOMINATOR;
+        payout = remainingExtraPrincipal + remainingMinimumPrincipal - retainedFee;
     }
 
     function validateBeneficiaryShares(uint16[] memory sharesBps) internal pure returns (bool) {

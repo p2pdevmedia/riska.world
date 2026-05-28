@@ -1,42 +1,49 @@
 # Riska 30
 
-Riska 30 is a long-duration life protection product designed around one rule:
+Riska 30 is a flexible USDC policy account for World ID verified humans.
 
-> Pay 30 USDC per month for 30 years. If the holder completes the term, the holder receives 100% of scheduled principal through 10 years of programmed income. If verified death occurs after the waiting period, beneficiaries collect under the policy formula.
+> Any verified human can open a policy. The minimum policy is 10,800 USDC, payable over time or prepaid. Extra deposits increase future monthly payout and are not fee-bearing. Beneficiaries can claim only after a death report plus 12 months without holder interaction.
 
 The product combines an electronic policy document with a smart-contract lifecycle:
 
-- 30-year contribution term.
-- Beneficiary protection before maturity.
-- Programmed withdrawals after maturity.
-- Principal accounting in USDC, with yield strategies funding protocol economics separately from the base policy promise.
-- Verifiable policy state for active, grace, lapsed, matured, payout, and closed policies.
+- One policy per verified human.
+- Minimum policy principal: `30 USDC * 360 = 10,800 USDC`.
+- Deposits fill the minimum first, then extra principal.
+- Holder payout can start once the minimum is fully funded.
+- Holder payout is `total remaining principal / 120` monthly payments, with final dust paid on the last claim.
+- Holder can claim all remaining principal with no fee.
+- Holder `heartbeat` proves life and cancels pending beneficiary death reports.
+- Beneficiary death claims retain 20% only from remaining minimum principal; extra principal goes 100% to beneficiaries.
 
 ## Product Flow
 
-1. A plan defines the 30 USDC monthly premium, waiting period, beneficiary payout formula, maturity payout duration, and policy terms hash.
-2. A verified holder opens a policy, sets a beneficiary, and pays the first premium.
-3. Scheduled premiums keep coverage active through the contribution term.
-4. If verified death occurs before 12 paid months, beneficiaries receive no policy payout.
-5. If verified death occurs from month 12 through maturity, beneficiaries receive 80% of paid premiums.
-6. If the policy reaches maturity, the holder activates 100% principal return over 120 monthly payouts.
-7. If verified death occurs after maturity or during payout, beneficiaries receive 90% of the matured or remaining balance.
+1. A verified holder opens a policy, sets beneficiaries, accepts the terms hash, and pays the first 30 USDC testnet unit.
+2. The holder deposits any amount over time; deposits fill the 10,800 USDC minimum first.
+3. Any amount above 10,800 USDC becomes extra principal and increases the future monthly payout estimate.
+4. Once the minimum is fully funded, the holder can activate 120 monthly payouts.
+5. The holder can claim monthly, claim all remaining principal, or send a heartbeat without withdrawing.
+6. A configured beneficiary can report death only after the policy has existed for 12 months.
+7. If the holder does not interact for 12 months after the report, any configured beneficiary can claim.
+8. If the holder interacts with the contract, the pending death report is cancelled.
 
-## Smart Contract
+## Current Smart Contracts
 
-The MVP Solidity contract lives at:
+The current production-directed contract set lives in:
 
 ```text
-contracts/RiskaThirtyYearPolicy.sol
+contracts/RiskaPolicyManager.sol
+contracts/RiskaPolicyMath.sol
+contracts/RiskaBeneficiaryRegistry.sol
+contracts/RiskaPremiumVault.sol
 ```
 
-The current contract is intentionally scoped and does not yet match the final production design. It implements an MVP lifecycle, stablecoin accounting, premium split, death settlement, maturity activation, programmed payouts, fee withdrawal, and lapsed-policy surrender.
+`RiskaDeathVerifier.sol` remains in the repository as a legacy verifier/oracle experiment, but it no longer gates the main beneficiary payout flow.
 
-It does not yet implement production-grade World ID proof persistence, upgrade governance, yield strategies, final payout formulas, or jurisdiction-specific legal compliance.
+The older `RiskaThirtyYearPolicy.sol` is kept as historical MVP source. The app and current tests target `RiskaPolicyManager`.
 
 ## White Paper
 
-The grant-oriented white paper source lives at:
+The white paper source lives at:
 
 ```text
 docs/riska-whitepaper-v2.md
@@ -54,33 +61,30 @@ Regenerate it with:
 python3 scripts/build_whitepaper_pdf.py
 ```
 
-## Productive Development Plan
-
-The current product plan, base financial model, roadmap, and open questions live at:
+## Product And Review Docs
 
 ```text
 docs/productive-development-plan.md
-```
-
-The site and contract map for AI-agent review, security review, and future auditors lives at:
-
-```text
 docs/agent-review-map.md
 ```
 
+The frontend is a Next.js app with bilingual product copy in `lib/i18n.ts`.
+
 ## Web App
 
-The frontend is a Next.js app with bilingual product copy in `lib/i18n.ts`.
-Mini App connection starts with the official World MiniKit provider and Wallet
-Auth verification endpoints:
+World App and World ID integration starts here:
 
 ```text
 components/MiniAppProvider.tsx
+components/WalletAuth.tsx
+components/WorldIdGate.tsx
 app/api/minikit/nonce/route.ts
 app/api/minikit/complete-siwe/route.ts
+app/api/world-id/rp-signature/route.ts
+app/api/world-id/verify-policy-human/route.ts
 ```
 
-For World App review, configure the Developer Portal app id:
+For World App review, configure:
 
 ```bash
 NEXT_PUBLIC_WORLD_APP_ID=app_your_world_app_id
@@ -103,26 +107,6 @@ npm run build
 
 ## Contract Development
 
-The contract toolchain uses Hardhat. The first production-aligned module is the Riska 30 policy math library:
-
-```text
-contracts/RiskaPolicyMath.sol
-```
-
-The first manager contract using that math lives at:
-
-```text
-contracts/RiskaPolicyManager.sol
-```
-
-Supporting modules now separate beneficiary configuration and USDC custody:
-
-```text
-contracts/RiskaBeneficiaryRegistry.sol
-contracts/RiskaDeathVerifier.sol
-contracts/RiskaPremiumVault.sol
-```
-
 Run contract checks with:
 
 ```bash
@@ -130,7 +114,7 @@ npm run contracts:compile
 npm run contracts:test
 ```
 
-### World Chain Sepolia test deployment
+### World Chain Sepolia Test Deployment
 
 World Chain Sepolia uses chain id `4801` and the public RPC URL
 `https://worldchain-sepolia.g.alchemy.com/public`.
@@ -141,23 +125,16 @@ Create a local deployer wallet:
 npm run wallet:create:worldchain-sepolia
 ```
 
-This writes the deployer private key to `.env.worldchain-sepolia.local`, which is
-git-ignored. Fund the printed address with World Chain Sepolia ETH from:
-
-```text
-https://www.alchemy.com/faucets/world-chain-sepolia
-```
-
-Deploy the test contract set after funding the wallet:
+Deploy after funding the wallet:
 
 ```bash
 npm run contracts:deploy:worldchain-sepolia
 ```
 
-The deploy script publishes `MockUSDC`, the modular Riska policy contracts, and
-the legacy `RiskaThirtyYearPolicy`, then wires the policy manager into the
-registry, verifier, and vault. Successful deployments are saved under
-`deployments/worldchain-sepolia/`.
+The deploy script publishes `MockUSDC`, the modular Riska policy contracts, the
+legacy verifier, and the legacy `RiskaThirtyYearPolicy`. It wires the active
+policy manager only into the beneficiary registry and premium vault. Successful
+deployments are saved under `deployments/worldchain-sepolia/`.
 
 ## Stack
 
@@ -166,4 +143,4 @@ registry, verifier, and vault. Successful deployments are saved under
 - World MiniKit for Mini App context and Wallet Auth.
 - viem for World Chain/browser wallet connectivity.
 - Prisma placeholder for future persistence.
-- Solidity and Hardhat for the Riska 30 policy lifecycle.
+- Solidity and Hardhat for the Riska policy lifecycle.

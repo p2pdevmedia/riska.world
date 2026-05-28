@@ -1,5 +1,4 @@
 import {
-  BadgeCheck,
   Check,
   ChevronRight,
   CircleDollarSign,
@@ -52,7 +51,7 @@ const steps: Step[] = [
     button: "Revisar contrato",
     eyebrow: "Paso 3 de 4",
     icon: CircleDollarSign,
-    meta: "30 USDC / mes",
+    meta: "10,800 USDC",
     progress: "75%",
     screen: "quote",
     title: "Entiende tu poliza antes de pagar"
@@ -81,7 +80,7 @@ export function OnboardingMockupsCanvas() {
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-[#516159]">
               Flujo pensado para World App: cada pantalla pide una decision concreta, explica por
-              que importa, y deja claro que no hay poliza real hasta beneficiarios, firma y pago.
+              que importa, y deja claro que no hay poliza real hasta beneficiarios, firma y primer pago.
             </p>
           </div>
 
@@ -219,16 +218,16 @@ function QuoteScreen() {
   return (
     <div className="space-y-4">
       <div className="border border-[#dce4d8] bg-white p-4">
-        <p className="text-sm text-[#66746e]">Prima mensual</p>
+        <p className="text-sm text-[#66746e]">Unidad base</p>
         <div className="mt-2 flex items-end gap-2">
           <p className="text-4xl font-semibold">30</p>
           <p className="pb-1 text-sm font-semibold text-[#66746e]">USDC</p>
         </div>
       </div>
-      <RuleRow icon={Percent} label="Antes de 12 meses" value="0%" />
-      <RuleRow icon={HeartHandshake} label="Mes 12 a madurez" value="80%" />
-      <RuleRow icon={BadgeCheck} label="Madurez 30 anios" value="100%" />
-      <RuleRow icon={Users} label="Despues de madurar" value="90%" />
+      <RuleRow icon={Percent} label="Minimo primero" value="10,800" />
+      <RuleRow icon={HeartHandshake} label="Extra principal" value="100%" />
+      <RuleRow icon={CircleDollarSign} label="Pago titular" value="120 meses" />
+      <RuleRow icon={Users} label="Fee muerte" value="20% minimo" />
     </div>
   );
 }

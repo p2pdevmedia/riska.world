@@ -4,40 +4,40 @@ pragma solidity ^0.8.24;
 import {RiskaPolicyMath} from "../RiskaPolicyMath.sol";
 
 contract RiskaPolicyMathHarness {
-    function monthlyPremium() external pure returns (uint256) {
-        return RiskaPolicyMath.MONTHLY_PREMIUM;
+    function minimumMonthlyUnit() external pure returns (uint256) {
+        return RiskaPolicyMath.MINIMUM_MONTHLY_UNIT;
     }
 
-    function waitingPeriodMonths() external pure returns (uint16) {
-        return RiskaPolicyMath.WAITING_PERIOD_MONTHS;
+    function minimumPolicyMonths() external pure returns (uint16) {
+        return RiskaPolicyMath.MINIMUM_POLICY_MONTHS;
     }
 
-    function contributionMonths() external pure returns (uint16) {
-        return RiskaPolicyMath.CONTRIBUTION_MONTHS;
+    function payoutMonths() external pure returns (uint16) {
+        return RiskaPolicyMath.PAYOUT_MONTHS;
     }
 
-    function retirementPayoutMonths() external pure returns (uint16) {
-        return RiskaPolicyMath.RETIREMENT_PAYOUT_MONTHS;
+    function minimumPolicyPrincipal() external pure returns (uint256) {
+        return RiskaPolicyMath.MINIMUM_POLICY_PRINCIPAL;
     }
 
-    function fullTermPrincipal() external pure returns (uint256) {
-        return RiskaPolicyMath.FULL_TERM_PRINCIPAL;
+    function deathBeneficiaryBps() external pure returns (uint16) {
+        return RiskaPolicyMath.DEATH_BENEFICIARY_BPS;
     }
 
-    function holderMonthlyPayout() external pure returns (uint256) {
-        return RiskaPolicyMath.HOLDER_MONTHLY_PAYOUT;
+    function deathFeeBps() external pure returns (uint16) {
+        return RiskaPolicyMath.DEATH_FEE_BPS;
     }
 
-    function paidPrincipal(uint16 paidMonths) external pure returns (uint256) {
-        return RiskaPolicyMath.paidPrincipal(paidMonths);
+    function monthlyPayout(uint256 principal) external pure returns (uint256) {
+        return RiskaPolicyMath.monthlyPayout(principal);
     }
 
-    function beneficiaryPayoutBeforeMaturity(uint16 paidMonths) external pure returns (uint256) {
-        return RiskaPolicyMath.beneficiaryPayoutBeforeMaturity(paidMonths);
-    }
-
-    function beneficiaryPayoutAfterMaturity(uint256 remainingBalance) external pure returns (uint256) {
-        return RiskaPolicyMath.beneficiaryPayoutAfterMaturity(remainingBalance);
+    function deathPayout(uint256 remainingMinimumPrincipal, uint256 remainingExtraPrincipal)
+        external
+        pure
+        returns (uint256 payout, uint256 retainedFee)
+    {
+        return RiskaPolicyMath.deathPayout(remainingMinimumPrincipal, remainingExtraPrincipal);
     }
 
     function validateBeneficiaryShares(uint16[] memory sharesBps) external pure returns (bool) {

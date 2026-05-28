@@ -1,15 +1,20 @@
 "use client";
 
 import {
+  Activity,
   BadgeCheck,
+  BellRing,
   Check,
   ChevronLeft,
   ChevronRight,
   CircleDollarSign,
   FileCheck2,
   Fingerprint,
+  HandCoins,
   HeartHandshake,
   Percent,
+  RefreshCw,
+  Send,
   ShieldCheck,
   Trash2,
   UserPlus,
@@ -34,10 +39,17 @@ import type { Language } from "@/lib/i18n";
 import { RISKA_POLICY_TERMS_HASH, WORLDCHAIN_SEPOLIA_CHAIN_ID, type RiskaTestnetDeployment } from "@/lib/riska-testnet";
 import {
   formatTestnetContractError,
+  formatUsdcAmount,
   getRiskaTestnetDeployment,
+  getTestnetPolicy,
   issueTestnetPolicy,
+  MINIMUM_POLICY_PRINCIPAL,
+  runTestnetPolicyAction,
+  type RiskaTestnetPolicyView,
   type TestnetIssuanceResult,
-  type TestnetIssuanceStatus
+  type TestnetIssuanceStatus,
+  type TestnetPolicyAction,
+  type TestnetPolicyActionStatus
 } from "@/lib/web3/riska-testnet";
 
 type StepId = "identity" | "beneficiaries" | "quote" | "confirm";
@@ -98,21 +110,21 @@ const copy = {
   en: {
     welcome: {
       badge: "Riska 30",
-      title: "Life protection that becomes programmed income.",
+      title: "Flexible life protection for verified humans.",
       body:
-        "Riska is a 30-year USDC policy on World Chain. During the contribution phase it protects your family; after maturity it turns into scheduled payments for the holder.",
+        "Riska is a World Chain USDC policy account. Any verified human can fund the 10,800 USDC minimum over time, add extra principal, and activate programmed income when ready.",
       primary: "Start application",
       secondary: "Read policy rules",
       cards: [
         {
           icon: HeartHandshake,
           title: "Family protection",
-          body: "After 12 paid months, verified beneficiaries can receive the published payout formula if the holder dies before maturity."
+          body: "Beneficiaries can claim only after a death report plus 12 months without holder interaction."
         },
         {
           icon: CircleDollarSign,
-          title: "30-year income",
-          body: "If the holder reaches maturity, 100% of scheduled principal is paid over 10 years."
+          title: "Flexible income",
+          body: "Once the minimum is funded, the holder can start 120 monthly payments or claim the remaining balance."
         },
         {
           icon: Fingerprint,
@@ -121,9 +133,9 @@ const copy = {
         }
       ],
       facts: [
-        ["Premium", "30 USDC / month"],
-        ["Waiting period", "12 months"],
-        ["Maturity", "30 years"],
+        ["Minimum", "10,800 USDC"],
+        ["Base unit", "30 USDC"],
+        ["Payout", "120 months"],
         ["Network", "World Chain"]
       ]
     },
@@ -131,23 +143,23 @@ const copy = {
       badge: "World Chain policy application",
       title: "Enroll in Riska 30.",
       body:
-        "Complete the real policy application flow: wallet, World ID, beneficiaries, policy quote, and signed consent before issuance.",
+        "Complete the real policy application flow: wallet, World ID, beneficiaries, flexible policy quote, and signed consent before issuance.",
       metrics: [
-        ["Monthly premium", "30 USDC"],
-        ["Waiting period", "12 months"],
-        ["Maturity", "30 years"]
+        ["Minimum policy", "10,800 USDC"],
+        ["Payout schedule", "120 months"],
+        ["Death notice", "12 months"]
       ]
     },
     rules: {
       eyebrow: "Riska 30 rules",
       title: "The promise is visible before the user signs.",
       body:
-        "No payout before 12 paid months, beneficiaries receive 80% before maturity, the holder receives 100% at maturity, and beneficiaries receive 90% after maturity.",
+        "Any verified human can open a policy. Deposits fill the 10,800 USDC minimum first, extra deposits increase future monthly payout, and beneficiaries can claim only after 12 months without holder interaction.",
       items: [
         "World ID verification is completed before policy issuance",
         "Beneficiaries must total 100%",
-        "Terms hash shown before payment",
-        "Audited contracts required before user funds"
+        "Extra deposits are not fee-bearing",
+        "Holder heartbeat cancels pending death reports"
       ]
     },
     wizard: {
@@ -188,15 +200,15 @@ const copy = {
         walletPlaceholder: "0x..."
       },
       quote: {
-        payout: "Maturity payout",
-        premium: "Monthly premium",
-        principal: "Scheduled principal",
+        payout: "Estimated monthly payout",
+        premium: "Base unit",
+        principal: "Minimum policy",
         reviewed: "I reviewed the policy formula.",
         rules: [
-          ["Before 12 months", "0%"],
-          ["Month 12 to maturity", "80%"],
-          ["30-year maturity", "100%"],
-          ["After maturity", "90%"]
+          ["Minimum first", "10,800 USDC"],
+          ["Extra deposits", "100% principal"],
+          ["Holder payout", "120 months"],
+          ["Death fee", "20% of minimum only"]
         ]
       },
       confirm: {
@@ -216,28 +228,50 @@ const copy = {
         termsHash: "Terms hash",
         risk: "I understand the payout rules and smart-contract audit requirement before user funds are activated.",
         payment: "I authorize preparing the first 30 USDC payment for the issuance step.",
-        wallet: "Wallet"
+        wallet: "Wallet",
+        policy: {
+          actionComplete: "Transaction confirmed",
+          actionError: "Action failed",
+          activate: "Activate payout",
+          claimAll: "Claim all",
+          claimDeath: "Claim death",
+          claimMonthly: "Claim monthly",
+          claimableAt: "Claimable after",
+          deathNotice: "Death report",
+          deposit: "Deposit",
+          depositAmount: "Deposit amount",
+          extraPrincipal: "Extra principal",
+          heartbeat: "Heartbeat",
+          minimumFunded: "Minimum funded",
+          monthlyEstimate: "Monthly estimate",
+          noDeathNotice: "No report",
+          payoutProgress: "Payouts",
+          refresh: "Refresh",
+          reportDeath: "Report death",
+          status: "Status",
+          title: "Flexible policy state"
+        }
       }
     }
   },
   es: {
     welcome: {
       badge: "Riska 30",
-      title: "Proteccion de vida que se convierte en renta programada.",
+      title: "Proteccion flexible para humanos verificados.",
       body:
-        "Riska es una poliza USDC a 30 anios en World Chain. Durante la etapa de aporte protege a tu familia; al madurar se convierte en pagos programados para el titular.",
+        "Riska es una cuenta de poliza USDC en World Chain. Cualquier humano verificado puede fondear el minimo de 10,800 USDC con el tiempo, sumar principal extra y activar renta programada cuando quiera.",
       primary: "Empezar solicitud",
       secondary: "Ver reglas",
       cards: [
         {
           icon: HeartHandshake,
           title: "Proteccion familiar",
-          body: "Despues de 12 meses pagos, los beneficiarios verificados pueden cobrar la formula publicada si el titular fallece antes de madurar."
+          body: "Los beneficiarios pueden cobrar solo despues de reportar fallecimiento y esperar 12 meses sin interaccion del titular."
         },
         {
           icon: CircleDollarSign,
-          title: "Renta a 30 anios",
-          body: "Si el titular llega a madurez, cobra 100% del principal programado durante 10 anios."
+          title: "Renta flexible",
+          body: "Cuando el minimo esta fondeado, el titular puede activar 120 pagos mensuales o retirar el saldo restante."
         },
         {
           icon: Fingerprint,
@@ -246,9 +280,9 @@ const copy = {
         }
       ],
       facts: [
-        ["Prima", "30 USDC / mes"],
-        ["Espera", "12 meses"],
-        ["Madurez", "30 anios"],
+        ["Minimo", "10,800 USDC"],
+        ["Unidad base", "30 USDC"],
+        ["Pagos", "120 meses"],
         ["Red", "World Chain"]
       ]
     },
@@ -256,23 +290,23 @@ const copy = {
       badge: "Solicitud de poliza en World Chain",
       title: "Inscribite en Riska 30.",
       body:
-        "Completa el flujo real de solicitud: wallet, World ID, beneficiarios, cotizacion de poliza y consentimiento firmado antes de emitir.",
+        "Completa el flujo real de solicitud: wallet, World ID, beneficiarios, cotizacion flexible y consentimiento firmado antes de emitir.",
       metrics: [
-        ["Prima mensual", "30 USDC"],
-        ["Espera inicial", "12 meses"],
-        ["Madurez", "30 anios"]
+        ["Poliza minima", "10,800 USDC"],
+        ["Calendario", "120 meses"],
+        ["Aviso muerte", "12 meses"]
       ]
     },
     rules: {
       eyebrow: "Reglas Riska 30",
       title: "La promesa queda visible antes de firmar.",
       body:
-        "No hay pago antes de 12 meses pagos, beneficiarios cobran 80% antes de madurez, el titular cobra 100% al madurar y beneficiarios cobran 90% despues de madurez.",
+        "Cualquier humano verificado puede abrir una poliza. Los depositos llenan primero el minimo de 10,800 USDC, el extra aumenta el pago mensual futuro y los beneficiarios solo cobran despues de 12 meses sin interaccion del titular.",
       items: [
         "La verificacion World ID se completa antes de emitir",
         "Los beneficiarios deben sumar 100%",
-        "Hash de terminos antes del pago",
-        "Contratos auditados antes de fondos de usuarios"
+        "Los depositos extra no pagan fee",
+        "El heartbeat del titular cancela reportes pendientes"
       ]
     },
     wizard: {
@@ -313,15 +347,15 @@ const copy = {
         walletPlaceholder: "0x..."
       },
       quote: {
-        payout: "Pago al madurar",
-        premium: "Prima mensual",
-        principal: "Principal programado",
+        payout: "Pago mensual estimado",
+        premium: "Unidad base",
+        principal: "Poliza minima",
         reviewed: "Revise la formula de la poliza.",
         rules: [
-          ["Antes de 12 meses", "0%"],
-          ["Mes 12 a madurez", "80%"],
-          ["Madurez 30 anios", "100%"],
-          ["Despues de madurar", "90%"]
+          ["Primero minimo", "10,800 USDC"],
+          ["Depositos extra", "100% principal"],
+          ["Pago titular", "120 meses"],
+          ["Fee muerte", "20% solo minimo"]
         ]
       },
       confirm: {
@@ -341,7 +375,29 @@ const copy = {
         termsHash: "Hash de terminos",
         risk: "Entiendo las reglas de pago y el requisito de auditoria de contratos antes de activar fondos de usuarios.",
         payment: "Autorizo preparar el primer pago de 30 USDC para el paso de emision.",
-        wallet: "Wallet"
+        wallet: "Wallet",
+        policy: {
+          actionComplete: "Transaccion confirmada",
+          actionError: "La accion fallo",
+          activate: "Activar pagos",
+          claimAll: "Cobrar todo",
+          claimDeath: "Cobrar muerte",
+          claimMonthly: "Cobrar mes",
+          claimableAt: "Cobrable desde",
+          deathNotice: "Reporte muerte",
+          deposit: "Depositar",
+          depositAmount: "Monto a depositar",
+          extraPrincipal: "Principal extra",
+          heartbeat: "Heartbeat",
+          minimumFunded: "Minimo fondeado",
+          monthlyEstimate: "Estimado mensual",
+          noDeathNotice: "Sin reporte",
+          payoutProgress: "Pagos",
+          refresh: "Actualizar",
+          reportDeath: "Reportar muerte",
+          status: "Estado",
+          title: "Estado flexible"
+        }
       }
     }
   }
@@ -1093,7 +1149,255 @@ function TestnetIssuePanel({
           )}
         </div>
       )}
+
+      {policyId && state.walletSession && (
+        <PolicyControlPanel
+          content={content}
+          policyId={policyId}
+          walletAddress={state.walletSession.address}
+        />
+      )}
     </div>
+  );
+}
+
+function PolicyControlPanel({
+  content,
+  policyId,
+  walletAddress
+}: {
+  content: (typeof copy)[Language];
+  policyId: string;
+  walletAddress: string;
+}) {
+  const text = content.wizard.confirm.policy;
+  const [policy, setPolicy] = useState<RiskaTestnetPolicyView | null>(null);
+  const [depositAmount, setDepositAmount] = useState("10770");
+  const [workingAction, setWorkingAction] = useState<TestnetPolicyAction | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [statusTone, setStatusTone] = useState("text-[#66746e]");
+
+  const refreshPolicy = useCallback(async () => {
+    const nextPolicy = await getTestnetPolicy({ policyId, viewer: walletAddress });
+    setPolicy(nextPolicy);
+  }, [policyId, walletAddress]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    void getTestnetPolicy({ policyId, viewer: walletAddress })
+      .then((nextPolicy) => {
+        if (mounted) {
+          setPolicy(nextPolicy);
+        }
+      })
+      .catch((error) => {
+        if (mounted) {
+          setStatusMessage(formatTestnetContractError(error));
+          setStatusTone("text-red-700");
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [policyId, walletAddress]);
+
+  async function runAction(action: TestnetPolicyAction) {
+    setWorkingAction(action);
+    setStatusTone("text-amber-700");
+    setStatusMessage(getPolicyActionLabel(action, text));
+
+    try {
+      await runTestnetPolicyAction({
+        action,
+        amount: action === "deposit" ? depositAmount : undefined,
+        holder: walletAddress,
+        onStatus: (status) => {
+          setStatusMessage(getPolicyActionStatusLabel(status));
+        },
+        policyId
+      });
+      await refreshPolicy();
+      setStatusMessage(text.actionComplete);
+      setStatusTone("text-emerald-700");
+    } catch (error) {
+      setStatusMessage(`${text.actionError}: ${formatTestnetContractError(error)}`);
+      setStatusTone("text-red-700");
+    } finally {
+      setWorkingAction(null);
+    }
+  }
+
+  const isWorking = Boolean(workingAction);
+  const status = policy?.status ?? 0;
+  const minimumPercent = policy
+    ? Number((policy.remainingMinimumPrincipal * 10_000n) / MINIMUM_POLICY_PRINCIPAL) / 100
+    : 0;
+  const canUseHolderAction = policy ? status === 1 || status === 2 : false;
+  const minimumFunded = policy ? policy.remainingMinimumPrincipal >= MINIMUM_POLICY_PRINCIPAL : false;
+  const canDeposit = policy ? status === 1 : false;
+  const canActivate = policy ? status === 1 && minimumFunded : false;
+  const canClaimMonthly = policy ? status === 2 : false;
+  const canClaimAll = policy ? status === 2 || (status === 1 && minimumFunded) : false;
+  const canReportDeath = policy
+    ? policy.isViewerBeneficiary && (status === 1 || status === 2) && !policy.deathNotice.active
+    : false;
+  const canClaimDeath = policy
+    ? policy.isViewerBeneficiary && policy.deathNotice.active && (status === 1 || status === 2)
+    : false;
+
+  return (
+    <div className="mt-4 border border-[#dce4d8] bg-white p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-[#26342d]">{text.title}</p>
+          <p className="mt-1 text-xs text-[#66746e]">
+            {text.status}: {policy ? getPolicyStatusLabel(policy.status) : content.wizard.pending}
+          </p>
+        </div>
+        <button
+          className="flex h-10 items-center justify-center gap-2 border border-[#cbd7cf] px-3 text-xs font-semibold text-[#26342d] transition hover:border-[#17231e] disabled:opacity-50"
+          disabled={isWorking}
+          onClick={() => void refreshPolicy()}
+          type="button"
+        >
+          <RefreshCw className="h-4 w-4" />
+          {text.refresh}
+        </button>
+      </div>
+
+      {policy && (
+        <>
+          <div className="mt-4 grid gap-2 md:grid-cols-2">
+            <SummaryFact
+              label={text.minimumFunded}
+              value={`${formatUsdcAmount(policy.remainingMinimumPrincipal)} USDC (${minimumPercent.toFixed(2)}%)`}
+            />
+            <SummaryFact label={text.extraPrincipal} value={`${formatUsdcAmount(policy.remainingExtraPrincipal)} USDC`} />
+            <SummaryFact label={text.monthlyEstimate} value={`${formatUsdcAmount(policy.monthlyPayoutEstimate)} USDC`} />
+            <SummaryFact label={text.payoutProgress} value={`${policy.payoutsMade} / 120`} />
+          </div>
+
+          <div className="mt-3 border border-[#e3e8df] bg-[#f8faf6] p-3">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#66746e]">{text.deathNotice}</p>
+              <p className="text-sm font-semibold text-[#26342d]">
+                {policy.deathNotice.active ? shortAddress(policy.deathNotice.reporter) : text.noDeathNotice}
+              </p>
+            </div>
+            {policy.deathNotice.active && (
+              <p className="mt-2 text-sm text-[#66746e]">
+                {text.claimableAt}: {formatUnixDate(policy.deathNotice.claimableAt)}
+              </p>
+            )}
+          </div>
+
+          <div className="mt-4 grid gap-2 md:grid-cols-[1fr_auto]">
+            <input
+              aria-label={text.depositAmount}
+              className="min-h-11 border border-[#e3e8df] bg-[#fbfcf8] px-3 text-sm outline-none focus:border-[#17231e]"
+              min="0"
+              onChange={(event) => setDepositAmount(event.target.value)}
+              step="0.000001"
+              type="number"
+              value={depositAmount}
+            />
+            <PolicyActionButton
+              action="deposit"
+              disabled={!canDeposit || isWorking}
+              icon={Send}
+              label={text.deposit}
+              onClick={runAction}
+              workingAction={workingAction}
+            />
+          </div>
+
+          <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            <PolicyActionButton
+              action="heartbeat"
+              disabled={!canUseHolderAction || isWorking}
+              icon={Activity}
+              label={text.heartbeat}
+              onClick={runAction}
+              workingAction={workingAction}
+            />
+            <PolicyActionButton
+              action="activatePayout"
+              disabled={!canActivate || isWorking}
+              icon={CircleDollarSign}
+              label={text.activate}
+              onClick={runAction}
+              workingAction={workingAction}
+            />
+            <PolicyActionButton
+              action="claimMonthly"
+              disabled={!canClaimMonthly || isWorking}
+              icon={HandCoins}
+              label={text.claimMonthly}
+              onClick={runAction}
+              workingAction={workingAction}
+            />
+            <PolicyActionButton
+              action="claimAll"
+              disabled={!canClaimAll || isWorking}
+              icon={WalletCards}
+              label={text.claimAll}
+              onClick={runAction}
+              workingAction={workingAction}
+            />
+            <PolicyActionButton
+              action="reportDeath"
+              disabled={!canReportDeath || isWorking}
+              icon={BellRing}
+              label={text.reportDeath}
+              onClick={runAction}
+              workingAction={workingAction}
+            />
+            <PolicyActionButton
+              action="claimDeath"
+              disabled={!canClaimDeath || isWorking}
+              icon={HeartHandshake}
+              label={text.claimDeath}
+              onClick={runAction}
+              workingAction={workingAction}
+            />
+          </div>
+        </>
+      )}
+
+      {statusMessage && <p className={`mt-3 text-sm ${statusTone}`}>{statusMessage}</p>}
+    </div>
+  );
+}
+
+function PolicyActionButton({
+  action,
+  disabled,
+  icon: Icon,
+  label,
+  onClick,
+  workingAction
+}: {
+  action: TestnetPolicyAction;
+  disabled: boolean;
+  icon: ComponentType<{ className?: string }>;
+  label: string;
+  onClick: (action: TestnetPolicyAction) => void;
+  workingAction: TestnetPolicyAction | null;
+}) {
+  const working = workingAction === action;
+
+  return (
+    <button
+      className="flex min-h-11 items-center justify-center gap-2 border border-[#cbd7cf] bg-[#fbfcf8] px-3 text-sm font-semibold text-[#26342d] transition hover:border-[#17231e] hover:bg-white disabled:cursor-not-allowed disabled:opacity-45"
+      disabled={disabled}
+      onClick={() => onClick(action)}
+      type="button"
+    >
+      <Icon className={`h-4 w-4 ${working ? "animate-pulse" : ""}`} />
+      {label}
+    </button>
   );
 }
 
@@ -1322,6 +1626,60 @@ function getTestnetStepLabel(step: TestnetIssuanceStatus) {
   };
 
   return labels[step];
+}
+
+function getPolicyStatusLabel(status: number) {
+  const labels: Record<number, string> = {
+    0: "None",
+    1: "Active",
+    2: "Payout active",
+    3: "Death settled",
+    4: "Closed"
+  };
+
+  return labels[status] ?? "Unknown";
+}
+
+function getPolicyActionLabel(
+  action: TestnetPolicyAction,
+  text: (typeof copy)[Language]["wizard"]["confirm"]["policy"]
+) {
+  const labels: Record<TestnetPolicyAction, string> = {
+    activatePayout: text.activate,
+    claimAll: text.claimAll,
+    claimDeath: text.claimDeath,
+    claimMonthly: text.claimMonthly,
+    deposit: text.deposit,
+    heartbeat: text.heartbeat,
+    reportDeath: text.reportDeath
+  };
+
+  return labels[action];
+}
+
+function getPolicyActionStatusLabel(status: TestnetPolicyActionStatus) {
+  const labels: Record<TestnetPolicyActionStatus, string> = {
+    approving_usdc: "Approving USDC",
+    checking_usdc: "Checking USDC",
+    confirming_transaction: "Confirming transaction",
+    issued: "Policy issued",
+    loading_contracts: "Loading contracts",
+    minting_usdc: "Minting test USDC",
+    opening_policy: "Opening policy",
+    refreshing_policy: "Refreshing policy",
+    sending_transaction: "Sending transaction",
+    switching_network: "Switching network"
+  };
+
+  return labels[status];
+}
+
+function formatUnixDate(timestamp: number) {
+  if (!timestamp) {
+    return "-";
+  }
+
+  return new Date(timestamp * 1000).toLocaleString();
 }
 
 function getTestnetPanelStatus(

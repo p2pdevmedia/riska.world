@@ -1,195 +1,168 @@
-# Riska 30: Life Protection with Programmed Income
+# Riska 30: Flexible Protection and Programmed Income
 
-**Version:** 2.0  
-**Date:** May 2026  
-**Prepared by:** Riska Foundation  
-**Network:** World Chain  
-**Primary product:** 30-year life protection contract with programmed income after maturity
+**Version:** 2.1
+**Date:** May 2026
+**Prepared by:** Riska Foundation
+**Network:** World Chain
+**Primary product:** flexible USDC policy account for verified humans
 
 ## Abstract
 
-Riska 30 is a long-duration protection protocol for verified humans. The product combines family protection and future income in one transparent contract: the holder pays 30 USDC per month for up to 30 years; if verified death occurs after the 12-month waiting period and before maturity, beneficiaries receive 80% of paid premiums; if the holder completes the term, the holder receives 100% of scheduled principal through 10 years of programmed income.
+Riska 30 is a transparent policy account for World ID verified humans. Any verified human can open a policy, configure beneficiaries, and fund a 10,800 USDC minimum over time or upfront. Deposits above the minimum become extra principal, increasing the holder's future monthly payout. Once the minimum is fully funded, the holder can activate 120 monthly payments or claim all remaining principal.
 
-The design is intentionally narrower than a general insurance marketplace. Riska 30 focuses on one high-trust use case: helping a person avoid leaving a financial burden to family while building a future payout stream. World ID can reduce duplicate-account abuse, World Chain can provide low-cost settlement, and smart contracts can expose policy state, premium allocation, maturity, and payout rules for audit.
+The beneficiary flow is intentionally simple: a configured beneficiary can report death only after the policy has existed for 12 months. If the holder does not interact with the contract for another 12 months, beneficiaries can claim. A holder heartbeat, deposit, beneficiary update, monthly claim, or claim-all cancels the pending report. The protocol fee on death claims is 20% of remaining minimum principal only; extra principal is not fee-bearing.
 
-This paper describes the product, policy lifecycle, capital model, verification layer, grant-aligned implementation roadmap, and the compliance boundaries required before public sale.
+This paper describes the product, policy lifecycle, capital model, World Chain fit, grant-aligned implementation roadmap, and the compliance boundaries required before public sale.
 
 ## 1. Problem
 
-Life protection and retirement products are often hard to understand, slow to settle, and opaque about fees, reserves, surrender value, and payout mechanics. Families usually discover the real quality of a policy at the worst possible time: after a death, illness, or income disruption.
+Life protection and long-term income products are often hard to understand, slow to settle, and opaque about fees, reserves, surrender value, and payout mechanics. Families usually discover the real quality of a policy at the worst possible time.
 
-Riska 30 reframes the product around a simple promise:
+Riska reframes the product around explicit state:
 
-- If the holder dies before maturity, the family receives support.
-- If the holder reaches maturity, the holder receives programmed income.
-- Every state transition is visible: active, grace period, lapsed, death paid, matured, retirement payout, or closed.
+- Any verified human can open one policy.
+- The minimum policy is 10,800 USDC.
+- Extra deposits increase future monthly payout.
+- Holder withdrawals have no fee.
+- Beneficiary death claims require a 12-month notice window with no holder interaction.
+- Fees are charged only on death claims and only on remaining minimum principal.
 
-The goal is not to replace regulated insurers at launch. The first goal is to build a transparent, verifiable prototype for long-duration protection that can be reviewed, tested, and improved before jurisdiction-specific distribution.
+The goal is not to replace regulated insurers at launch. The first goal is to build a transparent, verifiable prototype for protection and programmed income that can be reviewed, tested, and improved before jurisdiction-specific distribution.
 
 ## 2. Product Thesis
 
-Riska 30 is a life protection contract with an in-life benefit. It is not presented as a state pension or lifetime annuity. The first implementation uses programmed withdrawals from an accumulated balance after the 30-year term.
-
-This narrower scope matters. A lifetime annuity requires longevity risk modeling and stronger reserve assumptions. A programmed-income model is easier to audit because the payout source is the tracked retirement balance.
+Riska 30 is a life protection contract with an in-life benefit. It is not presented as a state pension or lifetime annuity. The first implementation uses programmed withdrawals from a tracked USDC balance.
 
 Core product rule:
 
-1. The holder opens a 30-year policy and sets beneficiaries.
-2. Each premium is accounted as protected USDC principal for the base policy promise.
-3. If verified death occurs before 12 paid months, beneficiaries receive no policy payout.
-4. If verified death occurs from month 12 until maturity, beneficiaries receive 80% of paid premiums.
-5. If the policy reaches maturity, the holder activates 100% principal return through 120 monthly payouts over 10 years.
-6. If verified death occurs after maturity but before activation, or during the payout phase, beneficiaries receive 90% of the matured or remaining balance.
+1. The holder opens a policy and sets beneficiaries.
+2. Deposits fill the 10,800 USDC minimum first.
+3. Extra deposits above 10,800 USDC become extra principal.
+4. Once the minimum is funded, the holder can activate 120 monthly payments.
+5. The holder can claim monthly, claim all remaining principal, or heartbeat.
+6. A beneficiary can report death after the policy is at least 12 months old.
+7. Beneficiaries can claim only after 12 more months with no holder interaction.
+8. Death payout equals extra principal plus 80% of remaining minimum principal.
 
 ## 3. Why World Chain
 
-Riska 30 is designed for World Chain because the product benefits from human verification, low-friction wallet onboarding, and a grant ecosystem focused on applications for real humans.
+Riska is designed for World Chain because the product benefits from human verification, low-friction wallet onboarding, and a grant ecosystem focused on applications for real humans.
 
-World Foundation grants are available on a rolling basis and support teams building meaningful applications on World Chain. The Spark Track looks for a clear problem, a working demo or prototype, and realistic milestones. The Scale Track is aimed at live Mini Apps with active verified users, usage data, retention, and a 10x growth plan.
-
-Riska 30 should therefore be built as a Mini App-compatible product path:
+Riska should be built as a Mini App-compatible product path:
 
 - World ID for unique-human onboarding and anti-duplication controls.
 - World App distribution for reachable consumer onboarding.
 - World Chain contracts for transparent policy state and settlement.
-- Stablecoin-denominated accounting for premiums and payouts where legally permitted.
+- Stablecoin-denominated accounting for deposits and payouts where legally permitted.
 - Real-money activation only after jurisdiction-specific legal and operational clearance.
 - Usage metrics that can evolve from prototype validation to active-user evidence.
 
 ## 4. Policy Lifecycle
 
-The policy lifecycle is explicit and deterministic.
+### Open
 
-### Active
+The holder passes the World ID flow in the app, signs the terms hash, sets beneficiaries, and opens one policy from the authenticated wallet.
 
-The holder has paid enough premium to keep coverage current. The policy remains active, and paid USDC principal continues to accumulate toward the 30-year maturity promise.
+### Funding
 
-### Grace Period
+The holder deposits USDC before payout activation. Deposits fill `remainingMinimumPrincipal` until it reaches 10,800 USDC. Additional deposits increase `remainingExtraPrincipal`.
 
-The holder missed a scheduled payment but remains inside a published grace period. Beneficiary protection remains active until the grace period expires.
+### Payout Active
 
-### Lapsed
+Once the minimum is fully funded, the holder can activate payout. The monthly amount is snapshotted as:
 
-The holder missed payments beyond the grace period. Death protection is suspended or routed into an inactivity review flow. Paid principal remains accountable and can be handled only under the policy terms.
+```text
+monthlyPayout = totalPrincipal / 120
+```
 
-### Death Paid
+The final claim pays any remaining dust.
 
-A verifier confirms death under the policy rules. If death occurs after the 12-month waiting period and before maturity, beneficiaries receive 80% of paid premiums. If death occurs after maturity or during the payout phase, beneficiaries receive 90% of the matured or remaining balance.
+### Holder Heartbeat
 
-### Inactivity Review
+The holder can interact without withdrawing funds. Heartbeat updates the holder's last-interaction timestamp and cancels a pending beneficiary death report.
 
-If no premium is paid for 12 months, or if a matured holder does not claim scheduled monthly payouts for 12 months, the policy can enter inactivity review. Inactivity alone does not prove death and does not authorize beneficiary payment. A reporter must submit a death report, and Riska Team must verify the claim with evidence before settlement.
+### Beneficiary Death Notice
 
-### Matured
+A configured beneficiary can report death only after the policy has existed for `12 * 30 days`. The report starts a no-interaction window of another `12 * 30 days`.
 
-The policy reaches the 30-year term and becomes eligible for programmed income. Maturity is time-based and does not require an oracle.
+### Death Claim
 
-### Retirement Payout
+If the holder does not interact during the report window, beneficiaries can claim. Payout is distributed by configured beneficiary percentages.
 
-The holder activates scheduled payouts from protected principal. The production model uses fixed scheduled withdrawals, not lifetime income.
+```text
+retainedFee = remainingMinimumPrincipal * 20%
+beneficiaryPayout = remainingExtraPrincipal + remainingMinimumPrincipal - retainedFee
+```
 
 ### Closed
 
-The policy has fully paid, been surrendered under defined rules, or settled after death.
+The policy closes after claim-all, final monthly payout, or death settlement.
 
-## 5. Premium Allocation
+## 5. Capital and Accounting
 
-The base model treats each 30 USDC monthly premium as protected USDC principal for the user-facing policy promise. Yield and protocol economics must be accounted separately from that protected principal.
+The base model treats deposited USDC as policy principal. Yield and protocol economics must be accounted separately from that principal.
 
 | Bucket | Purpose | Accounting treatment |
 | --- | --- | --- |
-| Protected principal | Funds the holder's future programmed income and the base beneficiary formula | Tracked as a policy liability |
-| Yield reserve | Funds operations, protocol fees, risk buffers, audits, and growth | Generated only through allowlisted strategies and tracked separately |
-| Protocol treasury | Funds verification, maintenance, governance, and future decentralization | Withdrawable only under governance or administrator rules |
+| Minimum principal | Funds the base policy promise | Tracked per policy until paid out or death-settled |
+| Extra principal | Increases future holder payout and beneficiary death payout | Tracked separately and never fee-bearing |
+| Protocol reserve | Receives retained death fee from remaining minimum principal | Tracked separately in the vault |
+| Yield reserve | Future source for operations, risk buffers, audits, and growth | Must be separated from principal liabilities |
 
-Base example:
+Base examples:
 
-If a holder pays 30 USDC per month for 360 months, total scheduled principal is 10,800 USDC. At maturity, the holder receives 10,800 USDC over 120 monthly payouts, or 90 USDC per month. Riska's operating economics come from yield spread, treasury subsidy, sponsor subsidy, or explicit external fees rather than reducing the protected principal.
+| Holder balance at death | Beneficiary payout | Protocol reserve |
+| ---: | ---: | ---: |
+| 10,800 minimum + 0 extra | 8,640 USDC | 2,160 USDC |
+| 10,800 minimum + 1,000 extra | 9,640 USDC | 2,160 USDC |
+| 10,710 minimum + 1,190 extra | 9,758 USDC | 2,142 USDC |
 
-## 6. Death Verification
+## 6. Death Notice Reliability
 
-The contract cannot determine death by itself. It records verification events and applies payout rules.
+The contract does not determine biological death. It gives beneficiaries a way to start a notice period and gives the holder a simple way to cancel stale or false reports.
 
-The first production version can start with Riska Team as approved verifier to reduce complexity, but every death settlement should require a reporter, evidence hash, manual verification, and a 3-month dispute window. Production should move toward stronger verification:
+The main flow is beneficiary-driven. Future production versions may add evidence handling, legal documentation, notification services, or optional review processes when required by a jurisdiction, but those processes should not become an opaque manual gate in the base smart-contract lifecycle.
 
-- Multiple independent reporters.
-- Evidence hashes linked to off-chain records.
-- Dispute windows for conflicting reports.
-- Bonded verifier roles, potentially staked in RISKA.
-- Governance-controlled verifier updates.
+Sensitive evidence should stay off-chain. On-chain state should remain limited to policy id, reporter, timestamps, beneficiary authorization, and payout accounting.
 
-On-chain storage should be minimal. Sensitive evidence stays off-chain, while the contract stores only the policy id, event type, timestamp, verifier, and evidence hash.
+## 7. Smart Contract Architecture
 
-If a jurisdiction later requires additional compliance review, that process should stay outside the base onboarding flow and expose only minimal approval references to the protocol.
+Current testnet modules:
 
-## 7. Capital and Solvency
-
-Riska 30 must separate protected principal liabilities, yield strategy capital, treasury balances, and beneficiary obligations.
-
-Protected principal belongs to the policy lifecycle. It should not be treated as free treasury capital. The contract system should expose:
-
-- Total protected principal liability.
-- Fee balance.
-- Yield reserve.
-- Strategy exposure by protocol.
-- Available risk liquidity.
-- Beneficiary payout exposure.
-- Capacity limits for new policies.
-
-A basic liquidity rule:
-
-Available liquidity = token balance + withdrawable strategy value - protected principal liabilities - reserved beneficiary obligations - fee balance
-
-Beneficiary payouts should only be paid when available liquidity is sufficient and the policy rules are satisfied. New policy issuance and yield deployment should halt when exposure would exceed safe limits.
-
-The actuarial and yield-risk model remains a separate workstream. Grant funding should support prototyping, user validation, security review, yield-strategy risk review, and compliance preparation before broad public distribution.
-
-## 8. Smart Contract Architecture
-
-The current MVP contract, `RiskaThirtyYearPolicy`, implements an early lifecycle. Production contracts should be rewritten around the final policy model:
-
-- Plan creation with 30 USDC monthly premium, 12-month waiting period, beneficiary payout formula, payout duration, and policy terms hash.
-- Policy opening with holder, World ID eligibility, legal terms acceptance, and multiple beneficiaries.
-- Premium collection and accounting.
-- Grace period, inactivity review, and death-report status.
-- Verified death settlement with evidence hash and 3-month dispute window.
-- Maturity activation after 30 years.
-- Programmed retirement payouts over 10 years.
-- Yield strategy deployment and withdrawal.
-- Fee withdrawal only from yield/treasury accounting, not protected principal.
+- `RiskaPolicyManager`: flexible policy lifecycle, deposits, payout activation, holder claims, heartbeat, beneficiary death notice, and death claim.
+- `RiskaPolicyMath`: constants and math for minimum principal, payout months, and death fee.
+- `RiskaBeneficiaryRegistry`: beneficiary accounts and basis-point shares.
+- `RiskaPremiumVault`: USDC custody, principal liability, holder payouts, beneficiary payouts, and protocol reserve.
+- `RiskaDeathVerifier`: legacy verifier/oracle experiment, retained for reference and not used by the main flow.
 
 Future modules:
 
-- `WorldIdGate`: verifies unique-human eligibility.
-- `BeneficiaryRegistry`: manages beneficiary percentages and updates.
-- `DeathVerifier`: coordinates multiple death reports and dispute windows.
-- `PremiumVault`: segregates reserves and payout capital.
-- `YieldStrategyManager`: manages allowlisted yield deployment and withdrawals.
-- `RiskController`: enforces strategy caps, liquidity thresholds, and health checks.
-- `GovernanceTimelock`: controls parameters with delay and transparency.
-- `PolicyTermsRegistry`: stores legal document hashes and versioning.
+- `WorldIdGate`: durable one-human-one-policy enforcement.
+- `PolicyTermsRegistry`: legal document hashes and versioning.
+- `YieldStrategyManager`: allowlisted yield deployment and withdrawals.
+- `RiskController`: strategy caps, liquidity thresholds, and health checks.
+- `GovernanceTimelock`: delayed upgrades and parameter changes.
+- `PaymentAdapter`: WLD and fiat on-ramp conversion into USDC.
 
-## 9. Electronic Policy Terms
+## 8. Electronic Policy Terms
 
 The legal contract and smart contract must work together.
 
 The electronic policy should define:
 
 - Holder and beneficiary rights.
-- Premium schedule.
-- Grace period.
-- Waiting period and beneficiary payout formula.
-- Retirement-balance rules.
-- Maturity date.
-- Programmed payout duration.
-- Evidence and verification process.
-- Lapse, surrender, and closure rules.
-- Yield strategy risks and whether yield belongs to the protocol, the reserve, or the policyholder.
+- Minimum policy principal and deposit rules.
+- Extra principal treatment.
+- Payout activation and claim-all rights.
+- Heartbeat and death notice rules.
+- Death fee base and beneficiary payout formula.
+- Beneficiary updates.
+- Yield strategy risks and whether yield belongs to the protocol, reserve, or policyholder.
 - Jurisdiction and compliance disclosures.
 
-The document hash should be stored on-chain at plan creation. Users should sign human-readable policy terms before paying the first premium.
+The terms hash should be stored on-chain when the policy opens. Users should sign human-readable policy terms before paying the first policy unit.
 
-## 10. RISKA Incentive Layer
+## 9. RISKA Incentive Layer
 
 RISKA should support protocol reliability, enterprise distribution, and future decentralization, not distract from the user promise.
 
@@ -202,104 +175,61 @@ Initial RISKA design:
 - Initial ownership: Riska owner/foundation controls all tokens.
 - Governance starts centralized and can later decentralize through treasury, partner, or community distribution.
 
-Potential RISKA roles:
+The grant-stage product should not depend on token speculation. The strongest grant argument is public-good utility: verified humans can access transparent protection logic that is easier to audit than legacy opaque policies.
 
-- Governance over plan parameters, verifier sets, yield-strategy allowlists, fee routing, and upgrade timelocks.
-- Enterprise partner access and commercial alignment.
-- Verifier staking in later phases, where misconduct can be penalized.
-- Incentive alignment for long-term capital and distribution partners.
+## 10. Mini App Roadmap
 
-The grant-stage product should not depend on token speculation. The strongest grant argument is the public-good utility: verified humans can access transparent protection logic that is easier to audit than legacy opaque policies.
-
-## 11. Mini App Roadmap
-
-### Phase 1: Production architecture prototype
+### Phase 1: Testnet Product
 
 - Build the Riska 30 landing page and downloadable white paper.
 - Implement wallet connection, World ID path, beneficiary setup, and policy preview.
-- Rewrite production-oriented contracts around the final payout formula.
-- Deploy controlled production-test contracts on World Chain mainnet when required by Mini App testing.
-- Simulate and/or execute premium payments, grace period, inactivity review, maturity, and death settlement.
-- Add a basic policy dashboard.
+- Deploy flexible policy contracts on World Chain Sepolia.
+- Add dashboard actions for deposit, heartbeat, payout activation, monthly claim, claim-all, death report, and death claim.
 
-### Phase 2: Production Mini App demo
+### Phase 2: Production Mini App Demo
 
-- Add World ID verification.
-- Package the onboarding flow for World App.
-- Create a clearly labeled simulation/training mode for users and grant reviewers.
-- Add production transaction flow, backend verification, and policy activation checks.
+- Package onboarding for World App.
+- Add persistent policy storage and nullifier reservation.
+- Keep a clearly labeled simulation/training mode for users and grant reviewers.
 - Collect feedback from verified users.
 - Produce retention, completion, and trust metrics.
 
-### Phase 3: Pilot readiness
+### Phase 3: Pilot Readiness
 
-- Add verifier workflow and evidence-hash dashboard.
 - Commission smart contract review.
 - Produce actuarial, yield-risk, and liquidity assumptions.
 - Prepare jurisdiction-specific legal analysis.
 - Define live production controls, strategy caps, user protections, and reserve rules.
 
-### Phase 4: Scale path
-
-- Launch broader production only after legal, security, yield-risk, and operational clearance.
-- Track verified-user activation, premium intent, beneficiary setup completion, and retention.
-- Prepare a Scale Track grant case based on live usage and a 10x growth plan.
-
-## 12. Grant Alignment
-
-Riska 30 is positioned for a World Foundation Spark Track application first.
-
-The project addresses a concrete problem: families need understandable protection that pays quickly and transparently, while users also want a future benefit if they survive the term.
-
-The working product/demo should show:
-
-- A clear policy quote.
-- World ID-gated onboarding.
-- Beneficiary setup.
-- Premium, yield, and protected-principal disclosure.
-- On-chain policy creation.
-- Death verification with evidence-hash workflow.
-- Maturity and programmed payout simulation.
-
-Milestones should be scoped to a defined timeline:
-
-- Month 1: final product specification, contract rewrite, policy dashboard, downloadable white paper.
-- Month 2: World ID integration, Mini App production flow, beneficiary setup, and simulation/training mode.
-- Month 3: World Chain mainnet production-test deployment, AI-agent security review, audit package, and grant reporting metrics.
-
-## 13. Risks and Open Questions
+## 11. Risks and Open Questions
 
 ### Regulatory classification
 
-Life protection and retirement products are regulated in most jurisdictions. Riska 30 must not be publicly sold as insurance, pension, or annuity without legal clearance.
+Life protection and retirement products are regulated in most jurisdictions. Riska must not be publicly sold as insurance, pension, or annuity without legal clearance.
 
-### Verification reliability
+### False death notices
 
-Death verification is sensitive. A 12-month inactivity period can trigger review, but it must not prove death by itself. Production requires robust evidence standards, a reporter, Riska Team verification, dispute handling, and careful beneficiary notification.
+Beneficiary reports are sensitive. The heartbeat and 12-month no-interaction window reduce accidental or malicious settlement risk, but production still needs notifications, monitoring, and legal processes.
 
 ### Solvency
 
-Beneficiary payouts, protected principal, and yield strategies require reserve discipline. Protected principal must be segregated from treasury capital, and yield strategy losses need a predefined loss waterfall.
+Beneficiary payouts, protected principal, and yield strategies require reserve discipline. Principal must be segregated from treasury capital, and yield strategy losses need a predefined loss waterfall.
 
 ### User trust
 
-The product asks users to think in decades. The interface must be unusually clear about what is guaranteed, what is conditional, and what depends on legal approval.
+The product asks users to think long term. The interface must be clear about what is guaranteed, what is conditional, and what depends on legal clearance.
 
 ### Yield risk
 
-Using policy funds in lending or yield protocols introduces smart-contract risk, liquidity risk, bridge risk, oracle risk, governance risk, and counterparty risk. Riska must publish strategy caps, health checks, emergency exits, and user-facing disclosures.
+Using policy funds in lending or yield protocols introduces smart-contract risk, liquidity risk, bridge risk, oracle risk, governance risk, and counterparty risk.
 
-### Token design
-
-RISKA incentives must be secondary to product trust. Token mechanics should not create regulatory or reputational risk.
-
-## 14. Conclusion
+## 12. Conclusion
 
 Riska 30 narrows the original Riska vision into a product that is easier to explain, prototype, audit, and evaluate for grant funding.
 
-The promise is direct: after the waiting period, protect beneficiaries through a published payout formula, then pay the holder 100% of scheduled principal through programmed income after maturity. World ID can reduce duplicate-account abuse, World Chain can make policy state transparent, and a Mini App can turn the concept into a production-grade consumer flow.
+The promise is direct: any verified human can open a policy, fund the minimum over time, add extra principal, and choose when to activate programmed income. Beneficiaries have a transparent death-notice path that depends on time and holder interaction rather than a hidden manual process.
 
-The next milestone is not mass-market launch. The next milestone is a credible, verifiable demo: a working policy lifecycle, a clear user interface, a downloadable white paper, and a grant application grounded in measurable progress.
+The next milestone is a credible, verifiable demo: a working policy lifecycle, a clear user interface, a downloadable white paper, and a grant application grounded in measurable progress.
 
 ## References
 
@@ -307,5 +237,3 @@ The next milestone is not mass-market launch. The next milestone is a credible, 
 2. World Developer Docs, "Grants Program", https://docs.world.org/world-chain/developers/grants
 3. World Developer Docs, "World ID", https://docs.world.org/world-id
 4. World Developer Docs, "Mini Apps", https://docs.world.org/mini-apps
-5. Bitcoin White Paper, S. Nakamoto, 2008, https://bitcoin.org/bitcoin.pdf
-6. OECD, "Innovation in Peer-to-Peer Risk Pooling", 2023

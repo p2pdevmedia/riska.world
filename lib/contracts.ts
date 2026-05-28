@@ -31,8 +31,8 @@ export const contracts: ContractDefinition[] = [
     id: "thirtyYearPolicy",
     slug: "riska-thirty-year-policy",
     network: "World Chain Sepolia",
-    address: "0x96ae3c2ECDcfC267731f12294BEee978dEaBfF9b",
-    explorerUrl: `${worldchainSepoliaExplorer}/0x96ae3c2ECDcfC267731f12294BEee978dEaBfF9b`,
+    address: "0xF0Ab6785B2DE77D91b2921e4749923Df12fd21d9",
+    explorerUrl: `${worldchainSepoliaExplorer}/0xF0Ab6785B2DE77D91b2921e4749923Df12fd21d9`,
     sourceFile: "contracts/RiskaThirtyYearPolicy.sol",
     sourceIncluded: true
   },
@@ -40,8 +40,8 @@ export const contracts: ContractDefinition[] = [
     id: "policyManager",
     slug: "policy-manager",
     network: "World Chain Sepolia",
-    address: "0x86296480ee14F2FBD6fae299c799771a7F1aFc0b",
-    explorerUrl: `${worldchainSepoliaExplorer}/0x86296480ee14F2FBD6fae299c799771a7F1aFc0b`,
+    address: "0x369Ca7c53F0cA2960328f8347ce16963569782c9",
+    explorerUrl: `${worldchainSepoliaExplorer}/0x369Ca7c53F0cA2960328f8347ce16963569782c9`,
     sourceFile: "contracts/RiskaPolicyManager.sol",
     sourceIncluded: true
   },
@@ -49,8 +49,8 @@ export const contracts: ContractDefinition[] = [
     id: "beneficiaryRegistry",
     slug: "beneficiary-registry",
     network: "World Chain Sepolia",
-    address: "0xf55E879fD7Bcab699bA72D1e23c8E008c6DAD9a2",
-    explorerUrl: `${worldchainSepoliaExplorer}/0xf55E879fD7Bcab699bA72D1e23c8E008c6DAD9a2`,
+    address: "0x136634699F1633b57711935c01485F37448FB26a",
+    explorerUrl: `${worldchainSepoliaExplorer}/0x136634699F1633b57711935c01485F37448FB26a`,
     sourceFile: "contracts/RiskaBeneficiaryRegistry.sol",
     sourceIncluded: true
   },
@@ -58,8 +58,8 @@ export const contracts: ContractDefinition[] = [
     id: "deathVerifier",
     slug: "death-verifier",
     network: "World Chain Sepolia",
-    address: "0x770148E7cE0ADb9A9F4F5Ffc33e9f5eAA44283a4",
-    explorerUrl: `${worldchainSepoliaExplorer}/0x770148E7cE0ADb9A9F4F5Ffc33e9f5eAA44283a4`,
+    address: "0x6080DFF3900Be904D8fcFd2B7A83E317D8b2de99",
+    explorerUrl: `${worldchainSepoliaExplorer}/0x6080DFF3900Be904D8fcFd2B7A83E317D8b2de99`,
     sourceFile: "contracts/RiskaDeathVerifier.sol",
     sourceIncluded: true
   },
@@ -67,8 +67,8 @@ export const contracts: ContractDefinition[] = [
     id: "premiumVault",
     slug: "premium-vault",
     network: "World Chain Sepolia",
-    address: "0x9D1C6B0569eC0049506Bea3696A3Ece681447079",
-    explorerUrl: `${worldchainSepoliaExplorer}/0x9D1C6B0569eC0049506Bea3696A3Ece681447079`,
+    address: "0x69b56B3Cc1A938851948173400Dc0C410102849E",
+    explorerUrl: `${worldchainSepoliaExplorer}/0x69b56B3Cc1A938851948173400Dc0C410102849E`,
     sourceFile: "contracts/RiskaPremiumVault.sol",
     sourceIncluded: true
   },
@@ -76,8 +76,8 @@ export const contracts: ContractDefinition[] = [
     id: "mockUsdc",
     slug: "mock-usdc",
     network: "World Chain Sepolia",
-    address: "0xFBCB358948A1873AaEA771e0c1E6177498f497D9",
-    explorerUrl: `${worldchainSepoliaExplorer}/0xFBCB358948A1873AaEA771e0c1E6177498f497D9`,
+    address: "0x370981a7c40B133cEe8d34A7bd08650A0b00A36C",
+    explorerUrl: `${worldchainSepoliaExplorer}/0x370981a7c40B133cEe8d34A7bd08650A0b00A36C`,
     sourceFile: "contracts/test/MockUSDC.sol",
     sourceIncluded: true
   }

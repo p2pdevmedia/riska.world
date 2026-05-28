@@ -1,295 +1,335 @@
-import type { ContractId } from "./contracts";
-
 export type Language = "en" | "es";
 
-export type Dictionary = {
-  metadata: {
-    title: string;
-    description: string;
-  };
-  navbar: {
-    brand: string;
-    links: { href: string; label: string }[];
-    cta: string;
-    languageToggle: {
-      label: string;
-      ariaLabel: string;
-    };
-  };
-  hero: {
-    badge: string;
-    title: string;
-    description: string;
-    chips: string[];
-  };
-  impactMetrics: {
-    title: string;
-    subtitle: string;
-    body: string;
-    metrics: { label: string; value: string }[];
-  };
-  aboutSections: {
-    sections: {
-      title: string;
-      description: string;
-      points: string[];
-    }[];
-  };
-  valueGrid: {
-    title: string;
-    subtitle: string;
-    values: {
-      title: string;
-      description: string;
-    }[];
-  };
-  retirementProduct: {
-    badge: string;
-    title: string;
-    subtitle: string;
-    timelineTitle: string;
-    timeline: { label: string; description: string }[];
-    economicsTitle: string;
-    economics: { label: string; value: string; description: string }[];
-    contractNote: string;
-  };
-  contracts: {
-    title: string;
-    subtitle: string;
-    addressLabel: string;
-    pendingLabel: string;
-    explorerLabel: string;
-    docsLabel: string;
-    items: {
-      id: ContractId;
-      name: string;
-      description: string;
-    }[];
-  };
-  contractDetail: {
-    backLabel: string;
-    eyebrow: string;
-    addressLabel: string;
-    pendingAddressLabel: string;
-    networkLabel: string;
-    statusLabel: string;
-    explorerLabel: string;
-    responsibilitiesTitle: string;
-    interfaceTitle: string;
-    safeguardsTitle: string;
-    sourceTitle: string;
-    sourceIncludedLabel: string;
-    sourcePendingLabel: string;
-  };
-  contractDocs: Record<
-    ContractId,
-    {
-      title: string;
-      summary: string;
-      status: string;
-      responsibilities: string[];
-      interfaceItems: {
-        name: string;
-        description: string;
-      }[];
-      safeguards: string[];
-      sourceNote: string;
-    }
-  >;
-  docsPage: {
-    metadata: {
-      title: string;
-      description: string;
-    };
-    hero: {
-      badge: string;
-      title: string;
-      description: string;
-      primaryCta: string;
-      secondaryCta: string;
-    };
-  };
-  techStack: {
-    title: string;
-    subtitle: string;
-    stack: {
-      title: string;
-      description: string;
-    }[];
-  };
-  callToAction: {
-    title: string;
-    subtitle: string;
-    primary: string;
-    secondary: string;
-  };
-  footer: {
-    note: string;
-    worldChain: string;
-    email: string;
-  };
-  walletAuth: {
-    heading: string;
-    description: string;
-    miniApp: {
-      label: string;
-      checking: string;
-      installed: string;
-      browserFallback: string;
-    };
-    statusLabel: string;
-    status: {
-      connected: (address: string) => string;
-      connecting: string;
-      disconnected: string;
-    };
-    chainId: (chainId: number) => string;
-    mode: {
-      "world-app": string;
-      browser: string;
-    };
-    actions: {
-      connectWorldApp: string;
-      connectBrowser: string;
-      connecting: string;
-      disconnect: string;
-    };
-    messages: {
-      welcome: string;
-      disconnected: string;
-      error: string;
-      nonceError: string;
-      verifyError: string;
-      worldAppRequired: string;
-    };
-  };
-  worldIdGate: {
-    heading: string;
-    description: string;
-    statusLabel: string;
-    statuses: {
-      locked: string;
-      ready: string;
-      loading: string;
-      verified: string;
-      error: string;
-      notConfigured: string;
-    };
-    action: string;
-    actionLoading: string;
-    walletRequired: string;
-    configMissing: string;
-    signatureError: string;
-    verifyError: string;
-    duplicateError: string;
-    errorPrefix: string;
-    errors: Record<string, string>;
-    signalLabel: (signal: string) => string;
-    proofLabel: (proofId: string) => string;
-  };
-  whitepaper: {
-    metadata: {
-      title: string;
-      description: string;
-    };
-    header: {
-      badge: string;
-      title: string;
-      date: string;
-    };
-    download: {
-      label: string;
-      note: string;
-    };
-    abstract: {
-      title: string;
-      paragraphs: string[];
-    };
-    introduction: {
-      title: string;
-      paragraphs: string[];
-      goalsTitle: string;
-      goals: string[];
-    };
-    systemOverview: {
-      title: string;
-      paragraphs: string[];
-      everydayIntuition: {
-        title: string;
-        body: string;
-      };
-    };
-    userLifecycle: {
-      title: string;
-      steps: { label: string; description: string }[];
-      examples: {
-        title: string;
-        items: { label: string; description: string }[];
-      };
-    };
-    capital: {
-      title: string;
-      paragraphs: string[];
-      example: {
-        title: string;
-        body: string;
-      };
-    };
-    eventVerification: {
-      title: string;
-      paragraphs: string[];
-      plainLanguage: {
-        title: string;
-        body: string;
-      };
-    };
-    claims: {
-      title: string;
-      paragraphs: string[];
-    };
-    incentives: {
-      title: string;
-      intro: string;
-      points: { label: string; description: string }[];
-      feeParagraph: string;
-      example: {
-        title: string;
-        body: string;
-      };
-    };
-    governance: {
-      title: string;
-      paragraphs: string[];
-    };
-    security: {
-      title: string;
-      points: { label: string; description: string }[];
-    };
-    applications: {
-      title: string;
-      paragraphs: string[];
-    };
-    faq: {
-      title: string;
-      items: { question: string; answer: string }[];
-    };
-    conclusion: {
-      title: string;
-      paragraphs: string[];
-    };
-    references: {
-      title: string;
-      items: string[];
-    };
-  };
+const worldIdErrorsEn = {
+  cancelled: "Verification was cancelled. No policy slot was reserved.",
+  connection_failed: "The connection with World App was interrupted. Check your connection and try again.",
+  credential_unavailable:
+    "This World App account is not verified as human yet. Finish World ID verification in World App, then return to Riska and try again.",
+  failed_by_host_app: "Riska could not accept the proof. Reconnect your wallet session and try again.",
+  generic_error: "We could not complete World ID verification. Please try again.",
+  identity_attributes_not_matched: "This World ID does not match the proof requirements for a Riska policy.",
+  inclusion_proof_failed: "World App could not prepare the proof for this account. Wait a moment and try again.",
+  inclusion_proof_pending: "Your World ID proof is still being prepared. Wait a moment and try again.",
+  invalid_network: "World ID returned a proof for the wrong network. Please try again from World App.",
+  invalid_rp_signature: "Riska's World ID configuration needs attention before verification can continue.",
+  malformed_request: "The World ID request could not be read. Please refresh Riska and try again.",
+  max_verifications_reached: "This World ID has already been used for this Riska verification.",
+  nullifier_replayed: "This World ID has already been reserved for this Riska verification.",
+  timeout: "World App took too long to answer. Please try again.",
+  unexpected_response: "World App returned an unexpected response. Please update World App and try again.",
+  user_rejected: "Verification was cancelled. No policy slot was reserved.",
+  verification_rejected: "World App rejected the verification. Make sure your account is verified and try again.",
+  wallet_session_required:
+    "Connect your wallet again before verifying World ID. In World App this creates the secure Wallet Auth session Riska needs.",
+  world_id_3_not_available:
+    "This World App account cannot create the required proof yet. Finish verification and try again.",
+  world_id_4_not_available:
+    "This World App account cannot create the required proof yet. Update World App or finish verification, then try again."
 };
 
-export const dictionaries: Record<Language, Dictionary> = {
+const worldIdErrorsEs = {
+  cancelled: "Cancelaste la verificacion. No se reservo ninguna poliza.",
+  connection_failed: "La conexion con World App se interrumpio. Revisa tu conexion e intentalo de nuevo.",
+  credential_unavailable:
+    "Esta cuenta de World App todavia no esta verificada como humana. Completa la verificacion de World ID en World App y vuelve a intentarlo en Riska.",
+  failed_by_host_app: "Riska no pudo aceptar la prueba. Vuelve a conectar tu sesion de wallet e intentalo otra vez.",
+  generic_error: "No pudimos completar la verificacion de World ID. Intentalo de nuevo.",
+  identity_attributes_not_matched: "Este World ID no cumple los requisitos de prueba para una poliza Riska.",
+  inclusion_proof_failed: "World App no pudo preparar la prueba para esta cuenta. Espera un momento e intentalo de nuevo.",
+  inclusion_proof_pending: "Tu prueba de World ID todavia se esta preparando. Espera un momento e intentalo de nuevo.",
+  invalid_network: "World ID devolvio una prueba para la red incorrecta. Intentalo de nuevo desde World App.",
+  invalid_rp_signature: "La configuracion de World ID de Riska necesita una correccion antes de continuar.",
+  malformed_request: "La solicitud de World ID no se pudo leer. Refresca Riska e intentalo de nuevo.",
+  max_verifications_reached: "Este World ID ya fue usado para esta verificacion de Riska.",
+  nullifier_replayed: "Este World ID ya esta reservado para esta verificacion de Riska.",
+  timeout: "World App tardo demasiado en responder. Intentalo de nuevo.",
+  unexpected_response: "World App devolvio una respuesta inesperada. Actualiza World App e intentalo de nuevo.",
+  user_rejected: "Cancelaste la verificacion. No se reservo ninguna poliza.",
+  verification_rejected: "World App rechazo la verificacion. Asegurate de que tu cuenta este verificada e intentalo de nuevo.",
+  wallet_session_required:
+    "Vuelve a conectar tu wallet antes de verificar World ID. En World App eso crea la sesion segura de Wallet Auth que Riska necesita.",
+  world_id_3_not_available:
+    "Esta cuenta de World App todavia no puede crear la prueba requerida. Completa la verificacion e intentalo de nuevo.",
+  world_id_4_not_available:
+    "Esta cuenta de World App todavia no puede crear la prueba requerida. Actualiza World App o completa la verificacion, y vuelve a intentarlo."
+};
+
+const contractDocsEn = {
+  thirtyYearPolicy: {
+    title: "RiskaThirtyYearPolicy",
+    summary: "Historical MVP source retained for comparison with the current flexible policy manager.",
+    status: "Legacy reference. Not used by the current testnet app flow.",
+    responsibilities: [
+      "Document the first MVP lifecycle experiment.",
+      "Remain available for auditors who want to compare the old model with the current manager."
+    ],
+    interfaceItems: [
+      { name: "Legacy open/claim functions", description: "Kept for source review only." }
+    ],
+    safeguards: [
+      "Do not treat this contract as the current policy lifecycle.",
+      "Use RiskaPolicyManager for current app and testnet review."
+    ],
+    sourceNote: "Included as historical MVP source."
+  },
+  policyManager: {
+    title: "RiskaPolicyManager",
+    summary:
+      "The active flexible policy manager for opening policies, deposits, payout activation, holder claims, heartbeat, beneficiary death notice, and death claim.",
+    status: "Deployed on World Chain Sepolia for test flows. Not audited for production funds.",
+    responsibilities: [
+      "Open one policy per holder after app-level World ID verification.",
+      "Allocate deposits first to the 10,800 USDC minimum and then to extra principal.",
+      "Activate 120 monthly payouts once the minimum is funded.",
+      "Cancel pending death reports whenever the holder interacts.",
+      "Allow configured beneficiaries to claim after a report plus 12 months without holder interaction."
+    ],
+    interfaceItems: [
+      { name: "openPolicy", description: "Creates the policy, stores beneficiaries, and collects the first 30 USDC unit." },
+      { name: "deposit", description: "Adds USDC before payout activation, filling minimum principal first." },
+      { name: "activatePayout", description: "Snapshots monthly payout over 120 months once the minimum is funded." },
+      { name: "claimMonthly", description: "Pays the next holder payout with no fee." },
+      { name: "claimAll", description: "Withdraws all remaining holder principal with no fee." },
+      { name: "heartbeat", description: "Records life interaction without withdrawing money." },
+      { name: "reportDeath", description: "Lets a configured beneficiary start the 12-month notice window." },
+      { name: "claimDeath", description: "Pays beneficiaries after the no-interaction window." }
+    ],
+    safeguards: [
+      "Deposits are closed after payout activation.",
+      "Death fee applies only to remaining minimum principal.",
+      "Extra principal is never fee-bearing.",
+      "Beneficiary reports cannot be claimed while the holder keeps interacting."
+    ],
+    sourceNote: "The local source below is the current manager used by the World Chain Sepolia deployment."
+  },
+  beneficiaryRegistry: {
+    title: "RiskaBeneficiaryRegistry",
+    summary: "Stores beneficiary wallets and allocation shares for each policy.",
+    status: "Deployed on World Chain Sepolia and writable only by the policy manager.",
+    responsibilities: [
+      "Store beneficiary accounts and basis-point allocations.",
+      "Reject empty, duplicate, zero-address, or oversized beneficiary sets.",
+      "Require total beneficiary shares to equal 100%."
+    ],
+    interfaceItems: [
+      { name: "setPolicyManager", description: "Sets the only contract authorized to write records." },
+      { name: "setBeneficiaries", description: "Writes beneficiary accounts and share percentages." },
+      { name: "beneficiaryCount", description: "Returns beneficiary count for a policy." },
+      { name: "beneficiaryAt", description: "Returns a beneficiary wallet and share by index." }
+    ],
+    safeguards: [
+      "Only the configured policy manager can write.",
+      "At most eight beneficiaries per policy.",
+      "Shares must add up to exactly 10,000 basis points."
+    ],
+    sourceNote: "The local source below is used in the current Sepolia deployment."
+  },
+  deathVerifier: {
+    title: "RiskaDeathVerifier",
+    summary: "Legacy verifier/oracle experiment retained for reference.",
+    status: "Legacy reference. It does not gate the current beneficiary death claim flow.",
+    responsibilities: [
+      "Document a previous evidence-hash verifier design.",
+      "Remain available if a future optional review module is needed."
+    ],
+    interfaceItems: [
+      { name: "reportDeath", description: "Legacy evidence report path." },
+      { name: "verifyDeath", description: "Legacy verifier review path, not used by the current manager." }
+    ],
+    safeguards: [
+      "Do not require this module for the current beneficiary payout flow.",
+      "Do not present it as the current manual gate."
+    ],
+    sourceNote: "Included as legacy source only."
+  },
+  premiumVault: {
+    title: "RiskaPremiumVault",
+    summary: "USDC custody module for deposits, holder payouts, beneficiary payouts, and protocol reserve accounting.",
+    status: "Deployed on World Chain Sepolia and callable only by the policy manager.",
+    responsibilities: [
+      "Collect USDC deposits from holders.",
+      "Track total principal liability.",
+      "Pay holder monthly claims and claim-all withdrawals.",
+      "Pay beneficiaries according to registry shares.",
+      "Track retained death fee as protocol reserve."
+    ],
+    interfaceItems: [
+      { name: "collectPremium", description: "Collects USDC from a holder and increases principal liability." },
+      { name: "payHolder", description: "Releases principal to the holder." },
+      { name: "settleBeneficiaryPayout", description: "Releases beneficiary payout and accounts retained reserve." }
+    ],
+    safeguards: [
+      "Only the policy manager can move funds.",
+      "Payouts cannot exceed tracked liability.",
+      "Protocol reserve is accounted but not withdrawable in this version."
+    ],
+    sourceNote: "The local source below is used in the current Sepolia deployment."
+  },
+  mockUsdc: {
+    title: "MockUSDC",
+    summary: "Six-decimal ERC-20 test token for World Chain Sepolia policy tests.",
+    status: "Testnet only. No production value.",
+    responsibilities: [
+      "Represent USDC-style accounting in test flows.",
+      "Allow wallets to mint test funds.",
+      "Support ERC-20 allowances for vault deposits."
+    ],
+    interfaceItems: [
+      { name: "decimals", description: "Returns 6." },
+      { name: "mint", description: "Mints test tokens." },
+      { name: "approve", description: "Approves the vault for deposits." },
+      { name: "balanceOf", description: "Reads wallet test balance." }
+    ],
+    safeguards: [
+      "Mock token only.",
+      "Open minting is intentional for testnet.",
+      "Production must use an allowlisted payment token."
+    ],
+    sourceNote: "The local source below is the mock token used in test deployments."
+  }
+};
+
+const contractDocsEs = {
+  thirtyYearPolicy: {
+    title: "RiskaThirtyYearPolicy",
+    summary: "Fuente MVP historica mantenida para comparar con el manager flexible actual.",
+    status: "Referencia legacy. No se usa en el flujo actual de la app testnet.",
+    responsibilities: [
+      "Documentar el primer experimento de ciclo de vida.",
+      "Quedar disponible para auditores que quieran comparar el modelo anterior con el manager actual."
+    ],
+    interfaceItems: [
+      { name: "Funciones legacy", description: "Conservadas solo para revision de codigo." }
+    ],
+    safeguards: [
+      "No tratar este contrato como el ciclo de poliza actual.",
+      "Usar RiskaPolicyManager para revisar la app y testnet actuales."
+    ],
+    sourceNote: "Incluido como fuente historica del MVP."
+  },
+  policyManager: {
+    title: "RiskaPolicyManager",
+    summary:
+      "Manager flexible activo para abrir polizas, depositar, activar pagos, cobrar, enviar heartbeat, reportar muerte y liquidar beneficiarios.",
+    status: "Desplegado en World Chain Sepolia para pruebas. No auditado para fondos productivos.",
+    responsibilities: [
+      "Abrir una poliza por holder despues de la verificacion World ID en la app.",
+      "Asignar depositos primero al minimo de 10,800 USDC y luego a principal extra.",
+      "Activar 120 pagos mensuales cuando el minimo esta fondeado.",
+      "Cancelar reportes de muerte pendientes cada vez que el titular interactua.",
+      "Permitir que beneficiarios configurados cobren despues de reporte y 12 meses sin interaccion del titular."
+    ],
+    interfaceItems: [
+      { name: "openPolicy", description: "Crea la poliza, guarda beneficiarios y cobra la primera unidad de 30 USDC." },
+      { name: "deposit", description: "Agrega USDC antes de activar pagos, llenando primero el minimo." },
+      { name: "activatePayout", description: "Fija el pago mensual sobre 120 meses cuando el minimo esta fondeado." },
+      { name: "claimMonthly", description: "Paga el siguiente mes al titular sin fee." },
+      { name: "claimAll", description: "Retira todo el principal restante del titular sin fee." },
+      { name: "heartbeat", description: "Registra interaccion de vida sin retirar dinero." },
+      { name: "reportDeath", description: "Permite que un beneficiario configurado inicie la ventana de 12 meses." },
+      { name: "claimDeath", description: "Paga beneficiarios despues de la ventana sin interaccion." }
+    ],
+    safeguards: [
+      "Los depositos cierran despues de activar pagos.",
+      "El fee de muerte aplica solo al minimo restante.",
+      "El principal extra nunca paga fee.",
+      "Los reportes de beneficiarios no pueden cobrarse si el titular sigue interactuando."
+    ],
+    sourceNote: "El codigo local de abajo es el manager actual usado en Sepolia."
+  },
+  beneficiaryRegistry: {
+    title: "RiskaBeneficiaryRegistry",
+    summary: "Guarda wallets de beneficiarios y porcentajes para cada poliza.",
+    status: "Desplegado en World Chain Sepolia y escribible solo por el policy manager.",
+    responsibilities: [
+      "Guardar cuentas y asignaciones en basis points.",
+      "Rechazar conjuntos vacios, duplicados, con direccion cero o demasiado grandes.",
+      "Exigir que los porcentajes sumen 100%."
+    ],
+    interfaceItems: [
+      { name: "setPolicyManager", description: "Define el unico contrato autorizado a escribir." },
+      { name: "setBeneficiaries", description: "Guarda cuentas y porcentajes." },
+      { name: "beneficiaryCount", description: "Devuelve cantidad de beneficiarios." },
+      { name: "beneficiaryAt", description: "Devuelve wallet y porcentaje por indice." }
+    ],
+    safeguards: [
+      "Solo escribe el manager configurado.",
+      "Maximo ocho beneficiarios por poliza.",
+      "Las asignaciones deben sumar exactamente 10,000 basis points."
+    ],
+    sourceNote: "El codigo local de abajo se usa en el despliegue actual de Sepolia."
+  },
+  deathVerifier: {
+    title: "RiskaDeathVerifier",
+    summary: "Experimento legacy de verificador/oraculo mantenido como referencia.",
+    status: "Referencia legacy. No bloquea el flujo actual de cobro de beneficiarios.",
+    responsibilities: [
+      "Documentar un diseno anterior con hashes de evidencia.",
+      "Quedar disponible si en el futuro se agrega un modulo opcional de revision."
+    ],
+    interfaceItems: [
+      { name: "reportDeath", description: "Ruta legacy de reporte con evidencia." },
+      { name: "verifyDeath", description: "Ruta legacy de revision, no usada por el manager actual." }
+    ],
+    safeguards: [
+      "No requerir este modulo para el pago actual a beneficiarios.",
+      "No presentarlo como compuerta manual actual."
+    ],
+    sourceNote: "Incluido solo como fuente legacy."
+  },
+  premiumVault: {
+    title: "RiskaPremiumVault",
+    summary: "Custodia USDC para depositos, pagos al titular, pagos a beneficiarios y reserva del protocolo.",
+    status: "Desplegado en World Chain Sepolia y llamable solo por el policy manager.",
+    responsibilities: [
+      "Cobrar depositos USDC desde holders.",
+      "Rastrear pasivo total de principal.",
+      "Pagar cobros mensuales y claim-all al titular.",
+      "Pagar beneficiarios segun porcentajes del registry.",
+      "Registrar el fee retenido de muerte como reserva."
+    ],
+    interfaceItems: [
+      { name: "collectPremium", description: "Cobra USDC y aumenta el pasivo de principal." },
+      { name: "payHolder", description: "Libera principal al titular." },
+      { name: "settleBeneficiaryPayout", description: "Libera pago a beneficiarios y contabiliza reserva retenida." }
+    ],
+    safeguards: [
+      "Solo el policy manager puede mover fondos.",
+      "Los pagos no pueden superar el pasivo registrado.",
+      "La reserva del protocolo esta contabilizada pero no es retirable en esta version."
+    ],
+    sourceNote: "El codigo local de abajo se usa en el despliegue actual de Sepolia."
+  },
+  mockUsdc: {
+    title: "MockUSDC",
+    summary: "Token ERC-20 de seis decimales para pruebas de polizas en World Chain Sepolia.",
+    status: "Solo testnet. Sin valor productivo.",
+    responsibilities: [
+      "Representar contabilidad estilo USDC en pruebas.",
+      "Permitir mintear fondos de prueba.",
+      "Soportar allowances ERC-20 para depositos al vault."
+    ],
+    interfaceItems: [
+      { name: "decimals", description: "Devuelve 6." },
+      { name: "mint", description: "Mintea tokens de prueba." },
+      { name: "approve", description: "Aprueba al vault para depositos." },
+      { name: "balanceOf", description: "Lee el balance de prueba." }
+    ],
+    safeguards: [
+      "Token mock solamente.",
+      "El minteo abierto es intencional para testnet.",
+      "Produccion debe usar un token de pago allowlisted."
+    ],
+    sourceNote: "El codigo local de abajo es el mock usado en despliegues de prueba."
+  }
+};
+
+export const dictionaries = {
   en: {
     metadata: {
-      title: "Riska.world - Life Protection + 30-Year Retirement Income",
+      title: "Riska.world - Flexible protection for verified humans",
       description:
-        "Riska combines life protection with a 30-year USDC policy: after the 12-month waiting period, beneficiaries receive a formula payout; at maturity, the holder receives 100% principal over 10 years."
+        "Riska lets verified humans open a flexible USDC policy, fund a 10,800 USDC minimum over time, add extra principal, and use heartbeat-based beneficiary protection."
     },
     navbar: {
       brand: "RISKA",
@@ -300,194 +340,138 @@ export const dictionaries: Record<Language, Dictionary> = {
         { href: "/docs", label: "Contracts" }
       ],
       cta: "Start",
-      languageToggle: {
-        label: "ES",
-        ariaLabel: "Switch to Spanish"
-      }
+      languageToggle: { label: "ES", ariaLabel: "Switch to Spanish" }
     },
     hero: {
-      badge: "Riska 30 · Life protection + programmed income",
-      title: "30 USDC a month. If you reach maturity, you collect 100%.",
+      badge: "Riska 30 · Flexible USDC policy",
+      title: "Any verified human can open a policy.",
       description:
-        "Riska turns life insurance into a long-term USDC policy. After 12 paid months, verified beneficiaries can receive 80% of paid premiums if the holder dies before maturity. At 30 years, the holder receives 100% of scheduled principal over 10 years.",
+        "Fund the 10,800 USDC minimum over time or upfront. Extra deposits increase future monthly payout, and beneficiaries can claim only after a death report plus 12 months without holder interaction.",
       chips: [
-        "30 USDC monthly premium",
-        "12-month waiting period",
-        "80% beneficiary formula",
-        "100% maturity principal"
+        "10,800 USDC minimum",
+        "30 USDC base unit",
+        "120 monthly payouts",
+        "Heartbeat death-flow guard"
       ]
     },
     impactMetrics: {
       title: "Product rules",
-      subtitle:
-        "One policy, published outcomes: beneficiary support after the waiting period, programmed income when the 30-year term is complete.",
+      subtitle: "One policy account, visible balances, and clear holder or beneficiary outcomes.",
       body:
-        "The base promise is principal-denominated in USDC: 80% of paid premiums to beneficiaries after verified death from month 12 through maturity, 90% of the matured or remaining balance after maturity, and 100% principal to the holder if they complete the term.",
+        "Deposits fill the minimum first, extra principal is not fee-bearing, holder withdrawals have no fee, and death fees touch only remaining minimum principal.",
       metrics: [
-        { label: "Contribution term", value: "30 years" },
-        { label: "Monthly premium", value: "30 USDC" },
-        { label: "Waiting period", value: "12 months" },
-        { label: "After maturity", value: "10-year payout" },
-        { label: "Contract terms", value: "Auditable" },
+        { label: "Minimum policy", value: "10,800 USDC" },
+        { label: "Base unit", value: "30 USDC" },
+        { label: "Payout duration", value: "120 months" },
+        { label: "Death notice", value: "12 months" },
+        { label: "Extra principal", value: "No fee" },
         { label: "User identity", value: "Verified human" }
       ]
     },
     aboutSections: {
       sections: [
         {
-          title: "30-year life contract",
-          description:
-            "Each policy publishes the 30 USDC premium, maturity date, waiting period, beneficiary formula, and programmed income method.",
+          title: "Flexible policy account",
+          description: "A verified holder opens one policy and funds the minimum at their own pace.",
           points: [
-            "The holder contributes for 30 years",
-            "The legal terms hash is linked to the on-chain policy",
-            "The policy state is visible: active, grace, matured, payout, or closed"
+            "Any verified human can open a policy",
+            "The terms hash is linked to the policy",
+            "Minimum and extra principal are visible separately"
           ]
         },
         {
-          title: "Family protection phase",
-          description:
-            "Before maturity, the policy pays beneficiaries only under the published formula and after verified death reporting.",
+          title: "Holder-controlled payout",
+          description: "Once the minimum is funded, the holder decides when to start or withdraw.",
           points: [
-            "Beneficiaries are set at policy creation",
-            "Death reports are verified before payout",
-            "From month 12 through maturity, beneficiaries receive 80% of paid premiums after approval"
+            "Activate 120 monthly payments",
+            "Claim all remaining principal with no fee",
+            "Use heartbeat to prove life without claiming that month"
           ]
         },
         {
-          title: "Retirement income phase",
-          description:
-            "After 30 years, the policy matures and converts the accumulated balance into scheduled payments.",
+          title: "Beneficiary notice flow",
+          description: "Beneficiaries use a report-and-wait path instead of a hidden manual gate.",
           points: [
-            "Maturity is time-based and does not require an oracle",
-            "The holder receives 100% of scheduled principal over 120 monthly payments",
-            "Beneficiaries receive 90% of the matured or remaining balance if verified death occurs after maturity"
+            "Only configured beneficiaries can report",
+            "Death claim waits 12 months after report",
+            "Any holder interaction cancels the report"
           ]
         }
       ]
     },
     valueGrid: {
       title: "Contract components",
-      subtitle:
-        "The protocol is scoped around one defensible product: life protection during accumulation, programmed income after maturity.",
+      subtitle: "The protocol separates identity, beneficiaries, principal accounting, and payout rules.",
       values: [
         {
           title: "Electronic policy terms",
-          description:
-            "A signed policy document defines coverage, beneficiaries, premiums, maturity, payout schedule, and dispute rules. Its hash is stored on-chain."
+          description: "A signed policy document defines deposits, beneficiaries, heartbeat, payout rights, and the death-notice window."
         },
         {
-          title: "Principal and yield",
-          description:
-            "The 30 USDC monthly premium is protected principal for the base promise. Protocol economics come from allowlisted yield strategies and must be accounted separately."
+          title: "Minimum and extra principal",
+          description: "The first 10,800 USDC funds the minimum. Anything above it is extra principal and never pays the death fee."
         },
         {
-          title: "Beneficiary formula",
-          description:
-            "Before 12 paid months there is no policy payout. From month 12 through maturity, verified beneficiaries receive 80% of paid premiums."
+          title: "Holder payout",
+          description: "After the minimum is funded, the holder can activate 120 monthly payments or claim all remaining principal."
         },
         {
-          title: "Programmed income",
-          description:
-            "After 30 years, 100% of scheduled principal converts into fixed withdrawals over 10 years."
+          title: "Beneficiary payout",
+          description: "Beneficiaries receive extra principal plus 80% of remaining minimum principal after the no-interaction window."
         },
         {
           title: "Verified access",
-          description:
-            "World Chain verification limits duplicate policy abuse while preserving a wallet-native onboarding flow."
+          description: "World ID reduces duplicate policy abuse while keeping biometric data outside Riska."
         }
       ]
     },
     retirementProduct: {
       badge: "Riska 30 contract",
-      title: "A life policy that becomes income after 30 years.",
+      title: "A policy account that can become programmed income.",
       subtitle:
-        "Riska 30 keeps the promise explicit: 30 USDC per month, 12-month waiting period, 80% beneficiary payout before maturity, and 100% principal return to the holder at maturity.",
+        "The minimum policy is 10,800 USDC. Once funded, the holder can activate 120 monthly payments, claim all, or keep interacting with heartbeat.",
       timelineTitle: "Policy lifecycle",
       timeline: [
-        {
-          label: "Years 0-30",
-          description: "The holder pays 30 USDC per month. Principal accumulates toward the 30-year maturity promise."
-        },
-        {
-          label: "If death occurs",
-          description: "After 12 paid months, a verified death claim pays beneficiaries 80% of paid premiums before maturity."
-        },
-        {
-          label: "Year 30",
-          description: "The policy matures by time. No death oracle is needed to unlock the retirement phase."
-        },
-        {
-          label: "After maturity",
-          description: "The holder receives 100% of scheduled principal over 10 years; verified death routes 90% of the remaining balance to beneficiaries."
-        }
+        { label: "Open", description: "Verify as human, configure beneficiaries, accept terms, and pay the first 30 USDC unit." },
+        { label: "Fund", description: "Deposit any amount before payout activation; the minimum fills first and extra principal follows." },
+        { label: "Choose payout", description: "Activate monthly payout or claim all principal once the minimum is funded." },
+        { label: "Beneficiary notice", description: "A beneficiary report plus 12 months without holder interaction can unlock death settlement." }
       ],
       economicsTitle: "Policy economics",
       economics: [
         {
-          label: "Protected principal",
-          value: "30 USDC/mo",
-          description: "The base amount used for beneficiary formulas and maturity payout."
+          label: "Minimum principal",
+          value: "10,800 USDC",
+          description: "The base amount required before holder payout can be activated."
         },
         {
-          label: "Yield strategy",
-          value: "Protocol income",
-          description: "Funds can be deployed into allowlisted protocols to generate yield for reserves and operations."
+          label: "Extra principal",
+          value: "No fee",
+          description: "Extra deposits increase monthly payout and pass fully to beneficiaries if death settlement happens."
         },
         {
-          label: "RISKA governance",
-          value: "100,000 supply",
-          description: "The 0-decimal token starts centralized and transferable, with a future decentralization path."
+          label: "Death fee",
+          value: "20% of minimum",
+          description: "Charged only against remaining minimum principal during death settlement."
         }
       ],
       contractNote:
-        "The production contracts need to be rewritten around World ID, multiple beneficiaries, yield accounting, upgrade governance, and the final payout formula."
+        "The current testnet contracts implement the flexible policy flow. Production still requires legal clearance, external audit, multisig/timelock, and monitoring."
     },
     contracts: {
       title: "Protocol contracts",
-      subtitle:
-        "Riska's current test modules are deployed on World Chain Sepolia. Each deployed module includes an explorer link and local source reference.",
+      subtitle: "Riska's current modules are deployed on World Chain Sepolia for test flows.",
       addressLabel: "Contract address",
       pendingLabel: "Pending deployment",
       explorerLabel: "View on explorer",
       docsLabel: "Read docs",
       items: [
-        {
-          id: "thirtyYearPolicy",
-          name: "RiskaThirtyYearPolicy",
-          description:
-            "MVP policy lifecycle for 30-year contributions, death-benefit settlement, maturity activation, and programmed retirement payouts."
-        },
-        {
-          id: "policyManager",
-          name: "PolicyManager",
-          description:
-            "Issues coverage NFTs, enforces policy lifecycles, and exposes underwriting controls."
-        },
-        {
-          id: "beneficiaryRegistry",
-          name: "BeneficiaryRegistry",
-          description:
-            "Stores beneficiary wallets and allocation shares for each policy opened by the manager."
-        },
-        {
-          id: "deathVerifier",
-          name: "DeathVerifier",
-          description:
-            "Receives verified death reports, stores evidence hashes, and authorizes beneficiary settlement."
-        },
-        {
-          id: "premiumVault",
-          name: "PremiumVault",
-          description:
-            "Holds liquidity, accounts for pool balances, and releases capital for payouts."
-        },
-        {
-          id: "mockUsdc",
-          name: "MockUSDC",
-          description:
-            "Test ERC-20 payment token used for the Sepolia issuance flow and first premium approval."
-        }
+        { id: "thirtyYearPolicy", name: "RiskaThirtyYearPolicy", description: "Historical MVP source retained for reference." },
+        { id: "policyManager", name: "PolicyManager", description: "Active flexible policy lifecycle and payout manager." },
+        { id: "beneficiaryRegistry", name: "BeneficiaryRegistry", description: "Stores beneficiary wallets and allocation shares." },
+        { id: "deathVerifier", name: "DeathVerifier", description: "Legacy verifier experiment, not a current payout gate." },
+        { id: "premiumVault", name: "PremiumVault", description: "Holds USDC and releases holder or beneficiary payouts." },
+        { id: "mockUsdc", name: "MockUSDC", description: "Test ERC-20 payment token for Sepolia flows." }
       ]
     },
     contractDetail: {
@@ -505,324 +489,68 @@ export const dictionaries: Record<Language, Dictionary> = {
       sourceIncludedLabel: "Source included in this site",
       sourcePendingLabel: "Source import pending"
     },
-    contractDocs: {
-      thirtyYearPolicy: {
-        title: "RiskaThirtyYearPolicy",
-        summary:
-          "The MVP contract for the Riska 30 product: a 30-year contribution policy that protects beneficiaries before maturity and pays the holder through programmed withdrawals after maturity.",
-        status: "Deployed on World Chain Sepolia for test flows. Not audited for production funds.",
-        responsibilities: [
-          "Create plans with premium, death benefit, allocation percentages, payout months, and terms hash.",
-          "Open policies with holder, beneficiary, maturity date, paid-through date, and retirement balance.",
-          "Collect premiums and separate retirement balance, risk reserve, and protocol fees.",
-          "Settle verified death claims before maturity and activate programmed retirement payouts after maturity."
-        ],
-        interfaceItems: [
-          {
-            name: "createPlan",
-            description: "Creates a policy plan with published economics and the hash of the electronic policy terms."
-          },
-          {
-            name: "openPolicy",
-            description: "Starts a holder policy, records the beneficiary, and collects the first premium."
-          },
-          {
-            name: "payPremium",
-            description: "Extends coverage by one or more payment periods and updates the retirement balance."
-          },
-          {
-            name: "reportDeath",
-            description: "Allows the approved verifier to submit an evidence hash and settle the beneficiary payout."
-          },
-          {
-            name: "activateRetirement",
-            description: "Converts a matured policy into programmed withdrawals for the holder."
-          },
-          {
-            name: "claimRetirementPayout",
-            description: "Releases the next scheduled retirement payout and closes the policy when the balance is exhausted."
-          }
-        ],
-        safeguards: [
-          "A non-reentrancy guard wraps premium collection, claim settlement, reserve funding, fee withdrawals, and payouts.",
-          "Death benefits only settle when available risk liquidity covers the configured benefit.",
-          "Retirement balances are tracked as protocol liabilities and separated from fee balance.",
-          "Plan terms are anchored with a terms hash so the legal document can be versioned and audited."
-        ],
-        sourceNote:
-          "The source below is the current MVP implementation included in this repository. It should be audited before production use."
-      },
-      policyManager: {
-        title: "PolicyManager",
-        summary:
-          "The policy registry and issuance module for deployed coverage records. In the Riska 30 architecture, it is the place where a signed electronic policy becomes an on-chain policy reference.",
-        status: "Deployed on World Chain Sepolia and wired to the registry, verifier, and vault.",
-        responsibilities: [
-          "Bind a policy holder, beneficiary, plan, and terms hash to a durable on-chain record.",
-          "Expose lifecycle state to the app so users can see whether coverage is active, in grace, matured, or closed.",
-          "Coordinate with the vault and verification modules when a claim or maturity event changes policy state.",
-          "Keep policy metadata addressable for wallets, explorers, and partner integrations."
-        ],
-        interfaceItems: [
-          {
-            name: "Policy issuance",
-            description: "Creates the coverage record after the user accepts the electronic contract and pays the required premium."
-          },
-          {
-            name: "Beneficiary registry",
-            description: "Stores or references the beneficiary selected by the holder at policy creation."
-          },
-          {
-            name: "Lifecycle status",
-            description: "Publishes the current policy state for the web app, explorers, and downstream integrations."
-          },
-          {
-            name: "Terms reference",
-            description: "Links the policy to the exact legal document hash accepted by the holder."
-          }
-        ],
-        safeguards: [
-          "Issuance should be gated by underwriting rules, verified identity, and capacity checks.",
-          "Lifecycle changes should emit events for public auditability.",
-          "Policy records should not store sensitive evidence directly on-chain.",
-          "Administrative permissions should be time-delayed or moved behind governance before public scale."
-        ],
-        sourceNote:
-          "The local source below is the contract used for the current World Chain Sepolia deployment."
-      },
-      beneficiaryRegistry: {
-        title: "BeneficiaryRegistry",
-        summary:
-          "The registry module that stores beneficiary wallets and allocation shares for each policy created through the Riska policy manager.",
-        status: "Deployed on World Chain Sepolia and restricted so only the policy manager can set beneficiaries.",
-        responsibilities: [
-          "Store beneficiary accounts and basis-point allocations for each policy.",
-          "Reject empty, duplicate, zero-address, or oversized beneficiary sets.",
-          "Require total beneficiary shares to equal 100%.",
-          "Expose beneficiary count and indexed beneficiary reads for payout logic and app views."
-        ],
-        interfaceItems: [
-          {
-            name: "setPolicyManager",
-            description: "Sets the only contract authorized to write beneficiary records."
-          },
-          {
-            name: "setBeneficiaries",
-            description: "Writes the beneficiary accounts and share percentages for a policy."
-          },
-          {
-            name: "beneficiaryCount",
-            description: "Returns how many beneficiaries are configured for a policy."
-          },
-          {
-            name: "beneficiaryAt",
-            description: "Returns a beneficiary wallet and share by index."
-          }
-        ],
-        safeguards: [
-          "Only the configured policy manager can write beneficiary data.",
-          "The registry rejects duplicate wallets and zero addresses.",
-          "A policy can have at most eight beneficiaries.",
-          "Shares must add up to exactly 10,000 basis points."
-        ],
-        sourceNote:
-          "The local source below is the contract used for the current World Chain Sepolia deployment."
-      },
-      deathVerifier: {
-        title: "DeathVerifier",
-        summary:
-          "The verification module that receives death reports, records evidence hashes, and authorizes beneficiary settlement under the policy rules.",
-        status: "Deployed on World Chain Sepolia with a single configured verifier for test flows.",
-        responsibilities: [
-          "Receive a death report for a policy without storing private documents directly on-chain.",
-          "Record the hash or reference of off-chain evidence used by the verifier.",
-          "Authorize claim settlement only after the event has passed the verification process.",
-          "Provide an auditable trail for beneficiaries, governance, and future dispute windows."
-        ],
-        interfaceItems: [
-          {
-            name: "Evidence reference",
-            description: "Stores a cryptographic reference to the documents or attestations used for verification."
-          },
-          {
-            name: "Verifier authorization",
-            description: "Restricts settlement authorization to approved reporters in the MVP."
-          },
-          {
-            name: "Claim signal",
-            description: "Notifies the policy module that a beneficiary payout can be executed."
-          },
-          {
-            name: "Dispute upgrade path",
-            description: "Leaves room for quorum, bonded reporters, and dispute windows in later versions."
-          }
-        ],
-        safeguards: [
-          "Raw medical, civil registry, or identity documents should stay off-chain.",
-          "Verifier changes should be governed and evented.",
-          "Large claims should support multiple reporters and a delay before final settlement.",
-          "Evidence references should be immutable after settlement."
-        ],
-        sourceNote:
-          "The local source below is the contract used for the current World Chain Sepolia deployment."
-      },
-      premiumVault: {
-        title: "PremiumVault",
-        summary:
-          "The liquidity and accounting module for premiums, reserves, liabilities, fees, and payouts. This is the contract page that should replace the broken external premium-vault documentation link.",
-        status: "Deployed on World Chain Sepolia and authorized to accept calls from the policy manager.",
-        responsibilities: [
-          "Receive premium flows from policy contracts and account for where each unit of capital belongs.",
-          "Keep retirement liabilities separate from risk liquidity used for death benefits.",
-          "Release approved beneficiary payouts, maturity withdrawals, and permitted fee withdrawals.",
-          "Expose reserve and liability data so the web app can show solvency and payout capacity."
-        ],
-        interfaceItems: [
-          {
-            name: "Premium intake",
-            description: "Receives funds from policy flows and attributes them to retirement balance, risk reserve, and fees."
-          },
-          {
-            name: "Reserve accounting",
-            description: "Tracks capital that backs death-benefit capacity separately from user retirement liabilities."
-          },
-          {
-            name: "Payout release",
-            description: "Transfers funds only when the policy or verifier module has authorized a claim or scheduled withdrawal."
-          },
-          {
-            name: "Fee withdrawal",
-            description: "Allows protocol fees to be withdrawn only from the accounted fee balance."
-          }
-        ],
-        safeguards: [
-          "Retirement liabilities must not be treated as free risk capital.",
-          "Death-benefit payments should fail if available risk liquidity is insufficient.",
-          "Treasury withdrawals should never touch user retirement balances.",
-          "Vault operations should emit events for premium receipt, reserve funding, payout, and fee withdrawal."
-        ],
-        sourceNote:
-          "The local source below is the contract used for the current World Chain Sepolia deployment."
-      },
-      mockUsdc: {
-        title: "MockUSDC",
-        summary:
-          "A six-decimal ERC-20 test token used as the payment token for World Chain Sepolia policy issuance tests.",
-        status: "Deployed on World Chain Sepolia. The deployer minted 20,000 MockUSDC for test enrollment flows.",
-        responsibilities: [
-          "Represent a USDC-like payment token in testnet flows.",
-          "Expose six decimals so premiums match the policy math assumptions.",
-          "Allow test minting for wallets that need premium funds.",
-          "Provide the token approved by holders before opening a policy."
-        ],
-        interfaceItems: [
-          {
-            name: "decimals",
-            description: "Returns 6 to match USDC-style accounting."
-          },
-          {
-            name: "mint",
-            description: "Mints test tokens for development and test issuance."
-          },
-          {
-            name: "approve",
-            description: "Lets a holder approve the vault to collect the first premium."
-          },
-          {
-            name: "balanceOf",
-            description: "Shows the available test balance for a wallet."
-          }
-        ],
-        safeguards: [
-          "This token is only for testnet and has no production value.",
-          "Minting is intentionally open in the mock contract for development convenience.",
-          "Production should use a real, allowlisted payment token.",
-          "The app labels this deployment as World Chain Sepolia."
-        ],
-        sourceNote:
-          "The local source below is the mock ERC-20 used for the current World Chain Sepolia deployment."
-      }
-    },
+    contractDocs: contractDocsEn,
     docsPage: {
       metadata: {
         title: "Riska protocol docs",
-        description:
-          "Review deployed contracts, internal contract documentation, and integration entry points for Riska."
+        description: "Review deployed contracts, internal documentation, and integration entry points for Riska."
       },
       hero: {
         badge: "Documentation",
         title: "Build with the Riska protocol",
-        description:
-          "Explore contract addresses, integration resources, and references for partners shipping on World Chain.",
+        description: "Explore contract addresses, integration resources, and references for partners shipping on World Chain.",
         primaryCta: "View contract addresses",
         secondaryCta: "Open white paper"
       }
     },
     techStack: {
       title: "Operational safeguards",
-      subtitle:
-        "Security practices minimize trust, limit data exposure, and keep every decision auditable on-chain.",
+      subtitle: "Security practices minimize trust, limit data exposure, and keep every decision auditable.",
       stack: [
-        {
-          title: "Minimize trust",
-          description: "Contracts remain minimal, contain no backdoors, and rely on diverse, bonded oracle sets."
-        },
-        {
-          title: "Data minimization",
-          description: "Only necessary references live on-chain while evidence stays off-chain with cryptographic links."
-        },
-        {
-          title: "Auditability",
-          description: "Every death report, maturity activation, and payout event is recorded for public review and governance oversight."
-        },
-        {
-          title: "Governance",
-          description: "RISKA governance starts centralized, then can expand through transparent partner and community distribution."
-        }
+        { title: "Minimize trust", description: "Contracts keep privileged actions small and explicit." },
+        { title: "Data minimization", description: "Only necessary references live on-chain while sensitive evidence stays off-chain." },
+        { title: "Auditability", description: "Deposits, heartbeats, notices, claims, and payouts emit reviewable events." },
+        { title: "Governance", description: "Production admin should use multisig, timelock, monitoring, and clear roles." }
       ]
     },
     callToAction: {
       title: "Download the Riska 30 white paper",
-      subtitle:
-        "Prepared for grant review: product thesis, World Chain alignment, policy lifecycle, smart-contract scope, roadmap, and risk boundaries.",
+      subtitle: "Prepared for grant review: product thesis, World Chain alignment, lifecycle, roadmap, and risk boundaries.",
       primary: "Open white paper",
       secondary: "Contact Riska Foundation"
     },
     footer: {
-      note: "© {year} riska.world · Life protection with 30-year programmed income.",
+      note: "© {year} riska.world · Flexible protection for verified humans.",
       worldChain: "World Chain",
       email: "hey@riska.world"
     },
     walletAuth: {
       heading: "Riska 30 console",
       description:
-        "Sign in through World App to review 30-year policy status, beneficiary settings, premium history, maturity date, and programmed payout state.",
+        "Sign in through World App to review policy state, beneficiary settings, minimum funding, extra principal, heartbeat, and payout actions.",
       miniApp: {
         label: "Mini App bridge",
-        checking: "Checking World App context…",
+        checking: "Checking World App context...",
         installed: "World App detected. Wallet Auth will be verified on the Riska backend.",
         browserFallback: "Browser mode active. Use the web wallet fallback for local review."
       },
       statusLabel: "Status",
       status: {
         connected: (address: string) => `Session connected: ${address}`,
-        connecting: "Connecting…",
+        connecting: "Connecting...",
         disconnected: "Not connected"
       },
       chainId: (chainId: number) => `Chain ID: ${chainId}`,
-      mode: {
-        "world-app": "World App",
-        browser: "Browser wallet"
-      },
+      mode: { "world-app": "World App", browser: "Browser wallet" },
       actions: {
         connectWorldApp: "Sign in with World App",
         connectBrowser: "Connect browser wallet",
-        connecting: "Connecting…",
+        connecting: "Connecting...",
         disconnect: "Disconnect"
       },
       messages: {
-        welcome: "Welcome to Riska 30. Wallet Auth was completed and the session is ready for the next onboarding step.",
-        disconnected: "Session closed. Reconnect to manage policies, beneficiaries, and maturity payouts.",
+        welcome: "Welcome to Riska 30. Wallet Auth is ready for the next onboarding step.",
+        disconnected: "Session closed. Reconnect to manage policies, beneficiaries, heartbeat, and payout actions.",
         error: "Unable to connect the wallet.",
         nonceError: "Unable to prepare the Wallet Auth nonce.",
         verifyError: "Unable to verify the Wallet Auth signature.",
@@ -837,276 +565,188 @@ export const dictionaries: Record<Language, Dictionary> = {
       statuses: {
         locked: "Connect a wallet first so the proof can be bound to that address.",
         ready: "Ready to request a World ID proof for this wallet.",
-        loading: "Preparing a signed World ID request…",
+        loading: "Preparing a signed World ID request...",
         verified: "Verified unique human. This wallet can continue to beneficiary setup.",
         error: "World ID verification needs attention.",
         notConfigured: "World ID app configuration is pending."
       },
       action: "Verify human",
-      actionLoading: "Preparing proof…",
+      actionLoading: "Preparing proof...",
       walletRequired: "Connect Wallet Auth before requesting World ID.",
       configMissing: "Set NEXT_PUBLIC_WORLD_APP_ID before opening the IDKit flow.",
       signatureError: "Unable to create the signed RP request.",
       verifyError: "Unable to verify the World ID proof.",
       duplicateError: "This verified human is already reserved for a Riska policy.",
       errorPrefix: "IDKit error:",
-      errors: {
-        cancelled: "Verification was cancelled. No policy slot was reserved.",
-        connection_failed: "The connection with World App was interrupted. Check your connection and try again.",
-        credential_unavailable:
-          "This World App account is not verified as human yet. Finish World ID verification in World App, then return to Riska and try again.",
-        failed_by_host_app:
-          "Riska could not accept the proof. Reconnect your wallet session and try again.",
-        generic_error: "We could not complete World ID verification. Please try again.",
-        identity_attributes_not_matched:
-          "This World ID does not match the proof requirements for a Riska policy.",
-        inclusion_proof_failed:
-          "World App could not prepare the proof for this account. Wait a moment and try again.",
-        inclusion_proof_pending:
-          "Your World ID proof is still being prepared. Wait a moment and try again.",
-        invalid_network: "World ID returned a proof for the wrong network. Please try again from World App.",
-        invalid_rp_signature:
-          "Riska's World ID configuration needs attention before verification can continue.",
-        malformed_request: "The World ID request could not be read. Please refresh Riska and try again.",
-        max_verifications_reached:
-          "This World ID has already been used for this Riska verification.",
-        nullifier_replayed:
-          "This World ID has already been reserved for this Riska verification.",
-        timeout: "World App took too long to answer. Please try again.",
-        unexpected_response:
-          "World App returned an unexpected response. Please update World App and try again.",
-        user_rejected: "Verification was cancelled. No policy slot was reserved.",
-        verification_rejected:
-          "World App rejected the verification. Make sure your account is verified and try again.",
-        wallet_session_required:
-          "Connect your wallet again before verifying World ID. In World App this creates the secure Wallet Auth session Riska needs.",
-        world_id_3_not_available:
-          "This World App account cannot create the required proof yet. Finish verification and try again.",
-        world_id_4_not_available:
-          "This World App account cannot create the required proof yet. Update World App or finish verification, then try again."
-      },
+      errors: worldIdErrorsEn as Record<string, string>,
       signalLabel: (signal: string) => `Signal: ${signal}`,
       proofLabel: (proofId: string) => `Reserved nullifier: ${proofId}`
     },
     whitepaper: {
       metadata: {
-        title: "Riska Whitepaper - Life Protection with 30-Year Programmed Income",
+        title: "Riska Whitepaper - Flexible Protection and Programmed Income",
         description:
-          "Explore how riska.world combines life protection, long-term premium accumulation, verified death claims, and programmed payouts after a 30-year maturity period."
+          "Explore how Riska combines World ID, flexible USDC deposits, heartbeat, beneficiary notice, and programmed holder payouts."
       },
       header: {
         badge: "Riska Foundation",
-        title: "Riska: Life Protection with 30-Year Programmed Income",
-        date: "November 2025"
+        title: "Riska: Flexible Protection and Programmed Income",
+        date: "May 2026"
       },
       download: {
         label: "Download white paper v2",
-        note: "Prepared for World Chain grant review: Riska 30 product thesis, contract lifecycle, grant milestones, and risk scope."
+        note: "Prepared for World Chain grant review: flexible policy thesis, contract lifecycle, milestones, and risk scope."
       },
       abstract: {
         title: "Abstract",
         paragraphs: [
-          "We present a 30-year life protection contract with a fixed 30 USDC monthly premium. If verified death occurs after the 12-month waiting period and before maturity, beneficiaries receive 80% of paid premiums. If the holder completes the term, the holder receives 100% of scheduled principal through 10 years of programmed withdrawals.",
-          "Riska integrates World Chain to anchor participation to human-verified accounts. World Chain proof-of-personhood helps deter duplicate-policy abuse while keeping biometric data outside the protocol. Death claims require a reporter, Riska Team verification, evidence hashes, and a dispute window."
+          "Riska 30 is a flexible USDC policy account for World ID verified humans. The holder funds a 10,800 USDC minimum over time or upfront, and any extra principal increases future monthly payout.",
+          "Beneficiaries can claim only after a death report plus 12 months without holder interaction. A heartbeat, deposit, beneficiary update, monthly claim, or claim-all cancels the pending report."
         ]
       },
       introduction: {
         title: "1. Introduction",
         paragraphs: [
-          "Riska focuses on a single product: a life policy that becomes programmed income after 30 years. Legacy life and retirement products are often opaque about fees, reserves, surrender value, and payout mechanics. Riska makes the policy state, payment history, maturity date, and payout rules inspectable.",
-          "The contract does not attempt to be a full pension system at launch. It implements a bounded product: pay a published beneficiary formula before maturity and return scheduled principal to the holder after maturity. Yield strategies can fund protocol economics, but they must be separated from the user-facing principal promise."
+          "Riska makes policy state, deposit allocation, beneficiary rights, heartbeat, and payout rules inspectable.",
+          "The launch model is intentionally scoped: no hidden eligibility step, no opaque death gate, and no fee on holder withdrawals."
         ],
         goalsTitle: "Design Goals",
         goals: [
-          "Make the 30-year term, maturity, and payout schedule explicit.",
-          "Keep protected principal, yield reserves, treasury balances, and beneficiary obligations separate.",
-          "Pay beneficiaries under the 12-month waiting period and 80% formula when death is verified before maturity.",
-          "Pay the holder 100% of scheduled principal through programmed withdrawals after maturity.",
+          "Let any verified human open one policy.",
+          "Separate minimum principal from extra principal.",
+          "Give holders no-fee monthly payout, claim-all, and heartbeat actions.",
+          "Give beneficiaries a transparent report-and-wait path.",
           "Keep legal terms versioned through document hashes."
         ]
       },
       systemOverview: {
         title: "2. System Overview",
         paragraphs: [
-          "Participants interact with a 30-year policy contract. A plan defines the 30 USDC monthly premium, 12-month waiting period, beneficiary payout formula, payout duration, inactivity review rules, and the hash of the legal policy document.",
-          "Before maturity, the policy is active while premiums are current or inside the grace period. If the holder dies after 12 paid months and the death is verified, beneficiaries receive 80% of paid premiums.",
-          "At maturity, the policy converts into programmed income. The holder activates retirement payouts, and the contract releases 100% of scheduled principal over 120 monthly withdrawals. If verified death occurs after maturity, beneficiaries receive 90% of the matured or remaining balance."
+          "The policy manager stores holder, terms hash, payout count, timestamps, minimum principal, extra principal, and status.",
+          "The vault holds USDC, tracks total principal liability, and accounts retained death fee as protocol reserve.",
+          "The beneficiary registry stores recipient wallets and basis-point shares."
         ],
         everydayIntuition: {
           title: "Everyday Intuition",
-          body: "Riska 30 is a promise with published outcomes: after the waiting period your family has a formula payout, and if you complete 30 years you collect the scheduled principal."
+          body: "The holder can keep funding, start income after the minimum is funded, withdraw all principal, or simply heartbeat to say they are alive."
         }
       },
       userLifecycle: {
-        title: "3. How It Works (User Lifecycle)",
+        title: "3. How It Works",
         steps: [
-          {
-            label: "Verify identity.",
-            description: "Authenticate with World ID before continuing to beneficiary setup and policy activation."
-          },
-          { label: "Accept policy terms.", description: "Review premium, waiting period, beneficiary formula, maturity date, payout duration, beneficiaries, and the terms hash." },
-          { label: "Pay premium.", description: "The contract opens the policy and accounts the monthly USDC payment as protected principal." },
-          { label: "Maintain coverage.", description: "Scheduled payments keep the policy active through the 30-year contribution term." },
-          { label: "Collect outcome.", description: "Beneficiaries are paid under the published formula after verified death, or the holder collects 100% principal after maturity." }
+          { label: "Verify identity.", description: "Authenticate with Wallet Auth and World ID before continuing." },
+          { label: "Set beneficiaries.", description: "Choose wallets and percentages that sum to 100%." },
+          { label: "Open policy.", description: "Accept terms and pay the first 30 USDC testnet unit." },
+          { label: "Fund or withdraw.", description: "Deposit before payout activation, then activate monthly payout or claim all." },
+          { label: "Heartbeat.", description: "Interact without withdrawing to cancel a pending death notice." }
         ],
         examples: {
           title: "Concrete Examples",
           items: [
-            {
-              label: "Before maturity:",
-              description: "Alice pays premiums for 12 years and dies while covered. A verifier confirms the event, and her beneficiaries receive 80% of paid premiums."
-            },
-            {
-              label: "At maturity:",
-              description: "Bruno completes 30 years of payments. The policy matures, and he activates 120 monthly payments of 90 USDC."
-            },
-            {
-              label: "During payout:",
-              description: "Carla starts receiving retirement payments. If she dies before the balance is fully distributed, 90% of the remaining balance can route to her beneficiaries after verification."
-            },
-            {
-              label: "Missed payments:",
-              description: "If a holder misses payments for 12 months, the policy can enter inactivity review. Inactivity alone does not prove death or authorize payout."
-            }
+            { label: "Minimum funded:", description: "A holder with 10,800 USDC can activate 120 baseline payments." },
+            { label: "Extra principal:", description: "A holder with 12,000 USDC gets a higher monthly estimate." },
+            { label: "Death claim:", description: "Beneficiaries receive extra principal plus 80% of the remaining minimum." },
+            { label: "False report:", description: "A holder heartbeat cancels the report immediately." }
           ]
         }
       },
       capital: {
-        title: "4. Principal, Yield, and Solvency",
+        title: "4. Principal, Fees, and Solvency",
         paragraphs: [
-          "Each 30 USDC premium is protected principal for the base policy promise. Protocol income should come from yield spread, treasury subsidy, sponsor subsidy, or explicit external fees rather than reducing the protected principal.",
-          "Yield-bearing strategies introduce additional risk and require separate accounting. The contract system should expose protected principal liabilities, treasury balances, yield reserves, strategy exposure, available liquidity, and beneficiary payout obligations."
+          "Minimum principal and extra principal are policy liabilities until paid to the holder or beneficiaries.",
+          "Death settlement retains 20% of remaining minimum principal only. Extra principal is not fee-bearing."
         ],
         example: {
           title: "Base Example",
-          body: "A holder who pays 30 USDC for 360 months contributes 10,800 USDC. At maturity, the holder receives 10,800 USDC over 120 payments, or 90 USDC per month."
+          body: "A policy with 10,800 USDC minimum and 1,000 USDC extra pays 9,640 USDC to beneficiaries and retains 2,160 USDC as protocol reserve."
         }
       },
       eventVerification: {
-        title: "5. Death Verification",
+        title: "5. Beneficiary Notice",
         paragraphs: [
-          "Reliable data is essential for beneficiary protection. A 12-month period without premium payment or payout claims can trigger inactivity review, but inactivity alone does not prove death. A reporter must submit a death report, Riska Team must verify it, and the system should record an evidence hash and dispute window before settlement."
+          "A configured beneficiary can report death only after the policy has existed for 12 months. The report starts a second 12-month window. If the holder interacts, the report is cancelled."
         ],
         plainLanguage: {
           title: "Plain-Language View",
-          body: "The contract does not decide whether a person died by itself. It records verified reports and then applies the published payout formula."
+          body: "A report does not pay immediately. The holder has a long, simple window to prove life by interacting."
         }
       },
       claims: {
-        title: "6. Maturity and Payouts",
+        title: "6. Holder and Beneficiary Claims",
         paragraphs: [
-          "Maturity is deterministic: after 30 years, the policy can be activated for programmed payouts. The holder receives 100% of scheduled principal over 10 years instead of a lifetime annuity.",
-          "If verified death occurs after maturity but before activation, or during the payout phase, beneficiaries receive 90% of the matured or remaining balance."
+          "Holder monthly claims and claim-all withdrawals have no fee.",
+          "Beneficiary death claims pay according to beneficiary shares after the no-interaction window."
         ]
       },
       incentives: {
-        title: "7. Economic Incentives and Capital Flow (RISKA)",
-        intro: "The RISKA token starts as centralized governance for protocol parameters, enterprise distribution, and future decentralization.",
+        title: "7. Economic Incentives and Capital Flow",
+        intro: "RISKA should support reliability, governance, and partner distribution without distracting from the principal promise.",
         points: [
-          {
-            label: "Riska Foundation:",
-            description: "Initially controls the full 100,000-token supply and uses governance to manage protocol parameters, upgrades, and partner access."
-          },
-          {
-            label: "Verifiers:",
-            description: "Riska Team verifies death reports at launch; later verifier sets can be expanded and bonded through governance."
-          },
-          {
-            label: "Policyholders and families:",
-            description: "Contribute toward future programmed income while keeping beneficiary protection active before maturity."
-          }
+          { label: "Riska Foundation:", description: "Initially manages parameters, upgrades, and partner access." },
+          { label: "Policyholders:", description: "Fund the policy and control payout or heartbeat actions." },
+          { label: "Beneficiaries:", description: "Can report and claim only through the published delay." }
         ],
         feeParagraph:
-          "RISKA has a fixed supply of 100,000 tokens, 0 decimals, and transferability from day 1. Protocol economics are expected to come from yield strategies, treasury subsidy, sponsor subsidy, or explicit fees, not from reducing the protected principal owed to policyholders.",
+          "Protocol economics should be explicit. In the current death flow, the fee base is only remaining minimum principal.",
         example: {
           title: "Governance Posture",
-          body: "Because the owner/foundation controls all RISKA at launch, governance is centralized first. The decentralization path should be disclosed before presenting Riska as community-governed."
+          body: "Production admin should use multisig, timelock, public events, and a clear decentralization path."
         }
       },
       governance: {
         title: "8. Yield Risk and Governance",
         paragraphs: [
-          "Plans publish principal liabilities, utilization, strategy exposure, available liquidity, beneficiary payouts, and yield reserve status. Issuance or yield deployment should halt when safe limits would be breached.",
-          "Governance controls verifier sets, yield-strategy allowlists, caps, upgrade timelocks, fee routing, and emergency actions. Even while centralized, admin actions should use multisig, timelock, and public event trails."
+          "Yield strategies are future work and must be separated from principal liabilities.",
+          "Production governance should control strategy allowlists, caps, upgrades, fee routing, and emergency actions."
         ]
       },
       security: {
-        title: "9. Security Model and Fraud Prevention",
+        title: "9. Security Model",
         points: [
-          {
-            label: "Minimize trust:",
-            description: "Contracts should minimize privileged actions, use scoped emergency controls, and route upgrades through transparent governance."
-          },
-          {
-            label: "Data minimization:",
-            description: "Only necessary policy, World ID, and death-report references live on-chain while sensitive evidence remains off-chain with cryptographic proofs."
-          },
-          {
-            label: "Human verification:",
-            description: "World Chain proof-of-personhood enforces one-policy-per-person, deterring sybil fraud and mass-claim bots without storing raw biometrics on Riska."
-          },
-          {
-            label: "Auditability:",
-            description: "Every decision—accept, deny, dispute, strategy change, and payout—is stored on-chain for public review."
-          }
+          { label: "Access control:", description: "Only the policy manager can move vault funds." },
+          { label: "Data minimization:", description: "Sensitive evidence stays off-chain." },
+          { label: "Human verification:", description: "World ID enforces one verified human per policy in the app flow." },
+          { label: "Auditability:", description: "Deposits, notices, heartbeats, and payouts emit public events." }
         ]
       },
       applications: {
         title: "10. Practical Applications",
         paragraphs: [
-          "The first application is Riska 30: a long-duration policy for people who want family protection while building a future payout stream.",
-          "Families choose the product because the outcome is direct: if the holder dies before maturity, beneficiaries receive support; if the holder completes the term, the holder receives programmed income.",
-          "Employers, unions, and communities can sponsor premiums for verified members while the policy state remains auditable."
+          "Riska 30 serves people who want transparent family protection and optional programmed income.",
+          "Communities and employers can sponsor deposits for verified members while policy state remains auditable."
         ]
       },
       faq: {
         title: "11. FAQ",
         items: [
-          {
-            question: "How are prices set?",
-            answer: "The base plan publishes a 30 USDC monthly premium, 12-month waiting period, 80% beneficiary formula before maturity, 90% beneficiary formula after maturity, and 10-year holder payout after maturity."
-          },
-          {
-            question: "What if data feeds fail?",
-            answer: "The MVP uses approved verifiers. Production should use multiple reporters, dispute windows, and bonded verification before large-scale deployment."
-          },
-          {
-            question: "Can a pool run out of funds?",
-            answer: "Protected principal and beneficiary obligations are tracked as liabilities. Yield strategy exposure must be capped, monitored, and backed by emergency withdrawal and loss-accounting rules."
-          },
-          {
-            question: "Where does RISKA matter day-to-day?",
-            answer: "RISKA controls governance parameters, verifier sets, strategy allowlists, partner access, and the future decentralization path."
-          },
-          {
-            question: "Is this a pension?",
-            answer: "The MVP is programmed income from accumulated balance, not a lifetime pension. Legal classification depends on jurisdiction and must be handled before public sale."
-          }
+          { question: "Who can open a policy?", answer: "Any World ID verified human in the supported flow." },
+          { question: "When can the holder start payout?", answer: "After the 10,800 USDC minimum is fully funded." },
+          { question: "Do extra deposits pay a fee?", answer: "No. Extra principal is not fee-bearing." },
+          { question: "Who can report death?", answer: "Only a configured beneficiary." },
+          { question: "Is this a public insurance launch?", answer: "No. Real-money production needs legal clearance and external audit." }
         ]
       },
       conclusion: {
         title: "12. Conclusion",
         paragraphs: [
-          "Riska replaces vague long-term promises with explicit policy states: active contribution, beneficiary protection, maturity, programmed payout, and closure. The first product is intentionally scoped so the contract can be audited before expanding into more complex retirement or insurance structures."
+          "Riska replaces vague long-term promises with explicit policy balances, holder controls, beneficiary notice, and auditable settlement."
         ]
       },
       references: {
         title: "References",
         items: [
-          "S. Nakamoto. Bitcoin: A Peer-to-Peer Electronic Cash System. 2008. https://bitcoin.org/bitcoin.pdf",
-          "A. Eling and W. Schnell. Parametric Insurance: The Next Generation of Insurance Products. 2016.",
-          "OECD. Innovation in Peer-to-Peer Risk Pooling. 2023.",
-          "B. Pournader et al. Blockchain and Risk Transfer Mechanisms. 2022.",
-          "Chainlink Labs. Data Feeds and Oracle Architectures. 2021. https://chain.link"
+          "World Foundation Grants, https://world.org/grants",
+          "World Developer Docs, World ID, https://docs.world.org/world-id",
+          "World Developer Docs, Mini Apps, https://docs.world.org/mini-apps"
         ]
       }
     }
   },
   es: {
     metadata: {
-      title: "Riska.world - Protección de vida + renta a 30 años",
+      title: "Riska.world - Proteccion flexible para humanos verificados",
       description:
-        "Riska combina protección de vida con una póliza USDC a 30 años: después de 12 meses, los beneficiarios cobran por fórmula; al madurar, el titular cobra 100% del principal en 10 años."
+        "Riska permite que humanos verificados abran una poliza USDC flexible, fondeen un minimo de 10,800 USDC, sumen principal extra y usen heartbeat para proteger el flujo de beneficiarios."
     },
     navbar: {
       brand: "RISKA",
@@ -1117,529 +757,205 @@ export const dictionaries: Record<Language, Dictionary> = {
         { href: "/docs", label: "Contratos" }
       ],
       cta: "Empezar",
-      languageToggle: {
-        label: "EN",
-        ariaLabel: "Cambiar a inglés"
-      }
+      languageToggle: { label: "EN", ariaLabel: "Switch to English" }
     },
     hero: {
-      badge: "Riska 30 · Protección de vida + renta programada",
-      title: "30 USDC por mes. Si llegas a madurez, cobras 100%.",
+      badge: "Riska 30 · Poliza USDC flexible",
+      title: "Cualquier humano verificado puede abrir una poliza.",
       description:
-        "Riska convierte el seguro de vida en una póliza USDC de largo plazo. Después de 12 meses pagos, los beneficiarios verificados pueden cobrar 80% de las primas pagadas si el titular fallece antes de madurar. A los 30 años, el titular cobra 100% del principal en 10 años.",
+        "Fondea el minimo de 10,800 USDC con el tiempo o por adelantado. Los depositos extra aumentan el pago mensual futuro, y los beneficiarios solo cobran despues de reporte y 12 meses sin interaccion del titular.",
       chips: [
-        "Prima mensual de 30 USDC",
-        "Espera de 12 meses",
-        "Fórmula de 80% a beneficiarios",
-        "100% del principal al madurar"
+        "Minimo 10,800 USDC",
+        "Unidad base 30 USDC",
+        "120 pagos mensuales",
+        "Heartbeat contra reportes falsos"
       ]
     },
     impactMetrics: {
       title: "Reglas del producto",
-      subtitle:
-        "Una póliza, resultados publicados: soporte a beneficiarios después de la espera, renta programada cuando completa los 30 años.",
+      subtitle: "Una cuenta de poliza, saldos visibles y resultados claros.",
       body:
-        "La promesa base está denominada en USDC: 80% de primas pagadas a beneficiarios por fallecimiento verificado desde el mes 12 hasta madurez, 90% del saldo maduro o restante después de madurar, y 100% del principal al titular si completa el plazo.",
+        "Los depositos llenan primero el minimo, el extra no paga fee, los retiros del titular no tienen fee y el fee de muerte toca solo el minimo restante.",
       metrics: [
-        { label: "Plazo de aporte", value: "30 años" },
-        { label: "Prima mensual", value: "30 USDC" },
-        { label: "Espera", value: "12 meses" },
-        { label: "Después de madurar", value: "Pago a 10 años" },
-        { label: "Términos", value: "Auditables" },
+        { label: "Poliza minima", value: "10,800 USDC" },
+        { label: "Unidad base", value: "30 USDC" },
+        { label: "Duracion pagos", value: "120 meses" },
+        { label: "Aviso muerte", value: "12 meses" },
+        { label: "Extra principal", value: "Sin fee" },
         { label: "Identidad", value: "Humano verificado" }
       ]
     },
     aboutSections: {
       sections: [
         {
-          title: "Contrato de vida a 30 años",
-          description:
-            "Cada póliza publica la prima de 30 USDC, fecha de madurez, espera, fórmula de beneficiarios y método de renta programada.",
+          title: "Cuenta de poliza flexible",
+          description: "Un holder verificado abre una poliza y fondea el minimo a su ritmo.",
           points: [
-            "El titular aporta durante 30 años",
-            "El hash de los términos legales queda vinculado a la póliza on-chain",
-            "El estado es visible: activa, gracia, madura, en pago o cerrada"
+            "Cualquier humano verificado puede abrir",
+            "El hash de terminos queda vinculado",
+            "Minimo y extra se muestran separados"
           ]
         },
         {
-          title: "Fase de protección familiar",
-          description:
-            "Antes de madurar, la póliza paga a beneficiarios solo bajo la fórmula publicada y después de verificar el fallecimiento.",
+          title: "Pago controlado por titular",
+          description: "Cuando el minimo esta fondeado, el titular decide si cobra o espera.",
           points: [
-            "Los beneficiarios se definen al crear la póliza",
-            "Los reportes de fallecimiento se verifican antes del pago",
-            "Desde el mes 12 hasta madurez, los beneficiarios cobran 80% de primas pagadas después de aprobación"
+            "Activar 120 pagos mensuales",
+            "Retirar todo el principal sin fee",
+            "Usar heartbeat para probar vida sin cobrar ese mes"
           ]
         },
         {
-          title: "Fase de renta",
-          description:
-            "Después de 30 años, la póliza madura y convierte el principal programado en pagos programados.",
+          title: "Aviso de beneficiarios",
+          description: "Los beneficiarios usan reporte y espera en lugar de una compuerta oculta.",
           points: [
-            "La madurez depende del tiempo y no requiere oráculo",
-            "El titular cobra 100% del principal programado en 120 pagos mensuales",
-            "Los beneficiarios cobran 90% del saldo maduro o restante si hay fallecimiento verificado después de madurar"
+            "Solo beneficiarios configurados reportan",
+            "El cobro espera 12 meses despues del reporte",
+            "Cualquier interaccion del titular cancela el reporte"
           ]
         }
       ]
     },
     valueGrid: {
       title: "Componentes del contrato",
-      subtitle:
-        "El protocolo se enfoca en un producto defendible: protección de vida durante la acumulación y renta programada al madurar.",
+      subtitle: "El protocolo separa identidad, beneficiarios, contabilidad de principal y reglas de pago.",
       values: [
         {
-          title: "Términos electrónicos",
-          description:
-            "Un documento firmado define cobertura, beneficiarios, primas, madurez, calendario de pagos y disputas. Su hash queda on-chain."
+          title: "Terminos electronicos",
+          description: "El documento firmado define depositos, beneficiarios, heartbeat, derechos de cobro y ventana de aviso."
         },
         {
-          title: "Principal y yield",
-          description:
-            "La prima mensual de 30 USDC es principal protegido para la promesa base. La economía del protocolo viene de estrategias de yield permitidas y se contabiliza aparte."
+          title: "Minimo y extra",
+          description: "Los primeros 10,800 USDC fondean el minimo. Lo que supere ese monto es principal extra y no paga fee de muerte."
         },
         {
-          title: "Fórmula de beneficiarios",
-          description:
-            "Antes de 12 meses pagos no hay pago de póliza. Desde el mes 12 hasta madurez, los beneficiarios verificados reciben 80% de primas pagadas."
+          title: "Pago titular",
+          description: "Despues de fondear el minimo, el titular puede activar 120 pagos mensuales o retirar todo."
         },
         {
-          title: "Renta programada",
-          description:
-            "Después de 30 años, 100% del principal programado se convierte en retiros fijos durante 10 años."
+          title: "Pago beneficiarios",
+          description: "Los beneficiarios reciben extra principal mas 80% del minimo restante despues de la ventana sin interaccion."
         },
         {
           title: "Acceso verificado",
-          description:
-            "World Chain limita abuso por pólizas duplicadas mientras mantiene un onboarding nativo con wallet."
+          description: "World ID reduce abuso por polizas duplicadas sin guardar biometria en Riska."
         }
       ]
     },
     retirementProduct: {
       badge: "Contrato Riska 30",
-      title: "Una póliza de vida que se transforma en renta después de 30 años.",
+      title: "Una cuenta de poliza que puede convertirse en renta programada.",
       subtitle:
-        "Riska 30 mantiene la promesa explícita: 30 USDC por mes, espera de 12 meses, 80% a beneficiarios antes de madurez y 100% del principal al titular al madurar.",
-      timelineTitle: "Ciclo de vida de la póliza",
+        "La poliza minima es 10,800 USDC. Cuando esta fondeada, el titular puede activar 120 pagos, cobrar todo o seguir usando heartbeat.",
+      timelineTitle: "Ciclo de vida",
       timeline: [
-        {
-          label: "Años 0-30",
-          description: "El titular paga 30 USDC por mes. El principal se acumula hacia la promesa de madurez a 30 años."
-        },
-        {
-          label: "Si ocurre fallecimiento",
-          description: "Después de 12 meses pagos, un reclamo de fallecimiento verificado paga a beneficiarios 80% de primas pagadas antes de madurez."
-        },
-        {
-          label: "Año 30",
-          description: "La póliza madura por tiempo. No se requiere un oráculo de fallecimiento para habilitar la fase de renta."
-        },
-        {
-          label: "Después de madurar",
-          description: "El titular cobra 100% del principal programado en 10 años; fallecimiento verificado deriva 90% del saldo restante a beneficiarios."
-        }
+        { label: "Abrir", description: "Verificar humanidad, configurar beneficiarios, aceptar terminos y pagar la primera unidad de 30 USDC." },
+        { label: "Fondear", description: "Depositar cualquier monto antes de activar pagos; primero se llena el minimo y luego el extra." },
+        { label: "Elegir cobro", description: "Activar pagos mensuales o retirar todo el principal cuando el minimo esta fondeado." },
+        { label: "Aviso beneficiario", description: "Reporte de beneficiario mas 12 meses sin interaccion puede habilitar liquidacion." }
       ],
-      economicsTitle: "Economía de la póliza",
+      economicsTitle: "Economia de la poliza",
       economics: [
-        {
-          label: "Principal protegido",
-          value: "30 USDC/mes",
-          description: "La base usada para fórmulas de beneficiarios y pago de madurez."
-        },
-        {
-          label: "Estrategia de yield",
-          value: "Ingreso del protocolo",
-          description: "Los fondos pueden prestarse en protocolos permitidos para generar yield destinado a reservas y operación."
-        },
-        {
-          label: "Gobernanza RISKA",
-          value: "100.000 supply",
-          description: "El token sin decimales empieza centralizado y transferible, con camino futuro de descentralización."
-        }
+        { label: "Principal minimo", value: "10,800 USDC", description: "Base requerida antes de activar pago al titular." },
+        { label: "Principal extra", value: "Sin fee", description: "Aumenta el pago mensual y pasa completo a beneficiarios si hay liquidacion." },
+        { label: "Fee muerte", value: "20% del minimo", description: "Se cobra solo sobre el minimo restante durante liquidacion por muerte." }
       ],
       contractNote:
-        "Los contratos productivos deben reescribirse alrededor de World ID, múltiples beneficiarios, contabilidad de yield, gobernanza upgradeable y la fórmula final de pagos."
+        "Los contratos testnet actuales implementan el flujo flexible. Produccion requiere legal, auditoria externa, multisig/timelock y monitoreo."
     },
     contracts: {
       title: "Contratos del protocolo",
-      subtitle:
-        "Los módulos actuales de prueba de Riska están desplegados en World Chain Sepolia. Cada módulo desplegado incluye enlace al explorador y referencia de código local.",
-      addressLabel: "Dirección del contrato",
+      subtitle: "Los modulos actuales de Riska estan desplegados en World Chain Sepolia para pruebas.",
+      addressLabel: "Direccion del contrato",
       pendingLabel: "Despliegue pendiente",
-      explorerLabel: "Ver en el explorador",
-      docsLabel: "Documentación",
+      explorerLabel: "Ver en explorador",
+      docsLabel: "Documentacion",
       items: [
-        {
-          id: "thirtyYearPolicy",
-          name: "RiskaThirtyYearPolicy",
-          description:
-            "Ciclo de vida MVP para aportes a 30 años, pago por fallecimiento, activación por madurez y renta programada."
-        },
-        {
-          id: "policyManager",
-          name: "PolicyManager",
-          description:
-            "Emite NFTs de cobertura, gestiona el ciclo de vida de las pólizas y expone controles de suscripción."
-        },
-        {
-          id: "beneficiaryRegistry",
-          name: "BeneficiaryRegistry",
-          description:
-            "Guarda wallets de beneficiarios y porcentajes de asignación para cada póliza abierta por el manager."
-        },
-        {
-          id: "deathVerifier",
-          name: "DeathVerifier",
-          description:
-            "Recibe reportes verificados de fallecimiento, guarda hashes de evidencia y autoriza pagos a beneficiarios."
-        },
-        {
-          id: "premiumVault",
-          name: "PremiumVault",
-          description:
-            "Resguarda la liquidez, lleva los saldos de los pools y libera capital para pagos."
-        },
-        {
-          id: "mockUsdc",
-          name: "MockUSDC",
-          description:
-            "Token ERC-20 de prueba usado en Sepolia para el flujo de emisión y aprobación de la primera prima."
-        }
+        { id: "thirtyYearPolicy", name: "RiskaThirtyYearPolicy", description: "Fuente MVP historica mantenida como referencia." },
+        { id: "policyManager", name: "PolicyManager", description: "Manager activo de ciclo flexible y pagos." },
+        { id: "beneficiaryRegistry", name: "BeneficiaryRegistry", description: "Guarda wallets y porcentajes de beneficiarios." },
+        { id: "deathVerifier", name: "DeathVerifier", description: "Experimento legacy, no compuerta actual de pago." },
+        { id: "premiumVault", name: "PremiumVault", description: "Custodia USDC y libera pagos a titular o beneficiarios." },
+        { id: "mockUsdc", name: "MockUSDC", description: "Token ERC-20 de prueba para Sepolia." }
       ]
     },
     contractDetail: {
       backLabel: "Volver a contratos",
-      eyebrow: "Documentación del contrato",
-      addressLabel: "Dirección del contrato",
+      eyebrow: "Documentacion del contrato",
+      addressLabel: "Direccion del contrato",
       pendingAddressLabel: "Despliegue pendiente",
       networkLabel: "Red",
       statusLabel: "Estado",
-      explorerLabel: "Ver en el explorador",
+      explorerLabel: "Ver en explorador",
       responsibilitiesTitle: "Responsabilidades",
       interfaceTitle: "Mapa de interfaz",
       safeguardsTitle: "Controles de riesgo",
-      sourceTitle: "Código del contrato",
-      sourceIncludedLabel: "Código incluido en este sitio",
-      sourcePendingLabel: "Importación de código pendiente"
+      sourceTitle: "Codigo del contrato",
+      sourceIncludedLabel: "Codigo incluido en este sitio",
+      sourcePendingLabel: "Importacion de codigo pendiente"
     },
-    contractDocs: {
-      thirtyYearPolicy: {
-        title: "RiskaThirtyYearPolicy",
-        summary:
-          "El contrato MVP para Riska 30: una póliza de aportes a 30 años que protege beneficiarios antes de la madurez y paga al titular con retiros programados después de madurar.",
-        status: "Desplegado en World Chain Sepolia para flujos de prueba. No auditado para fondos productivos.",
-        responsibilities: [
-          "Crear planes con prima, beneficio por fallecimiento, porcentajes de asignación, meses de pago y hash de términos.",
-          "Abrir pólizas con titular, beneficiario, fecha de madurez, fecha cubierta y saldo de retiro.",
-          "Cobrar primas y separar saldo de retiro, reserva de riesgo y fees del protocolo.",
-          "Liquidar reclamos de fallecimiento verificados antes de madurar y activar pagos programados al madurar."
-        ],
-        interfaceItems: [
-          {
-            name: "createPlan",
-            description: "Crea un plan de póliza con economía publicada y hash de los términos electrónicos."
-          },
-          {
-            name: "openPolicy",
-            description: "Inicia una póliza, registra beneficiario y cobra la primera prima."
-          },
-          {
-            name: "payPremium",
-            description: "Extiende la cobertura por uno o más períodos de pago y actualiza el saldo de retiro."
-          },
-          {
-            name: "reportDeath",
-            description: "Permite que el verificador aprobado envíe un hash de evidencia y liquide el pago al beneficiario."
-          },
-          {
-            name: "activateRetirement",
-            description: "Convierte una póliza madura en retiros programados para el titular."
-          },
-          {
-            name: "claimRetirementPayout",
-            description: "Libera el siguiente pago programado y cierra la póliza cuando se agota el saldo."
-          }
-        ],
-        safeguards: [
-          "Un guard de no reentrada cubre cobro de primas, reclamos, fondeo de reserva, retiros de fees y pagos.",
-          "Los beneficios por fallecimiento solo se liquidan si la liquidez de riesgo cubre el beneficio configurado.",
-          "Los saldos de retiro se registran como pasivos del protocolo y se separan del balance de fees.",
-          "Los términos del plan quedan anclados con un hash para auditar la versión legal aceptada."
-        ],
-        sourceNote:
-          "El código de abajo es la implementación MVP incluida en este repositorio. Debe auditarse antes de uso productivo."
-      },
-      policyManager: {
-        title: "PolicyManager",
-        summary:
-          "El módulo de registro y emisión de pólizas desplegadas. En Riska 30, es donde una póliza electrónica firmada se convierte en una referencia on-chain.",
-        status: "Desplegado en World Chain Sepolia y conectado con registry, verifier y vault.",
-        responsibilities: [
-          "Vincular titular, beneficiario, plan y hash de términos a un registro on-chain duradero.",
-          "Exponer el estado de ciclo de vida para que la app muestre si la cobertura está activa, en gracia, madura o cerrada.",
-          "Coordinar con el vault y los módulos de verificación cuando un reclamo o madurez cambia el estado.",
-          "Mantener metadata de pólizas accesible para wallets, exploradores e integraciones."
-        ],
-        interfaceItems: [
-          {
-            name: "Emisión de póliza",
-            description: "Crea el registro de cobertura después de que el usuario acepta el contrato electrónico y paga la prima requerida."
-          },
-          {
-            name: "Registro de beneficiario",
-            description: "Guarda o referencia el beneficiario elegido por el titular al crear la póliza."
-          },
-          {
-            name: "Estado de ciclo de vida",
-            description: "Publica el estado actual de la póliza para la web, exploradores e integraciones."
-          },
-          {
-            name: "Referencia de términos",
-            description: "Vincula la póliza al hash exacto del documento legal aceptado por el titular."
-          }
-        ],
-        safeguards: [
-          "La emisión debe estar limitada por reglas de suscripción, identidad verificada y capacidad del pool.",
-          "Los cambios de ciclo de vida deben emitir eventos para auditoría pública.",
-          "Los registros no deben guardar evidencia sensible directamente on-chain.",
-          "Los permisos administrativos deben migrar a timelocks o gobernanza antes de escalar."
-        ],
-        sourceNote:
-          "El código local de abajo corresponde al contrato usado en el despliegue actual de World Chain Sepolia."
-      },
-      beneficiaryRegistry: {
-        title: "BeneficiaryRegistry",
-        summary:
-          "El módulo de registro que guarda wallets de beneficiarios y porcentajes de asignación para cada póliza creada por el policy manager.",
-        status: "Desplegado en World Chain Sepolia y restringido para que solo el policy manager pueda escribir beneficiarios.",
-        responsibilities: [
-          "Guardar cuentas de beneficiarios y asignaciones en basis points para cada póliza.",
-          "Rechazar conjuntos vacíos, duplicados, con dirección cero o con demasiados beneficiarios.",
-          "Exigir que los porcentajes sumen 100%.",
-          "Exponer cantidad e índices de beneficiarios para pagos y vistas de la app."
-        ],
-        interfaceItems: [
-          {
-            name: "setPolicyManager",
-            description: "Define el único contrato autorizado a escribir registros de beneficiarios."
-          },
-          {
-            name: "setBeneficiaries",
-            description: "Guarda las wallets y porcentajes de beneficiarios para una póliza."
-          },
-          {
-            name: "beneficiaryCount",
-            description: "Devuelve cuántos beneficiarios tiene configurados una póliza."
-          },
-          {
-            name: "beneficiaryAt",
-            description: "Devuelve wallet y porcentaje de un beneficiario por índice."
-          }
-        ],
-        safeguards: [
-          "Solo el policy manager configurado puede escribir datos de beneficiarios.",
-          "El registro rechaza wallets duplicadas y direcciones cero.",
-          "Una póliza puede tener como máximo ocho beneficiarios.",
-          "Las asignaciones deben sumar exactamente 10.000 basis points."
-        ],
-        sourceNote:
-          "El código local de abajo corresponde al contrato usado en el despliegue actual de World Chain Sepolia."
-      },
-      deathVerifier: {
-        title: "DeathVerifier",
-        summary:
-          "El módulo de verificación que recibe reportes de fallecimiento, registra hashes de evidencia y autoriza pagos a beneficiarios bajo las reglas de la póliza.",
-        status: "Desplegado en World Chain Sepolia con un verificador único configurado para pruebas.",
-        responsibilities: [
-          "Recibir reportes de fallecimiento sin almacenar documentos privados directamente on-chain.",
-          "Registrar el hash o referencia de la evidencia off-chain usada por el verificador.",
-          "Autorizar la liquidación del reclamo solo después del proceso de verificación.",
-          "Dejar una traza auditable para beneficiarios, gobernanza y futuras ventanas de disputa."
-        ],
-        interfaceItems: [
-          {
-            name: "Referencia de evidencia",
-            description: "Guarda una referencia criptográfica a los documentos o atestaciones usados en la verificación."
-          },
-          {
-            name: "Autorización de verificador",
-            description: "Restringe la autorización de liquidación a reporteros aprobados en el MVP."
-          },
-          {
-            name: "Señal de reclamo",
-            description: "Notifica al módulo de póliza que puede ejecutarse el pago al beneficiario."
-          },
-          {
-            name: "Camino de disputa",
-            description: "Permite evolucionar hacia quórum, reporteros con stake y ventanas de disputa."
-          }
-        ],
-        safeguards: [
-          "Documentos médicos, civiles o de identidad deben permanecer off-chain.",
-          "Los cambios de verificador deben pasar por gobernanza y emitir eventos.",
-          "Los reclamos grandes deben soportar múltiples reporteros y demora antes de liquidación final.",
-          "Las referencias de evidencia deben ser inmutables después de liquidar."
-        ],
-        sourceNote:
-          "El código local de abajo corresponde al contrato usado en el despliegue actual de World Chain Sepolia."
-      },
-      premiumVault: {
-        title: "PremiumVault",
-        summary:
-          "El módulo de liquidez y contabilidad para primas, reservas, pasivos, fees y pagos. Esta es la página que reemplaza el enlace externo roto de premium-vault.",
-        status: "Desplegado en World Chain Sepolia y autorizado a recibir llamadas del policy manager.",
-        responsibilities: [
-          "Recibir flujos de primas desde los contratos de póliza y contabilizar a dónde pertenece cada unidad de capital.",
-          "Separar pasivos de retiro de la liquidez de riesgo usada para beneficios por fallecimiento.",
-          "Liberar pagos aprobados a beneficiarios, retiros por madurez y retiros permitidos de fees.",
-          "Exponer datos de reservas y pasivos para que la web muestre solvencia y capacidad de pago."
-        ],
-        interfaceItems: [
-          {
-            name: "Ingreso de primas",
-            description: "Recibe fondos desde flujos de póliza y los atribuye a saldo de retiro, reserva de riesgo y fees."
-          },
-          {
-            name: "Contabilidad de reservas",
-            description: "Rastrea el capital que respalda beneficios por fallecimiento separado de los pasivos de retiro."
-          },
-          {
-            name: "Liberación de pagos",
-            description: "Transfiere fondos solo cuando el módulo de póliza o verificador autorizó un reclamo o retiro programado."
-          },
-          {
-            name: "Retiro de fees",
-            description: "Permite retirar fees del protocolo únicamente desde el balance contable de fees."
-          }
-        ],
-        safeguards: [
-          "Los pasivos de retiro no deben tratarse como capital libre de riesgo.",
-          "Los pagos por fallecimiento deben fallar si la liquidez de riesgo no alcanza.",
-          "Los retiros de tesorería nunca deben tocar saldos de retiro de usuarios.",
-          "Las operaciones del vault deben emitir eventos por prima recibida, fondeo de reserva, pago y retiro de fees."
-        ],
-        sourceNote:
-          "El código local de abajo corresponde al contrato usado en el despliegue actual de World Chain Sepolia."
-      },
-      mockUsdc: {
-        title: "MockUSDC",
-        summary:
-          "Token ERC-20 de prueba con seis decimales usado como token de pago para tests de emisión en World Chain Sepolia.",
-        status: "Desplegado en World Chain Sepolia. El deployer minteó 20.000 MockUSDC para flujos de inscripción de prueba.",
-        responsibilities: [
-          "Representar un token tipo USDC en flujos de testnet.",
-          "Exponer seis decimales para coincidir con la matemática de la póliza.",
-          "Permitir minteo de prueba para wallets que necesiten fondos de prima.",
-          "Servir como token aprobado por titulares antes de abrir una póliza."
-        ],
-        interfaceItems: [
-          {
-            name: "decimals",
-            description: "Devuelve 6 para contabilidad estilo USDC."
-          },
-          {
-            name: "mint",
-            description: "Mintea tokens de prueba para desarrollo y emisión testnet."
-          },
-          {
-            name: "approve",
-            description: "Permite que el titular apruebe al vault para cobrar la primera prima."
-          },
-          {
-            name: "balanceOf",
-            description: "Muestra el balance de prueba disponible para una wallet."
-          }
-        ],
-        safeguards: [
-          "Este token es solo de testnet y no tiene valor productivo.",
-          "El minteo abierto es intencional en el mock para facilitar desarrollo.",
-          "Producción debe usar un token de pago real y allowlisted.",
-          "La app etiqueta este despliegue como World Chain Sepolia."
-        ],
-        sourceNote:
-          "El código local de abajo es el ERC-20 mock usado en el despliegue actual de World Chain Sepolia."
-      }
-    },
+    contractDocs: contractDocsEs,
     docsPage: {
       metadata: {
-        title: "Documentación del protocolo Riska",
-        description:
-          "Consulta direcciones de contratos, documentación interna y puntos de integración de Riska."
+        title: "Documentacion del protocolo Riska",
+        description: "Consulta direcciones de contratos, documentacion interna y puntos de integracion de Riska."
       },
       hero: {
-        badge: "Documentación",
+        badge: "Documentacion",
         title: "Construye con el protocolo Riska",
-        description:
-          "Explora direcciones de contratos, recursos de integración y referencias para socios en World Chain.",
-        primaryCta: "Ver direcciones de contratos",
-        secondaryCta: "Abrir libro blanco"
+        description: "Explora direcciones de contratos, recursos de integracion y referencias para World Chain.",
+        primaryCta: "Ver contratos",
+        secondaryCta: "Abrir white paper"
       }
     },
     techStack: {
       title: "Salvaguardas operativas",
-      subtitle:
-        "Las prácticas de seguridad minimizan la confianza, limitan la exposición de datos y dejan cada decisión auditable en cadena.",
+      subtitle: "Practicas de seguridad para minimizar confianza, limitar datos y auditar decisiones.",
       stack: [
-        {
-          title: "Minimizar confianza",
-          description: "Los contratos son mínimos, no tienen backdoors y dependen de oráculos diversos con bonos en stake."
-        },
-        {
-          title: "Minimización de datos",
-          description: "Solo las referencias necesarias viven on-chain mientras la evidencia permanece off-chain con enlaces criptográficos."
-        },
-        {
-          title: "Auditabilidad",
-          description: "Cada reporte de fallecimiento, activación de madurez y evento de pago se registra para revisión pública y gobernanza."
-        },
-        {
-          title: "Gobernanza",
-          description: "La gobernanza RISKA empieza centralizada y luego puede expandirse con distribución transparente a partners y comunidad."
-        }
+        { title: "Minimizar confianza", description: "Los contratos mantienen acciones privilegiadas pequenas y explicitas." },
+        { title: "Minimizar datos", description: "Solo referencias necesarias viven on-chain; evidencia sensible queda off-chain." },
+        { title: "Auditabilidad", description: "Depositos, heartbeats, avisos, reclamos y pagos emiten eventos." },
+        { title: "Gobernanza", description: "Produccion debe usar multisig, timelock, monitoreo y roles claros." }
       ]
     },
     callToAction: {
       title: "Descarga el white paper de Riska 30",
-      subtitle:
-        "Preparado para evaluación de grants: tesis del producto, alineación con World Chain, ciclo de póliza, contrato, roadmap y riesgos.",
+      subtitle: "Preparado para grants: tesis, World Chain, ciclo de vida, roadmap y riesgos.",
       primary: "Abrir white paper",
-      secondary: "Contactar a Fundación Riska"
+      secondary: "Contactar a Fundacion Riska"
     },
     footer: {
-      note: "© {year} riska.world · Protección de vida con renta programada a 30 años.",
+      note: "© {year} riska.world · Proteccion flexible para humanos verificados.",
       worldChain: "World Chain",
       email: "hey@riska.world"
     },
     walletAuth: {
       heading: "Consola Riska 30",
       description:
-        "Inicia sesión desde World App para revisar estado de póliza a 30 años, beneficiarios, historial de primas, fecha de madurez y estado de renta programada.",
+        "Inicia sesion desde World App para revisar estado de poliza, beneficiarios, minimo fondeado, extra principal, heartbeat y pagos.",
       miniApp: {
         label: "Puente Mini App",
-        checking: "Detectando contexto de World App…",
-        installed: "World App detectada. Wallet Auth se verificará en el backend de Riska.",
-        browserFallback: "Modo navegador activo. Usa la wallet web como fallback para revisión local."
+        checking: "Detectando contexto de World App...",
+        installed: "World App detectada. Wallet Auth se verificara en el backend de Riska.",
+        browserFallback: "Modo navegador activo. Usa la wallet web como fallback para revision local."
       },
       statusLabel: "Estado",
       status: {
-        connected: (address: string) => `Sesión conectada: ${address}`,
-        connecting: "Conectando…",
+        connected: (address: string) => `Sesion conectada: ${address}`,
+        connecting: "Conectando...",
         disconnected: "No conectado"
       },
       chainId: (chainId: number) => `Chain ID: ${chainId}`,
-      mode: {
-        "world-app": "World App",
-        browser: "Wallet navegador"
-      },
+      mode: { "world-app": "World App", browser: "Wallet navegador" },
       actions: {
         connectWorldApp: "Entrar con World App",
         connectBrowser: "Conectar wallet web",
-        connecting: "Conectando…",
+        connecting: "Conectando...",
         disconnect: "Desconectar"
       },
       messages: {
-        welcome: "Bienvenido a Riska 30. Wallet Auth fue completado y la sesión queda lista para el siguiente paso de onboarding.",
-        disconnected: "Sesión cerrada. Vuelve a conectar para gestionar pólizas, beneficiarios y pagos por madurez.",
+        welcome: "Bienvenido a Riska 30. Wallet Auth esta lista para el siguiente paso.",
+        disconnected: "Sesion cerrada. Vuelve a conectar para gestionar polizas, beneficiarios, heartbeat y pagos.",
         error: "No se pudo conectar la wallet.",
         nonceError: "No se pudo preparar el nonce de Wallet Auth.",
         verifyError: "No se pudo verificar la firma de Wallet Auth.",
@@ -1647,282 +963,193 @@ export const dictionaries: Record<Language, Dictionary> = {
       }
     },
     worldIdGate: {
-      heading: "Un humano, una póliza",
+      heading: "Un humano, una poliza",
       description:
-        "Verifica Proof of Human con IDKit antes de activar una póliza. Riska guarda el nullifier de World ID en backend para que el mismo humano verificado no pueda reservar una segunda póliza.",
+        "Verifica Proof of Human con IDKit antes de activar una poliza. Riska guarda el nullifier de World ID en backend para que el mismo humano verificado no pueda reservar una segunda poliza.",
       statusLabel: "Gate World ID",
       statuses: {
-        locked: "Primero conecta una wallet para atar la prueba a esa dirección.",
+        locked: "Primero conecta una wallet para atar la prueba a esa direccion.",
         ready: "Listo para pedir una prueba World ID para esta wallet.",
-        loading: "Preparando una solicitud World ID firmada…",
-        verified: "Humano único verificado. Esta wallet puede seguir a beneficiarios.",
-        error: "La verificación World ID necesita atención.",
+        loading: "Preparando una solicitud World ID firmada...",
+        verified: "Humano unico verificado. Esta wallet puede seguir a beneficiarios.",
+        error: "La verificacion World ID necesita atencion.",
         notConfigured: "Falta configurar la app de World ID."
       },
       action: "Verificar humano",
-      actionLoading: "Preparando prueba…",
+      actionLoading: "Preparando prueba...",
       walletRequired: "Conecta Wallet Auth antes de pedir World ID.",
       configMissing: "Configura NEXT_PUBLIC_WORLD_APP_ID antes de abrir IDKit.",
       signatureError: "No se pudo crear la solicitud RP firmada.",
       verifyError: "No se pudo verificar la prueba de World ID.",
-      duplicateError: "Este humano verificado ya está reservado para una póliza Riska.",
+      duplicateError: "Este humano verificado ya esta reservado para una poliza Riska.",
       errorPrefix: "Error IDKit:",
-      errors: {
-        cancelled: "Cancelaste la verificación. No se reservó ninguna póliza.",
-        connection_failed: "La conexión con World App se interrumpió. Revisa tu conexión e inténtalo de nuevo.",
-        credential_unavailable:
-          "Esta cuenta de World App todavía no está verificada como humana. Completa la verificación de World ID en World App y vuelve a intentarlo en Riska.",
-        failed_by_host_app:
-          "Riska no pudo aceptar la prueba. Vuelve a conectar tu sesión de wallet e inténtalo otra vez.",
-        generic_error: "No pudimos completar la verificación de World ID. Inténtalo de nuevo.",
-        identity_attributes_not_matched:
-          "Este World ID no cumple los requisitos de prueba para una póliza Riska.",
-        inclusion_proof_failed:
-          "World App no pudo preparar la prueba para esta cuenta. Espera un momento e inténtalo de nuevo.",
-        inclusion_proof_pending:
-          "Tu prueba de World ID todavía se está preparando. Espera un momento e inténtalo de nuevo.",
-        invalid_network: "World ID devolvió una prueba para la red incorrecta. Inténtalo de nuevo desde World App.",
-        invalid_rp_signature:
-          "La configuración de World ID de Riska necesita una corrección antes de continuar.",
-        malformed_request: "La solicitud de World ID no se pudo leer. Refresca Riska e inténtalo de nuevo.",
-        max_verifications_reached:
-          "Este World ID ya fue usado para esta verificación de Riska.",
-        nullifier_replayed:
-          "Este World ID ya está reservado para esta verificación de Riska.",
-        timeout: "World App tardó demasiado en responder. Inténtalo de nuevo.",
-        unexpected_response:
-          "World App devolvió una respuesta inesperada. Actualiza World App e inténtalo de nuevo.",
-        user_rejected: "Cancelaste la verificación. No se reservó ninguna póliza.",
-        verification_rejected:
-          "World App rechazó la verificación. Asegúrate de que tu cuenta esté verificada e inténtalo de nuevo.",
-        wallet_session_required:
-          "Vuelve a conectar tu wallet antes de verificar World ID. En World App eso crea la sesión segura de Wallet Auth que Riska necesita.",
-        world_id_3_not_available:
-          "Esta cuenta de World App todavía no puede crear la prueba requerida. Completa la verificación e inténtalo de nuevo.",
-        world_id_4_not_available:
-          "Esta cuenta de World App todavía no puede crear la prueba requerida. Actualiza World App o completa la verificación, y vuelve a intentarlo."
-      },
+      errors: worldIdErrorsEs as Record<string, string>,
       signalLabel: (signal: string) => `Signal: ${signal}`,
       proofLabel: (proofId: string) => `Nullifier reservado: ${proofId}`
     },
     whitepaper: {
       metadata: {
-        title: "Libro blanco de Riska - Protección de vida con renta programada a 30 años",
+        title: "Whitepaper Riska - Proteccion flexible y renta programada",
         description:
-          "Explora cómo riska.world combina protección de vida, acumulación de primas, reclamos verificados por fallecimiento y pagos programados después de una madurez de 30 años."
+          "Explora como Riska combina World ID, depositos USDC flexibles, heartbeat, aviso de beneficiarios y pagos programados."
       },
       header: {
-        badge: "Fundación Riska",
-        title: "Riska: Protección de vida con renta programada a 30 años",
-        date: "Noviembre 2025"
+        badge: "Fundacion Riska",
+        title: "Riska: Proteccion flexible y renta programada",
+        date: "Mayo 2026"
       },
       download: {
         label: "Descargar white paper v2",
-        note: "Preparado para evaluación de grants en World Chain: tesis de Riska 30, ciclo contractual, hitos y alcance de riesgos."
+        note: "Preparado para grants en World Chain: tesis flexible, ciclo contractual, hitos y riesgos."
       },
       abstract: {
         title: "Resumen",
         paragraphs: [
-          "Presentamos un contrato de protección de vida a 30 años con prima fija de 30 USDC mensuales. Si hay fallecimiento verificado después de la espera de 12 meses y antes de madurez, los beneficiarios cobran 80% de las primas pagadas. Si el titular completa el plazo, cobra 100% del principal programado mediante retiros durante 10 años.",
-          "Riska se integra con World Chain para anclar la participación a cuentas verificadas como humanas. La prueba de humanidad ayuda a frenar abuso por pólizas duplicadas sin guardar datos biométricos en el protocolo. Los reclamos por fallecimiento requieren reportero, verificación del Riska Team, hashes de evidencia y ventana de disputa."
+          "Riska 30 es una cuenta de poliza USDC flexible para humanos verificados por World ID. El titular fondea un minimo de 10,800 USDC con el tiempo o por adelantado, y el principal extra aumenta el pago mensual futuro.",
+          "Los beneficiarios solo pueden cobrar despues de un reporte y 12 meses sin interaccion del titular. Heartbeat, deposito, cambio de beneficiarios, cobro mensual o claim-all cancelan el reporte pendiente."
         ]
       },
       introduction: {
-        title: "1. Introducción",
+        title: "1. Introduccion",
         paragraphs: [
-          "Riska se enfoca en un solo producto: una póliza de vida que se convierte en renta programada después de 30 años. Los productos tradicionales de vida y retiro suelen ser opacos en fees, reservas, valor de rescate y mecánica de pagos. Riska hace inspeccionables el estado de la póliza, historial de pagos, fecha de madurez y reglas de renta.",
-          "El contrato no intenta ser un sistema jubilatorio completo en el lanzamiento. Implementa un producto acotado: pagar una fórmula publicada a beneficiarios antes de madurez y devolver el principal programado al titular después de madurar. Las estrategias de yield pueden financiar la economía del protocolo, pero deben separarse de la promesa base de principal."
+          "Riska hace inspeccionable el estado de poliza, asignacion de depositos, derechos de beneficiarios, heartbeat y reglas de pago.",
+          "El modelo inicial queda acotado: sin paso oculto de elegibilidad, sin compuerta opaca de muerte y sin fee para retiros del titular."
         ],
-        goalsTitle: "Objetivos de diseño",
+        goalsTitle: "Objetivos de diseno",
         goals: [
-          "Hacer explícitos el plazo de 30 años, la madurez y el calendario de pagos.",
-          "Separar principal protegido, reservas de yield, tesorería y obligaciones a beneficiarios.",
-          "Pagar a beneficiarios bajo la espera de 12 meses y fórmula de 80% cuando se verifica fallecimiento antes de madurez.",
-          "Pagar al titular 100% del principal programado mediante retiros después de madurar.",
-          "Versionar términos legales mediante hashes de documentos."
+          "Permitir que cualquier humano verificado abra una poliza.",
+          "Separar principal minimo de principal extra.",
+          "Dar al titular pagos mensuales sin fee, claim-all y heartbeat.",
+          "Dar a beneficiarios una ruta transparente de reporte y espera.",
+          "Versionar terminos legales mediante hashes."
         ]
       },
       systemOverview: {
-        title: "2. Visión general del sistema",
+        title: "2. Vision general",
         paragraphs: [
-          "Los participantes interactúan con un contrato de póliza a 30 años. Un plan define prima mensual de 30 USDC, espera de 12 meses, fórmula de pago a beneficiarios, duración de pagos, reglas de revisión por inactividad y hash del documento legal.",
-          "Antes de madurar, la póliza está activa mientras las primas estén al día o dentro del período de gracia. Si el titular fallece después de 12 meses pagos y el fallecimiento se verifica, los beneficiarios reciben 80% de las primas pagadas.",
-          "Al madurar, la póliza se convierte en renta programada. El titular activa pagos de retiro y el contrato libera 100% del principal programado en 120 retiros mensuales. Si hay fallecimiento verificado después de madurar, los beneficiarios reciben 90% del saldo maduro o restante."
+          "El policy manager guarda titular, hash de terminos, cantidad de pagos, timestamps, minimo, extra y estado.",
+          "El vault mantiene USDC, pasivo total de principal y fee retenido como reserva.",
+          "El beneficiary registry guarda wallets receptoras y porcentajes en basis points."
         ],
         everydayIntuition: {
-          title: "Intuición cotidiana",
-          body: "Riska 30 es una promesa con resultados publicados: después de la espera tu familia tiene una fórmula de pago, y si completas 30 años cobras el principal programado."
+          title: "Intuicion cotidiana",
+          body: "El titular puede seguir fondeando, empezar renta cuando el minimo esta listo, retirar todo o enviar heartbeat para decir que esta vivo."
         }
       },
       userLifecycle: {
-        title: "3. Cómo funciona (ciclo de vida del usuario)",
+        title: "3. Como funciona",
         steps: [
-          {
-            label: "Verifica identidad.",
-            description: "Autentícate con World ID antes de seguir a beneficiarios y activación de póliza."
-          },
-          {
-            label: "Acepta términos de póliza.",
-            description: "Revisa prima, espera, fórmula de beneficiarios, fecha de madurez, duración de pagos, beneficiarios y hash de términos."
-          },
-          { label: "Paga la prima.", description: "El contrato abre la póliza y contabiliza el pago mensual USDC como principal protegido." },
-          { label: "Mantén cobertura.", description: "Los pagos programados mantienen activa la póliza durante el plazo de aporte de 30 años." },
-          { label: "Cobra resultado.", description: "Los beneficiarios cobran bajo la fórmula publicada tras fallecimiento verificado, o el titular cobra 100% del principal después de madurar." }
+          { label: "Verifica identidad.", description: "Autenticate con Wallet Auth y World ID antes de continuar." },
+          { label: "Define beneficiarios.", description: "Elige wallets y porcentajes que suman 100%." },
+          { label: "Abre poliza.", description: "Acepta terminos y paga la primera unidad testnet de 30 USDC." },
+          { label: "Fondea o retira.", description: "Deposita antes de activar pagos; luego activa pagos mensuales o cobra todo." },
+          { label: "Heartbeat.", description: "Interactua sin retirar para cancelar un aviso de muerte pendiente." }
         ],
         examples: {
           title: "Ejemplos concretos",
           items: [
-            {
-              label: "Antes de madurar:",
-              description: "Alicia paga primas durante 12 años y fallece con cobertura. Un verificador confirma el evento y sus beneficiarios reciben 80% de las primas pagadas."
-            },
-            {
-              label: "Al madurar:",
-              description: "Bruno completa 30 años de pagos. La póliza madura y activa 120 pagos mensuales de 90 USDC."
-            },
-            {
-              label: "Durante el cobro:",
-              description: "Carla empieza a recibir pagos de retiro. Si fallece antes de distribuir todo el saldo, 90% del saldo restante puede ir a sus beneficiarios después de verificación."
-            },
-            {
-              label: "Pagos omitidos:",
-              description: "Si un titular omite pagos durante 12 meses, la póliza puede entrar en revisión por inactividad. La inactividad sola no prueba fallecimiento ni autoriza pagos."
-            }
+            { label: "Minimo fondeado:", description: "Un titular con 10,800 USDC puede activar 120 pagos base." },
+            { label: "Principal extra:", description: "Un titular con 12,000 USDC obtiene un estimado mensual mayor." },
+            { label: "Cobro muerte:", description: "Beneficiarios reciben extra mas 80% del minimo restante." },
+            { label: "Reporte falso:", description: "Un heartbeat del titular cancela el reporte al instante." }
           ]
         }
       },
       capital: {
-        title: "4. Principal, yield y solvencia",
+        title: "4. Principal, fees y solvencia",
         paragraphs: [
-          "Cada prima de 30 USDC es principal protegido para la promesa base de la póliza. El ingreso del protocolo debería venir del spread de yield, subsidio de tesorería, subsidio de sponsors o fees externos explícitos, no de reducir el principal protegido.",
-          "Las estrategias con yield agregan riesgo y requieren contabilidad separada. El sistema debe exponer pasivos de principal protegido, tesorería, reservas de yield, exposición por estrategia, liquidez disponible y obligaciones a beneficiarios."
+          "El minimo y el extra son pasivos de poliza hasta que se pagan al titular o beneficiarios.",
+          "La liquidacion por muerte retiene 20% solo del minimo restante. El principal extra no paga fee."
         ],
         example: {
           title: "Ejemplo base",
-          body: "Un titular que paga 30 USDC durante 360 meses aporta 10.800 USDC. Al madurar, cobra 10.800 USDC en 120 pagos, o 90 USDC por mes."
+          body: "Una poliza con 10,800 USDC de minimo y 1,000 USDC extra paga 9,640 USDC a beneficiarios y retiene 2,160 USDC como reserva."
         }
       },
       eventVerification: {
-        title: "5. Verificación de fallecimiento",
+        title: "5. Aviso de beneficiarios",
         paragraphs: [
-          "Los datos confiables son esenciales para la protección de beneficiarios. Un período de 12 meses sin pago de primas o sin reclamar pagos puede disparar revisión por inactividad, pero la inactividad sola no prueba fallecimiento. Un reportero debe enviar el aviso, Riska Team debe verificarlo, y el sistema debe registrar hash de evidencia y ventana de disputa antes de liquidar."
+          "Un beneficiario configurado puede reportar muerte solo despues de que la poliza tenga 12 meses. El reporte inicia otra ventana de 12 meses. Si el titular interactua, el reporte se cancela."
         ],
         plainLanguage: {
-          title: "Vista en lenguaje sencillo",
-          body: "El contrato no decide por sí mismo si una persona falleció. Registra reportes verificados y aplica la fórmula de pago publicada."
+          title: "Vista simple",
+          body: "Un reporte no paga al instante. El titular tiene una ventana larga y simple para probar vida interactuando."
         }
       },
       claims: {
-        title: "6. Madurez y pagos",
+        title: "6. Cobros del titular y beneficiarios",
         paragraphs: [
-          "La madurez es determinista: después de 30 años, la póliza puede activarse para pagos programados. El titular cobra 100% del principal programado durante 10 años en lugar de una renta vitalicia.",
-          "Si hay fallecimiento verificado después de madurar pero antes de activar, o durante la etapa de cobro, los beneficiarios reciben 90% del saldo maduro o restante."
+          "Los cobros mensuales y claim-all del titular no tienen fee.",
+          "Los cobros de beneficiarios se pagan segun porcentajes despues de la ventana sin interaccion."
         ]
       },
       incentives: {
-        title: "7. Incentivos económicos y flujo de capital (RISKA)",
-        intro: "El token RISKA empieza como gobernanza centralizada para parámetros del protocolo, distribución empresarial y futura descentralización.",
+        title: "7. Incentivos y flujo de capital",
+        intro: "RISKA debe apoyar confiabilidad, gobernanza y distribucion sin distraer de la promesa de principal.",
         points: [
-          {
-            label: "Fundación Riska:",
-            description: "Controla inicialmente los 100.000 tokens y usa la gobernanza para gestionar parámetros, upgrades y acceso de partners."
-          },
-          {
-            label: "Verificadores:",
-            description: "Riska Team verifica reportes de fallecimiento al inicio; luego los conjuntos de verificadores pueden expandirse y respaldarse con bonos mediante gobernanza."
-          },
-          {
-            label: "Titulares y familias:",
-            description: "Aportan hacia renta futura mientras mantienen protección de beneficiarios antes de la madurez."
-          }
+          { label: "Fundacion Riska:", description: "Gestiona parametros, upgrades y partners al inicio." },
+          { label: "Titulares:", description: "Fondean la poliza y controlan cobro o heartbeat." },
+          { label: "Beneficiarios:", description: "Pueden reportar y cobrar solo bajo la demora publicada." }
         ],
         feeParagraph:
-          "RISKA tiene oferta fija de 100.000 tokens, 0 decimales y transferibilidad desde el día 1. La economía del protocolo se espera desde estrategias de yield, subsidio de tesorería, subsidio de sponsors o fees explícitos, no desde reducir el principal protegido de los titulares.",
+          "La economia del protocolo debe ser explicita. En el flujo actual de muerte, la base de fee es solo el minimo restante.",
         example: {
           title: "Postura de gobernanza",
-          body: "Como el owner/fundación controla todo RISKA al inicio, la gobernanza empieza centralizada. El camino de descentralización debe comunicarse antes de presentar Riska como gobernada por comunidad."
+          body: "Produccion debe usar multisig, timelock, eventos publicos y un camino claro de descentralizacion."
         }
       },
       governance: {
         title: "8. Riesgo de yield y gobernanza",
         paragraphs: [
-          "Los planes publican pasivos de principal, utilización, exposición por estrategia, liquidez disponible, pagos a beneficiarios y estado de reservas de yield. La emisión o el despliegue de yield debe detenerse cuando se excederían límites seguros.",
-          "La gobernanza controla verificadores, allowlists de estrategias de yield, límites, timelocks de upgrades, ruteo de fees y acciones de emergencia. Incluso centralizada, la administración debe usar multisig, timelock y eventos públicos."
+          "Las estrategias de yield son trabajo futuro y deben separarse de pasivos de principal.",
+          "Gobernanza productiva debe controlar allowlists, limites, upgrades, ruteo de fees y emergencia."
         ]
       },
       security: {
-        title: "9. Modelo de seguridad y prevención de fraude",
+        title: "9. Modelo de seguridad",
         points: [
-          {
-            label: "Minimizar confianza:",
-            description: "Los contratos deben minimizar acciones privilegiadas, usar controles de emergencia acotados y rutear upgrades mediante gobernanza transparente."
-          },
-          {
-            label: "Minimización de datos:",
-            description: "Solo referencias necesarias de pólizas, World ID y reportes de fallecimiento viven on-chain mientras la evidencia sensible queda off-chain con pruebas criptográficas."
-          },
-          {
-            label: "Verificación humana:",
-            description: "La prueba de humanidad de World Chain aplica una política de una persona por póliza, frenando fraudes sibilinos y bots de reclamos masivos sin almacenar biometría cruda en Riska."
-          },
-          {
-            label: "Auditabilidad:",
-            description: "Cada decisión—aceptar, negar, disputar, cambiar estrategia y pagar—se almacena on-chain para revisión pública."
-          }
+          { label: "Acceso:", description: "Solo el policy manager puede mover fondos del vault." },
+          { label: "Datos minimos:", description: "La evidencia sensible queda off-chain." },
+          { label: "Humano verificado:", description: "World ID aplica una persona por poliza en el flujo de app." },
+          { label: "Auditabilidad:", description: "Depositos, avisos, heartbeats y pagos emiten eventos publicos." }
         ]
       },
       applications: {
-        title: "10. Aplicaciones prácticas",
+        title: "10. Aplicaciones",
         paragraphs: [
-          "La primera aplicación es Riska 30: una póliza de largo plazo para personas que quieren protección familiar mientras construyen un flujo de pagos futuro.",
-          "Las familias eligen el producto porque el resultado es directo: si el titular fallece antes de madurar, los beneficiarios reciben soporte; si completa el plazo, el titular recibe renta programada.",
-          "Empleadores, sindicatos y comunidades pueden patrocinar primas para miembros verificados mientras el estado de la póliza permanece auditable."
+          "Riska 30 sirve a personas que quieren proteccion familiar transparente y renta programada opcional.",
+          "Comunidades y empleadores pueden patrocinar depositos para miembros verificados con estado auditable."
         ]
       },
       faq: {
         title: "11. Preguntas frecuentes",
         items: [
-          {
-            question: "¿Cómo se fijan los precios?",
-            answer: "El plan base publica prima mensual de 30 USDC, espera de 12 meses, fórmula de 80% a beneficiarios antes de madurez, fórmula de 90% después de madurez y pago al titular durante 10 años."
-          },
-          {
-            question: "¿Qué ocurre si fallan las fuentes de datos?",
-            answer: "El MVP usa verificadores aprobados. Producción debería usar múltiples reporteros, ventanas de disputa y verificación con bonos antes de escalar."
-          },
-          {
-            question: "¿Un pool puede quedarse sin fondos?",
-            answer: "El principal protegido y las obligaciones a beneficiarios se registran como pasivos. La exposición de yield debe tener límites, monitoreo, retiro de emergencia y reglas de pérdida."
-          },
-          {
-            question: "¿Dónde importa RISKA en el día a día?",
-            answer: "RISKA controla parámetros de gobernanza, verificadores, allowlists de estrategias, acceso de partners y el camino futuro de descentralización."
-          },
-          {
-            question: "¿Esto es una jubilación?",
-            answer: "El producto usa renta programada desde principal acumulado, no una renta vitalicia ni jubilación estatal. La clasificación legal depende de la jurisdicción y debe resolverse antes de venta pública."
-          }
+          { question: "Quien puede abrir una poliza?", answer: "Cualquier humano verificado por World ID en el flujo soportado." },
+          { question: "Cuando puede cobrar el titular?", answer: "Cuando el minimo de 10,800 USDC esta completamente fondeado." },
+          { question: "El extra paga fee?", answer: "No. El principal extra no paga fee." },
+          { question: "Quien puede reportar muerte?", answer: "Solo un beneficiario configurado." },
+          { question: "Esto es un lanzamiento publico de seguro?", answer: "No. Produccion con dinero real requiere legal y auditoria externa." }
         ]
       },
       conclusion: {
-        title: "12. Conclusión",
+        title: "12. Conclusion",
         paragraphs: [
-          "Riska reemplaza promesas vagas de largo plazo con estados explícitos: aporte activo, protección de beneficiarios, madurez, renta programada y cierre. El primer producto queda acotado a propósito para poder auditar el contrato antes de expandirse a estructuras de retiro o seguro más complejas."
+          "Riska reemplaza promesas vagas por saldos explicitos, controles del titular, aviso de beneficiarios y liquidacion auditable."
         ]
       },
       references: {
         title: "Referencias",
         items: [
-          "S. Nakamoto. Bitcoin: A Peer-to-Peer Electronic Cash System. 2008. https://bitcoin.org/bitcoin.pdf",
-          "A. Eling and W. Schnell. Parametric Insurance: The Next Generation of Insurance Products. 2016.",
-          "OECD. Innovation in Peer-to-Peer Risk Pooling. 2023.",
-          "B. Pournader et al. Blockchain and Risk Transfer Mechanisms. 2022.",
-          "Chainlink Labs. Data Feeds and Oracle Architectures. 2021. https://chain.link"
+          "World Foundation Grants, https://world.org/grants",
+          "World Developer Docs, World ID, https://docs.world.org/world-id",
+          "World Developer Docs, Mini Apps, https://docs.world.org/mini-apps"
         ]
       }
     }
   }
-};
+} as const;
+
+export type Dictionary = (typeof dictionaries)[Language];
 
 export function isLanguage(value: string | null | undefined): value is Language {
   return value === "en" || value === "es";

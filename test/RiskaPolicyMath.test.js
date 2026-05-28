@@ -11,45 +11,25 @@ describe("RiskaPolicyMath", function () {
     math = await MathHarness.deploy();
   });
 
-  it("anchors the Riska 30 base constants", async function () {
-    expect(await math.monthlyPremium()).to.equal(usdc("30"));
-    expect(await math.waitingPeriodMonths()).to.equal(12);
-    expect(await math.contributionMonths()).to.equal(360);
-    expect(await math.retirementPayoutMonths()).to.equal(120);
-    expect(await math.fullTermPrincipal()).to.equal(usdc("10800"));
-    expect(await math.holderMonthlyPayout()).to.equal(usdc("90"));
+  it("anchors the flexible policy constants", async function () {
+    expect(await math.minimumMonthlyUnit()).to.equal(usdc("30"));
+    expect(await math.minimumPolicyMonths()).to.equal(360);
+    expect(await math.payoutMonths()).to.equal(120);
+    expect(await math.minimumPolicyPrincipal()).to.equal(usdc("10800"));
+    expect(await math.deathBeneficiaryBps()).to.equal(8000);
+    expect(await math.deathFeeBps()).to.equal(2000);
   });
 
-  it("tracks paid principal from the 30 USDC monthly premium", async function () {
-    expect(await math.paidPrincipal(0)).to.equal(usdc("0"));
-    expect(await math.paidPrincipal(2)).to.equal(usdc("60"));
-    expect(await math.paidPrincipal(12)).to.equal(usdc("360"));
-    expect(await math.paidPrincipal(360)).to.equal(usdc("10800"));
-
-    await expect(math.paidPrincipal(361)).to.be.revertedWith("PAID_MONTHS_TOO_HIGH");
+  it("estimates monthly payout from the full remaining balance", async function () {
+    expect(await math.monthlyPayout(usdc("10800"))).to.equal(usdc("90"));
+    expect(await math.monthlyPayout(usdc("12000"))).to.equal(usdc("100"));
+    expect(await math.monthlyPayout(usdc("10800") + 1n)).to.equal(usdc("90"));
   });
 
-  it("pays nothing to beneficiaries before 12 paid months", async function () {
-    expect(await math.beneficiaryPayoutBeforeMaturity(0)).to.equal(usdc("0"));
-    expect(await math.beneficiaryPayoutBeforeMaturity(2)).to.equal(usdc("0"));
-    expect(await math.beneficiaryPayoutBeforeMaturity(11)).to.equal(usdc("0"));
-  });
-
-  it("pays 80% of paid premiums to beneficiaries from month 12 until maturity", async function () {
-    expect(await math.beneficiaryPayoutBeforeMaturity(12)).to.equal(usdc("288"));
-    expect(await math.beneficiaryPayoutBeforeMaturity(24)).to.equal(usdc("576"));
-    expect(await math.beneficiaryPayoutBeforeMaturity(60)).to.equal(usdc("1440"));
-    expect(await math.beneficiaryPayoutBeforeMaturity(120)).to.equal(usdc("2880"));
-    expect(await math.beneficiaryPayoutBeforeMaturity(240)).to.equal(usdc("5760"));
-    expect(await math.beneficiaryPayoutBeforeMaturity(359)).to.equal(usdc("8616"));
-
-    await expect(math.beneficiaryPayoutBeforeMaturity(360)).to.be.revertedWith("USE_MATURED_PAYOUT");
-  });
-
-  it("pays 90% of matured or remaining balance to beneficiaries after maturity", async function () {
-    expect(await math.beneficiaryPayoutAfterMaturity(usdc("10800"))).to.equal(usdc("9720"));
-    expect(await math.beneficiaryPayoutAfterMaturity(usdc("8100"))).to.equal(usdc("7290"));
-    expect(await math.beneficiaryPayoutAfterMaturity(usdc("90"))).to.equal(usdc("81"));
+  it("charges death fees only against remaining minimum principal", async function () {
+    expect(await math.deathPayout(usdc("10800"), 0)).to.deep.equal([usdc("8640"), usdc("2160")]);
+    expect(await math.deathPayout(usdc("10800"), usdc("1000"))).to.deep.equal([usdc("9640"), usdc("2160")]);
+    expect(await math.deathPayout(usdc("10710"), usdc("1190"))).to.deep.equal([usdc("9758"), usdc("2142")]);
   });
 
   it("requires beneficiary shares to total 100%", async function () {

@@ -2,11 +2,24 @@ const { expect } = require("chai");
 const { ethers, network } = require("hardhat");
 
 const usdc = (amount) => ethers.parseUnits(amount, 6);
-const termsHash = ethers.keccak256(ethers.toUtf8Bytes("riska-policy-terms-v1"));
-const evidenceHash = ethers.keccak256(ethers.toUtf8Bytes("death-evidence"));
+const termsHash = ethers.keccak256(ethers.toUtf8Bytes("riska-policy-terms-v2-flexible"));
+
+const PAYMENT_PERIOD = 30 * 24 * 60 * 60;
+const DEATH_REPORT_DELAY = 12 * PAYMENT_PERIOD;
+const STATUS = {
+  Active: 1n,
+  PayoutActive: 2n,
+  DeathSettled: 3n,
+  Closed: 4n
+};
+
+async function advance(seconds) {
+  await network.provider.send("evm_increaseTime", [seconds]);
+  await network.provider.send("evm_mine");
+}
 
 async function deployFixture() {
-  const [owner, verifier, holder, beneficiaryA, beneficiaryB, stranger] = await ethers.getSigners();
+  const [owner, holder, beneficiaryA, beneficiaryB, beneficiaryC, stranger] = await ethers.getSigners();
 
   const MockUSDC = await ethers.getContractFactory("MockUSDC");
   const token = await MockUSDC.deploy();
@@ -14,62 +27,60 @@ async function deployFixture() {
   const RiskaBeneficiaryRegistry = await ethers.getContractFactory("RiskaBeneficiaryRegistry");
   const beneficiaryRegistry = await RiskaBeneficiaryRegistry.deploy();
 
-  const RiskaDeathVerifier = await ethers.getContractFactory("RiskaDeathVerifier");
-  const deathVerifier = await RiskaDeathVerifier.deploy(verifier.address);
-
   const RiskaPremiumVault = await ethers.getContractFactory("RiskaPremiumVault");
   const premiumVault = await RiskaPremiumVault.deploy(await token.getAddress(), await beneficiaryRegistry.getAddress());
 
   const RiskaPolicyManager = await ethers.getContractFactory("RiskaPolicyManager");
   const manager = await RiskaPolicyManager.deploy(
     await beneficiaryRegistry.getAddress(),
-    await deathVerifier.getAddress(),
     await premiumVault.getAddress()
   );
 
   await beneficiaryRegistry.connect(owner).setPolicyManager(await manager.getAddress());
-  await deathVerifier.connect(owner).setPolicyManager(await manager.getAddress());
   await premiumVault.connect(owner).setPolicyManager(await manager.getAddress());
 
-  await token.mint(holder.address, usdc("20000"));
-  await token.connect(holder).approve(await premiumVault.getAddress(), usdc("20000"));
+  await token.mint(holder.address, usdc("50000"));
+  await token.connect(holder).approve(await premiumVault.getAddress(), usdc("50000"));
 
   return {
     owner,
-    verifier,
     holder,
     beneficiaryA,
     beneficiaryB,
+    beneficiaryC,
     stranger,
     token,
     beneficiaryRegistry,
-    deathVerifier,
     premiumVault,
     manager
   };
 }
 
-async function openPolicy(ctx, beneficiaries, shares) {
+async function openPolicy(ctx, beneficiaries = [ctx.beneficiaryA.address], shares = [10_000]) {
   await ctx.manager.connect(ctx.holder).openPolicy(beneficiaries, shares, termsHash);
   return 1;
 }
 
-async function reportVerifyAndSettleDeath(ctx, policyId, evidence = evidenceHash) {
-  await ctx.deathVerifier.connect(ctx.stranger).reportDeath(policyId, evidence);
-  await network.provider.send("evm_increaseTime", [90 * 24 * 60 * 60]);
-  await network.provider.send("evm_mine");
-  await ctx.deathVerifier.connect(ctx.verifier).verifyDeath(policyId);
-  await ctx.manager.connect(ctx.stranger).settleVerifiedDeath(policyId);
+async function fundMinimum(ctx, policyId, extra = "0") {
+  await ctx.manager.connect(ctx.holder).deposit(policyId, usdc("10770") + usdc(extra));
+}
+
+async function reportAfterPolicyAge(ctx, policyId, reporter = ctx.beneficiaryA) {
+  await advance(DEATH_REPORT_DELAY);
+  await ctx.manager.connect(reporter).reportDeath(policyId);
 }
 
 describe("RiskaPolicyManager", function () {
-  it("opens a policy directly from the holder wallet", async function () {
+  it("opens a policy directly from the holder wallet without an admin gate", async function () {
     const ctx = await deployFixture();
 
     await ctx.manager.connect(ctx.holder).openPolicy([ctx.beneficiaryA.address], [10_000], termsHash);
 
     const policy = await ctx.manager.policies(1);
     expect(policy.holder).to.equal(ctx.holder.address);
+    expect(policy.status).to.equal(STATUS.Active);
+    expect(policy.remainingMinimumPrincipal).to.equal(usdc("30"));
+    expect(await ctx.manager.policyOf(ctx.holder.address)).to.equal(1);
   });
 
   it("opens one policy per verified holder and stores beneficiary shares", async function () {
@@ -78,9 +89,8 @@ describe("RiskaPolicyManager", function () {
 
     const policy = await ctx.manager.policies(policyId);
     expect(policy.holder).to.equal(ctx.holder.address);
-    expect(policy.paidMonths).to.equal(1);
-    expect(policy.paidPrincipal).to.equal(usdc("30"));
-    expect(policy.remainingPrincipal).to.equal(usdc("30"));
+    expect(policy.remainingMinimumPrincipal).to.equal(usdc("30"));
+    expect(policy.remainingExtraPrincipal).to.equal(0);
     expect(await ctx.premiumVault.totalPrincipalLiability()).to.equal(usdc("30"));
     expect(await ctx.token.balanceOf(await ctx.premiumVault.getAddress())).to.equal(usdc("30"));
 
@@ -97,11 +107,15 @@ describe("RiskaPolicyManager", function () {
     const ctx = await deployFixture();
 
     await expect(
-      ctx.manager.connect(ctx.holder).openPolicy([ctx.beneficiaryA.address, ctx.beneficiaryB.address], [8_000, 1_000], termsHash)
+      ctx.manager
+        .connect(ctx.holder)
+        .openPolicy([ctx.beneficiaryA.address, ctx.beneficiaryB.address], [8_000, 1_000], termsHash)
     ).to.be.revertedWith("INVALID_SHARES");
 
     await expect(
-      ctx.manager.connect(ctx.holder).openPolicy([ctx.beneficiaryA.address, ctx.beneficiaryB.address], [10_000], termsHash)
+      ctx.manager
+        .connect(ctx.holder)
+        .openPolicy([ctx.beneficiaryA.address, ctx.beneficiaryB.address], [10_000], termsHash)
     ).to.be.revertedWith("BENEFICIARY_LENGTH");
   });
 
@@ -114,7 +128,7 @@ describe("RiskaPolicyManager", function () {
         .openPolicy([ctx.beneficiaryA.address, ctx.beneficiaryA.address], [5_000, 5_000], termsHash)
     ).to.be.revertedWith("DUPLICATE_BENEFICIARY");
 
-    const tooManyBeneficiaries = Array.from({ length: 9 }, (_, index) => ethers.Wallet.createRandom().address);
+    const tooManyBeneficiaries = Array.from({ length: 9 }, () => ethers.Wallet.createRandom().address);
     const tooManyShares = [1_200, 1_100, 1_100, 1_100, 1_100, 1_100, 1_100, 1_100, 1_100];
 
     await expect(
@@ -126,9 +140,7 @@ describe("RiskaPolicyManager", function () {
     const ctx = await deployFixture();
 
     await expect(
-      ctx.beneficiaryRegistry
-        .connect(ctx.stranger)
-        .setBeneficiaries(1, [ctx.beneficiaryA.address], [10_000])
+      ctx.beneficiaryRegistry.connect(ctx.stranger).setBeneficiaries(1, [ctx.beneficiaryA.address], [10_000])
     ).to.be.revertedWith("ONLY_POLICY_MANAGER");
 
     await expect(
@@ -144,174 +156,181 @@ describe("RiskaPolicyManager", function () {
     ).to.be.revertedWith("ONLY_POLICY_MANAGER");
   });
 
-  it("requires report, dispute window, and Riska Team verification before settlement", async function () {
+  it("allocates deposits to minimum principal first, then extra principal", async function () {
     const ctx = await deployFixture();
-    const policyId = await openPolicy(ctx, [ctx.beneficiaryA.address], [10_000]);
+    const policyId = await openPolicy(ctx);
 
-    await expect(ctx.manager.connect(ctx.stranger).settleVerifiedDeath(policyId)).to.be.revertedWith("DEATH_NOT_VERIFIED");
-
-    await ctx.deathVerifier.connect(ctx.stranger).reportDeath(policyId, evidenceHash);
-    await expect(ctx.deathVerifier.connect(ctx.verifier).verifyDeath(policyId)).to.be.revertedWith("DISPUTE_WINDOW_OPEN");
-    await expect(ctx.manager.connect(ctx.stranger).settleVerifiedDeath(policyId)).to.be.revertedWith("DEATH_NOT_VERIFIED");
-
-    const disputeHash = ethers.keccak256(ethers.toUtf8Bytes("death-dispute"));
-    await ctx.deathVerifier.connect(ctx.beneficiaryA).disputeDeath(policyId, disputeHash);
-    let report = await ctx.deathVerifier.deathReports(policyId);
-    expect(report.status).to.equal(2);
-
-    await network.provider.send("evm_increaseTime", [90 * 24 * 60 * 60]);
-    await network.provider.send("evm_mine");
-
-    await ctx.deathVerifier.connect(ctx.verifier).verifyDeath(policyId);
-    report = await ctx.deathVerifier.deathReports(policyId);
-    expect(report.status).to.equal(3);
-
-    await ctx.manager.connect(ctx.stranger).settleVerifiedDeath(policyId);
-    report = await ctx.deathVerifier.deathReports(policyId);
-    expect(report.status).to.equal(5);
-  });
-
-  it("allows Riska Team to reject a report and lets a new report replace it", async function () {
-    const ctx = await deployFixture();
-    const policyId = await openPolicy(ctx, [ctx.beneficiaryA.address], [10_000]);
-    const secondEvidenceHash = ethers.keccak256(ethers.toUtf8Bytes("second-death-evidence"));
-
-    await ctx.deathVerifier.connect(ctx.stranger).reportDeath(policyId, evidenceHash);
-    await ctx.deathVerifier.connect(ctx.verifier).rejectDeath(policyId);
-
-    let report = await ctx.deathVerifier.deathReports(policyId);
-    expect(report.status).to.equal(4);
-
-    await ctx.deathVerifier.connect(ctx.beneficiaryA).reportDeath(policyId, secondEvidenceHash);
-    report = await ctx.deathVerifier.deathReports(policyId);
-    expect(report.status).to.equal(1);
-    expect(report.evidenceHash).to.equal(secondEvidenceHash);
-  });
-
-  it("only lets the policy manager consume a verified death report", async function () {
-    const ctx = await deployFixture();
-    const policyId = await openPolicy(ctx, [ctx.beneficiaryA.address], [10_000]);
-
-    await ctx.deathVerifier.connect(ctx.stranger).reportDeath(policyId, evidenceHash);
-    await network.provider.send("evm_increaseTime", [90 * 24 * 60 * 60]);
-    await network.provider.send("evm_mine");
-    await ctx.deathVerifier.connect(ctx.verifier).verifyDeath(policyId);
-
-    await expect(ctx.deathVerifier.connect(ctx.stranger).consumeVerifiedDeath(policyId)).to.be.revertedWith(
-      "ONLY_POLICY_MANAGER"
-    );
-  });
-
-  it("pays no beneficiaries when verified death occurs before 12 paid months", async function () {
-    const ctx = await deployFixture();
-    const policyId = await openPolicy(ctx, [ctx.beneficiaryA.address], [10_000]);
-
-    await reportVerifyAndSettleDeath(ctx, policyId);
-
-    expect(await ctx.token.balanceOf(ctx.beneficiaryA.address)).to.equal(0);
-    expect(await ctx.premiumVault.totalPrincipalLiability()).to.equal(0);
-    expect(await ctx.premiumVault.protocolReserveBalance()).to.equal(usdc("30"));
-
-    const policy = await ctx.manager.policies(policyId);
-    expect(policy.status).to.equal(6);
-  });
-
-  it("pays 80% of paid premiums to beneficiaries after the waiting period", async function () {
-    const ctx = await deployFixture();
-    const policyId = await openPolicy(ctx, [ctx.beneficiaryA.address, ctx.beneficiaryB.address], [6_000, 4_000]);
-
-    await ctx.manager.connect(ctx.holder).payPremium(policyId, 11);
-    await reportVerifyAndSettleDeath(ctx, policyId);
-
-    expect(await ctx.token.balanceOf(ctx.beneficiaryA.address)).to.equal(usdc("172.8"));
-    expect(await ctx.token.balanceOf(ctx.beneficiaryB.address)).to.equal(usdc("115.2"));
-    expect(await ctx.premiumVault.totalPrincipalLiability()).to.equal(0);
-    expect(await ctx.premiumVault.protocolReserveBalance()).to.equal(usdc("72"));
-
-    const policy = await ctx.manager.policies(policyId);
-    expect(policy.status).to.equal(5);
-  });
-
-  it("matures after 360 paid months and pays the holder 90 USDC monthly", async function () {
-    const ctx = await deployFixture();
-    const policyId = await openPolicy(ctx, [ctx.beneficiaryA.address], [10_000]);
-
-    await ctx.manager.connect(ctx.holder).payPremium(policyId, 359);
+    await ctx.manager.connect(ctx.holder).deposit(policyId, usdc("10770"));
 
     let policy = await ctx.manager.policies(policyId);
-    expect(policy.status).to.equal(3);
-    expect(policy.paidPrincipal).to.equal(usdc("10800"));
-    expect(policy.remainingPrincipal).to.equal(usdc("10800"));
+    expect(policy.remainingMinimumPrincipal).to.equal(usdc("10800"));
+    expect(policy.remainingExtraPrincipal).to.equal(0);
 
-    await ctx.manager.connect(ctx.holder).activateRetirement(policyId);
-    await ctx.manager.connect(ctx.holder).claimRetirementPayout(policyId);
+    await ctx.manager.connect(ctx.holder).deposit(policyId, usdc("1000"));
 
     policy = await ctx.manager.policies(policyId);
-    expect(policy.status).to.equal(4);
-    expect(policy.payoutsMade).to.equal(1);
-    expect(policy.remainingPrincipal).to.equal(usdc("10710"));
-    expect(await ctx.premiumVault.totalPrincipalLiability()).to.equal(usdc("10710"));
+    expect(policy.remainingMinimumPrincipal).to.equal(usdc("10800"));
+    expect(policy.remainingExtraPrincipal).to.equal(usdc("1000"));
+    expect(await ctx.manager.totalPrincipal(policyId)).to.equal(usdc("11800"));
+    expect(await ctx.premiumVault.totalPrincipalLiability()).to.equal(usdc("11800"));
   });
 
-  it("pays 90% of matured balance to beneficiaries before retirement activation", async function () {
+  it("does not activate payout before the minimum policy is funded", async function () {
     const ctx = await deployFixture();
-    const policyId = await openPolicy(ctx, [ctx.beneficiaryA.address, ctx.beneficiaryB.address], [6_000, 4_000]);
+    const policyId = await openPolicy(ctx);
 
-    await ctx.manager.connect(ctx.holder).payPremium(policyId, 359);
-    await reportVerifyAndSettleDeath(ctx, policyId);
-
-    expect(await ctx.token.balanceOf(ctx.beneficiaryA.address)).to.equal(usdc("5832"));
-    expect(await ctx.token.balanceOf(ctx.beneficiaryB.address)).to.equal(usdc("3888"));
-    expect(await ctx.premiumVault.totalPrincipalLiability()).to.equal(0);
-    expect(await ctx.premiumVault.protocolReserveBalance()).to.equal(usdc("1080"));
+    await expect(ctx.manager.connect(ctx.holder).activatePayout(policyId)).to.be.revertedWith("MINIMUM_NOT_FUNDED");
   });
 
-  it("pays 90% of remaining balance to beneficiaries during retirement payout", async function () {
+  it("activates payout once funded and blocks new deposits afterward", async function () {
     const ctx = await deployFixture();
-    const policyId = await openPolicy(ctx, [ctx.beneficiaryA.address, ctx.beneficiaryB.address], [6_000, 4_000]);
+    const policyId = await openPolicy(ctx);
 
-    await ctx.manager.connect(ctx.holder).payPremium(policyId, 359);
-    await ctx.manager.connect(ctx.holder).activateRetirement(policyId);
-    await ctx.manager.connect(ctx.holder).claimRetirementPayout(policyId);
-    await reportVerifyAndSettleDeath(ctx, policyId);
+    await fundMinimum(ctx, policyId, "1200");
+    await ctx.manager.connect(ctx.holder).activatePayout(policyId);
 
-    expect(await ctx.token.balanceOf(ctx.beneficiaryA.address)).to.equal(usdc("5783.4"));
-    expect(await ctx.token.balanceOf(ctx.beneficiaryB.address)).to.equal(usdc("3855.6"));
-    expect(await ctx.premiumVault.totalPrincipalLiability()).to.equal(0);
-    expect(await ctx.premiumVault.protocolReserveBalance()).to.equal(usdc("1071"));
-  });
-
-  it("keeps the 90% post-maturity formula when inactivity review starts during payout", async function () {
-    const ctx = await deployFixture();
-    const policyId = await openPolicy(ctx, [ctx.beneficiaryA.address, ctx.beneficiaryB.address], [6_000, 4_000]);
-
-    await ctx.manager.connect(ctx.holder).payPremium(policyId, 359);
-    await ctx.manager.connect(ctx.holder).activateRetirement(policyId);
-    await ctx.manager.connect(ctx.holder).claimRetirementPayout(policyId);
-    await ctx.manager.connect(ctx.owner).flagInactiveReview(policyId);
-    await reportVerifyAndSettleDeath(ctx, policyId);
-
-    expect(await ctx.token.balanceOf(ctx.beneficiaryA.address)).to.equal(usdc("5783.4"));
-    expect(await ctx.token.balanceOf(ctx.beneficiaryB.address)).to.equal(usdc("3855.6"));
-    expect(await ctx.premiumVault.totalPrincipalLiability()).to.equal(0);
-    expect(await ctx.premiumVault.protocolReserveBalance()).to.equal(usdc("1071"));
-  });
-
-  it("enforces monthly payout cadence after the first retirement claim", async function () {
-    const ctx = await deployFixture();
-    const policyId = await openPolicy(ctx, [ctx.beneficiaryA.address], [10_000]);
-
-    await ctx.manager.connect(ctx.holder).payPremium(policyId, 359);
-    await ctx.manager.connect(ctx.holder).activateRetirement(policyId);
-    await ctx.manager.connect(ctx.holder).claimRetirementPayout(policyId);
-
-    await expect(ctx.manager.connect(ctx.holder).claimRetirementPayout(policyId)).to.be.revertedWith("PAYOUT_NOT_READY");
-
-    await network.provider.send("evm_increaseTime", [30 * 24 * 60 * 60]);
-    await network.provider.send("evm_mine");
-
-    await ctx.manager.connect(ctx.holder).claimRetirementPayout(policyId);
     const policy = await ctx.manager.policies(policyId);
-    expect(policy.payoutsMade).to.equal(2);
+    expect(policy.status).to.equal(STATUS.PayoutActive);
+    expect(policy.monthlyPayoutAmount).to.equal(usdc("100"));
+
+    await expect(ctx.manager.connect(ctx.holder).deposit(policyId, usdc("1"))).to.be.revertedWith("DEPOSITS_CLOSED");
+  });
+
+  it("pays monthly over 120 claims and sends final dust on the last claim", async function () {
+    const ctx = await deployFixture();
+    const policyId = await openPolicy(ctx);
+
+    await fundMinimum(ctx, policyId, "0.000001");
+    await ctx.manager.connect(ctx.holder).activatePayout(policyId);
+
+    let policy = await ctx.manager.policies(policyId);
+    expect(policy.monthlyPayoutAmount).to.equal(usdc("90"));
+
+    for (let i = 0; i < 119; i++) {
+      if (i > 0) {
+        await advance(PAYMENT_PERIOD);
+      }
+      await ctx.manager.connect(ctx.holder).claimMonthly(policyId);
+    }
+
+    expect(await ctx.manager.totalPrincipal(policyId)).to.equal(usdc("90") + 1n);
+
+    await advance(PAYMENT_PERIOD);
+    const before = await ctx.token.balanceOf(ctx.holder.address);
+    await ctx.manager.connect(ctx.holder).claimMonthly(policyId);
+    const after = await ctx.token.balanceOf(ctx.holder.address);
+
+    expect(after - before).to.equal(usdc("90") + 1n);
+    policy = await ctx.manager.policies(policyId);
+    expect(policy.status).to.equal(STATUS.Closed);
+    expect(await ctx.premiumVault.totalPrincipalLiability()).to.equal(0);
+  });
+
+  it("lets the holder claim all remaining principal with no fee", async function () {
+    const ctx = await deployFixture();
+    const policyId = await openPolicy(ctx);
+
+    await fundMinimum(ctx, policyId, "1200");
+
+    const before = await ctx.token.balanceOf(ctx.holder.address);
+    await ctx.manager.connect(ctx.holder).claimAll(policyId);
+    const after = await ctx.token.balanceOf(ctx.holder.address);
+
+    expect(after - before).to.equal(usdc("12000"));
+    expect(await ctx.premiumVault.totalPrincipalLiability()).to.equal(0);
+    expect(await ctx.premiumVault.protocolReserveBalance()).to.equal(0);
+
+    const policy = await ctx.manager.policies(policyId);
+    expect(policy.status).to.equal(STATUS.Closed);
+  });
+
+  it("only configured beneficiaries can report death", async function () {
+    const ctx = await deployFixture();
+    const policyId = await openPolicy(ctx);
+
+    await expect(ctx.manager.connect(ctx.stranger).reportDeath(policyId)).to.be.revertedWith("ONLY_BENEFICIARY");
+
+    await advance(DEATH_REPORT_DELAY);
+    await expect(ctx.manager.connect(ctx.stranger).reportDeath(policyId)).to.be.revertedWith("ONLY_BENEFICIARY");
+
+    await ctx.manager.connect(ctx.beneficiaryA).reportDeath(policyId);
+    const notice = await ctx.manager.deathNotices(policyId);
+    expect(notice.active).to.equal(true);
+  });
+
+  it("does not allow beneficiary death reports during the first 12 months", async function () {
+    const ctx = await deployFixture();
+    const policyId = await openPolicy(ctx);
+
+    await expect(ctx.manager.connect(ctx.beneficiaryA).reportDeath(policyId)).to.be.revertedWith("POLICY_TOO_NEW");
+  });
+
+  it("does not allow death claims before the 12-month no-interaction window ends", async function () {
+    const ctx = await deployFixture();
+    const policyId = await openPolicy(ctx);
+
+    await reportAfterPolicyAge(ctx, policyId);
+    await expect(ctx.manager.connect(ctx.beneficiaryA).claimDeath(policyId)).to.be.revertedWith("DEATH_CLAIM_NOT_READY");
+  });
+
+  it("cancels a pending death report when the holder interacts", async function () {
+    let ctx = await deployFixture();
+    let policyId = await openPolicy(ctx);
+    await reportAfterPolicyAge(ctx, policyId);
+    await ctx.manager.connect(ctx.holder).heartbeat(policyId);
+    expect((await ctx.manager.deathNotices(policyId)).active).to.equal(false);
+
+    ctx = await deployFixture();
+    policyId = await openPolicy(ctx);
+    await reportAfterPolicyAge(ctx, policyId);
+    await ctx.manager.connect(ctx.holder).deposit(policyId, usdc("1"));
+    expect((await ctx.manager.deathNotices(policyId)).active).to.equal(false);
+
+    ctx = await deployFixture();
+    policyId = await openPolicy(ctx);
+    await reportAfterPolicyAge(ctx, policyId);
+    await ctx.manager.connect(ctx.holder).updateBeneficiaries(policyId, [ctx.beneficiaryB.address], [10_000]);
+    expect((await ctx.manager.deathNotices(policyId)).active).to.equal(false);
+    expect(await ctx.manager.beneficiaryAt(policyId, 0)).to.deep.equal([ctx.beneficiaryB.address, 10_000n]);
+
+    ctx = await deployFixture();
+    policyId = await openPolicy(ctx);
+    await fundMinimum(ctx, policyId, "1200");
+    await ctx.manager.connect(ctx.holder).activatePayout(policyId);
+    await reportAfterPolicyAge(ctx, policyId);
+    await ctx.manager.connect(ctx.holder).claimMonthly(policyId);
+    expect((await ctx.manager.deathNotices(policyId)).active).to.equal(false);
+
+    ctx = await deployFixture();
+    policyId = await openPolicy(ctx);
+    await fundMinimum(ctx, policyId, "1200");
+    await reportAfterPolicyAge(ctx, policyId);
+    await ctx.manager.connect(ctx.holder).claimAll(policyId);
+    expect((await ctx.manager.deathNotices(policyId)).active).to.equal(false);
+  });
+
+  it("pays death claims with 20% retained only from remaining minimum principal", async function () {
+    const ctx = await deployFixture();
+    const policyId = await openPolicy(ctx, [ctx.beneficiaryA.address, ctx.beneficiaryB.address], [6_000, 4_000]);
+
+    await fundMinimum(ctx, policyId, "1200");
+    await ctx.manager.connect(ctx.holder).activatePayout(policyId);
+    await ctx.manager.connect(ctx.holder).claimMonthly(policyId);
+
+    let policy = await ctx.manager.policies(policyId);
+    expect(policy.remainingMinimumPrincipal).to.equal(usdc("10710"));
+    expect(policy.remainingExtraPrincipal).to.equal(usdc("1190"));
+
+    await reportAfterPolicyAge(ctx, policyId, ctx.beneficiaryA);
+    await advance(DEATH_REPORT_DELAY);
+    await ctx.manager.connect(ctx.beneficiaryB).claimDeath(policyId);
+
+    expect(await ctx.token.balanceOf(ctx.beneficiaryA.address)).to.equal(usdc("5854.8"));
+    expect(await ctx.token.balanceOf(ctx.beneficiaryB.address)).to.equal(usdc("3903.2"));
+    expect(await ctx.premiumVault.totalPrincipalLiability()).to.equal(0);
+    expect(await ctx.premiumVault.protocolReserveBalance()).to.equal(usdc("2142"));
+
+    policy = await ctx.manager.policies(policyId);
+    expect(policy.status).to.equal(STATUS.DeathSettled);
   });
 });

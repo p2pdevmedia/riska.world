@@ -97,7 +97,6 @@ async function main() {
   const premiumVault = await deployContract("RiskaPremiumVault", [mockUsdc.address, beneficiaryRegistry.address]);
   const policyManager = await deployContract("RiskaPolicyManager", [
     beneficiaryRegistry.address,
-    deathVerifier.address,
     premiumVault.address
   ]);
   const thirtyYearPolicy = await deployContract("RiskaThirtyYearPolicy", [mockUsdc.address, verifierAddress]);
@@ -106,10 +105,6 @@ async function main() {
     beneficiaryRegistrySetPolicyManager: await runTransaction(
       "BeneficiaryRegistry.setPolicyManager",
       beneficiaryRegistry.instance.setPolicyManager(policyManager.address)
-    ),
-    deathVerifierSetPolicyManager: await runTransaction(
-      "DeathVerifier.setPolicyManager",
-      deathVerifier.instance.setPolicyManager(policyManager.address)
     ),
     premiumVaultSetPolicyManager: await runTransaction(
       "PremiumVault.setPolicyManager",

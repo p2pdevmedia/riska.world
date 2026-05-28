@@ -1,6 +1,6 @@
 # Riska Agent Review Map
 
-**Date:** May 26, 2026  
+**Date:** May 27, 2026
 **Purpose:** Give AI agents, auditors, and reviewers a fast map of the current site, contracts, and review targets.
 
 ## 1. Repository Entry Points
@@ -10,29 +10,22 @@ Core project files:
 - `README.md`: high-level project overview.
 - `docs/riska-whitepaper-v2.md`: grant-oriented whitepaper source.
 - `docs/productive-development-plan.md`: captured product decisions, calculations, risks, and roadmap.
-- `contracts/RiskaThirtyYearPolicy.sol`: current Solidity MVP contract.
-- `contracts/RiskaPolicyMath.sol`: production-aligned payout math for the 12-month waiting period, 80% pre-maturity beneficiary formula, 90% post-maturity beneficiary formula, and 100% maturity principal model.
-- `contracts/RiskaPolicyManager.sol`: first production-directed policy manager using the math library with one policy per holder, multiple beneficiaries, premium payment, maturity activation, retirement payouts, inactivity review, and verified-death settlement.
+- `contracts/RiskaPolicyMath.sol`: source of truth for flexible policy constants and death-fee math.
+- `contracts/RiskaPolicyManager.sol`: active policy lifecycle manager for flexible deposits, payout activation, holder claims, heartbeat, beneficiary death notice, and death claim.
 - `contracts/RiskaBeneficiaryRegistry.sol`: beneficiary storage module with share validation, duplicate protection, and manager-only writes.
-- `contracts/RiskaDeathVerifier.sol`: death-report workflow with reporter submission, evidence hash, 90-day dispute window, Riska Team verification/rejection, and manager-only consumption.
-- `contracts/RiskaPremiumVault.sol`: USDC custody module with principal liability accounting, protocol reserve tracking for retained formula balances, and manager-only premium/payout operations.
-- `test/RiskaPolicyMath.test.js`: Hardhat tests for the base Riska 30 payout rules.
-- `test/RiskaPolicyManager.test.js`: Hardhat tests for policy opening, beneficiary shares, death reports, dispute windows, settlement, maturity, and payout cadence.
+- `contracts/RiskaPremiumVault.sol`: USDC custody module with principal liability accounting, protocol reserve tracking, and manager-only payout operations.
+- `contracts/RiskaDeathVerifier.sol`: legacy verifier/oracle experiment; no longer used by the main beneficiary claim flow.
+- `contracts/RiskaThirtyYearPolicy.sol`: historical MVP contract retained for reference.
+- `test/RiskaPolicyMath.test.js`: Hardhat tests for constants, monthly payout estimate, death payout math, and beneficiary share validation.
+- `test/RiskaPolicyManager.test.js`: Hardhat tests for opening, deposits, payout activation, monthly claims, claim-all, death notice, heartbeat cancellation, and death settlement.
+- `lib/web3/riska-testnet.ts`: browser wallet and viem helpers for testnet policy issuance and actions.
 - `lib/contracts.ts`: contract metadata and documentation slugs used by the frontend.
 - `lib/i18n.ts`: bilingual product, whitepaper, and contract copy.
-- `components/MiniAppProvider.tsx`: World MiniKit provider wrapper for the Next.js app.
+- `components/RiskaEnrollmentHome.tsx`: main enrollment and testnet policy dashboard.
 - `components/WalletAuth.tsx`: Mini App Wallet Auth entry point with browser-wallet fallback.
 - `components/WorldIdGate.tsx`: IDKit proof-of-human gate for the one-policy-per-human flow.
-- `app/api/minikit/nonce/route.ts`: backend nonce issuer for SIWE Wallet Auth.
-- `app/api/minikit/complete-siwe/route.ts`: backend SIWE verification endpoint for MiniKit Wallet Auth.
-- `app/api/world-id/rp-signature/route.ts`: server-side RP signature issuer for IDKit proof requests.
 - `app/api/world-id/verify-policy-human/route.ts`: server-side World ID proof verification and nullifier reservation.
-- `lib/world/idkit.ts`: client-safe IDKit constants and signal normalization.
-- `lib/world/policy-human-registry.ts`: demo nullifier registry used to model one human per policy before database persistence.
-- `lib/world/minikit-auth.ts`: shared MiniKit/Wallet Auth constants.
-- `lib/world/wallet-session.ts`: signed `HttpOnly` Wallet Auth session helper used to bind World ID proofs to the authenticated wallet.
-- `lib/web3/metamask.ts`: browser wallet fallback helper targeting World Chain.
-- `prisma/schema.prisma`: placeholder database model.
+- `lib/world/policy-human-registry.ts`: demo nullifier registry used before database persistence.
 
 Build command:
 
@@ -47,40 +40,31 @@ npm run contracts:compile
 npm run contracts:test
 ```
 
-Current build status on May 26, 2026: passes.
-Current contract test status on May 26, 2026: passes.
+Current build status on May 27, 2026: passes.
+Current contract test status on May 27, 2026: passes.
 
 ## 2. Site Map
 
 ### `/`
 
-File:
+Files:
 
 - `app/page.tsx`
-
-Main sections:
-
 - `components/RiskaEnrollmentHome.tsx`
-- `components/WalletAuth.tsx`
-- `components/WorldIdGate.tsx`
-- `components/LanguageToggle.tsx`
 
 Current purpose:
 
 - Mobile-first Riska enrollment wizard and product entry point.
-- Functional local demo flow for identity reservation, beneficiary percentages, quote review, and terms/payment readiness.
-- Mini App Wallet Auth entry point with backend SIWE verification.
-- World ID / one-human-one-policy gate surfaced inside the enrollment flow.
-- Product thesis and protocol contract links.
+- Wallet Auth, World ID reservation, beneficiary setup, quote review, and terms/payment readiness.
+- World Chain Sepolia issuance using the active `RiskaPolicyManager`.
+- Testnet dashboard for minimum funded amount, extra principal, monthly payout estimate, heartbeat, payout activation, monthly claim, claim-all, beneficiary report, and beneficiary claim.
 
 Review focus:
 
-- Copy must match the current production model: 30 USDC/month, 12-month waiting period, 80% beneficiary payout before maturity, 100% holder payout at maturity, and 90% beneficiary payout after maturity or during retirement payout.
-- MiniKit is installed globally, but production still needs `NEXT_PUBLIC_WORLD_APP_ID` from the World Developer Portal.
-- Wallet Auth is verified server-side and now writes a signed `HttpOnly` wallet session for World ID binding; full account/session persistence is still pending.
-- World ID uses IDKit proof-of-human requests, backend RP signatures, backend `/api/v4/verify/{rp_id}` verification, wallet-bound signal hash checks, and nullifier reservation for the one-policy-per-human flow.
-- Production still needs persistent database storage for nullifiers; the current registry is an in-process demo model for the grant flow.
-- No real policy creation transaction yet.
+- Copy must match the current flexible model: any verified human can open, minimum is 10,800 USDC, extra principal is not fee-bearing, holder actions cancel death reports, and beneficiary payout waits 12 months after report.
+- World ID uses app/backend verification; current persistence remains demo/in-process until a database is added.
+- Testnet MockUSDC is not real USDC and has no production value.
+- Real-money production still needs legal clearance, external audit, multisig/timelock, and monitoring.
 
 ### `/whitepaper`
 
@@ -90,14 +74,10 @@ Files:
 - `components/WhitepaperContent.tsx`
 - `public/whitepapers/riska-whitepaper-v2.pdf`
 
-Current purpose:
-
-- Displays whitepaper content and downloadable PDF.
-
 Review focus:
 
+- Keep the markdown source and PDF synchronized.
 - Keep legal disclaimers aligned with actual product status.
-- Update PDF whenever whitepaper source changes.
 
 ### `/docs`
 
@@ -106,13 +86,9 @@ Files:
 - `app/docs/page.tsx`
 - `components/DocsContent.tsx`
 
-Current purpose:
-
-- Documentation landing page.
-
 Review focus:
 
-- Should link to product plan, contract map, production deployment plan, yield strategy disclosures, and audit scope.
+- Should point reviewers toward the product plan, contract map, deployment plan, risk disclosures, and audit scope.
 
 ### `/contracts/[slug]`
 
@@ -122,58 +98,13 @@ Files:
 - `components/ContractDetailContent.tsx`
 - `lib/contracts.ts`
 
-Current slugs:
-
-- `/contracts/riska-thirty-year-policy`
-- `/contracts/policy-manager`
-- `/contracts/death-verifier`
-- `/contracts/premium-vault`
-
 Review focus:
 
-- `riska-thirty-year-policy` includes local source.
-- Other listed contracts have addresses but source is not included here.
-- Verify every listed mainnet address before using in production or grant materials.
+- Verify deployed testnet addresses after each redeploy.
 - Do not present pending or unverified modules as audited production contracts.
+- Mark `RiskaDeathVerifier` and `RiskaThirtyYearPolicy` as legacy/reference where they appear.
 
 ## 3. Current Contract Map
-
-### `RiskaThirtyYearPolicy`
-
-File:
-
-- `contracts/RiskaThirtyYearPolicy.sol`
-
-Current capabilities:
-
-- Plan creation.
-- Single-beneficiary policy opening.
-- Premium collection.
-- Premium allocation into retirement balance and fee balance.
-- Grace period and lapsed status.
-- Single verifier death settlement.
-- Maturity activation.
-- Programmed retirement payouts.
-- Lapsed policy surrender.
-- Fee withdrawal.
-- Risk reserve funding.
-
-Current critical limitations:
-
-- Single owner address.
-- Single claim verifier.
-- No multisig or timelock.
-- No upgradeability implementation yet.
-- World ID gate exists in the app via IDKit; the current testnet contract opens directly from the holder wallet after app-level verification.
-- No multi-beneficiary percentages.
-- No separate vault module.
-- No external audit.
-- No contract test framework in repo.
-- Uses `360 * 30 days` as a 30-year term, not calendar years.
-- Uses a minimal ERC20 interface instead of a hardened SafeERC20 wrapper.
-- `refreshPolicyStatus` mutates state.
-- Non-payment currently means lapse, not death; future death logic must not infer death from missed payments alone.
-- Current contract does not implement the final 12-month waiting period, 80% beneficiary payout, 90% post-maturity beneficiary payout, or yield strategy accounting.
 
 ### `RiskaPolicyMath`
 
@@ -183,21 +114,18 @@ File:
 
 Current capabilities:
 
-- Defines 30 USDC monthly premium using 6-decimal USDC accounting.
-- Defines 12-month waiting period.
-- Defines 360 contribution months and 120 payout months.
-- Computes 10,800 USDC full-term principal.
-- Computes 90 USDC monthly holder payout at maturity.
-- Computes no beneficiary payout before 12 paid months.
-- Computes 80% of paid premiums from month 12 until maturity.
-- Computes 90% of matured or remaining balance after maturity.
+- Defines `MINIMUM_MONTHLY_UNIT = 30 USDC`.
+- Defines `MINIMUM_POLICY_MONTHS = 360`.
+- Defines `MINIMUM_POLICY_PRINCIPAL = 10,800 USDC`.
+- Defines `PAYOUT_MONTHS = 120`.
+- Defines death payout as 80% of remaining minimum principal plus 100% of remaining extra principal.
+- Defines retained death fee as 20% of remaining minimum principal.
 - Validates beneficiary share percentages sum to 100%.
 
 Review focus:
 
-- Treat this as the source of truth for policy math until the full `RiskaPolicyManager` is implemented.
-- Extend tests before changing any payout constant.
 - Keep USDC decimal handling explicit.
+- Extend tests before changing any payout or fee constant.
 
 ### `RiskaPolicyManager`
 
@@ -207,36 +135,37 @@ File:
 
 Current capabilities:
 
-- Uses `Ownable`, `Pausable`, and `ReentrancyGuard`; token movement is delegated to `RiskaPremiumVault`.
-- Uses `RiskaPolicyMath` for the base product formula.
-- Opens policies directly from the holder wallet after the app-level World ID and beneficiary steps are complete.
-- Enforces one policy per holder.
-- Writes beneficiary splits through `RiskaBeneficiaryRegistry`.
-- Collects 30 USDC through `RiskaPremiumVault` at policy opening and lets the holder pay additional monthly periods.
-- Marks the policy as matured at 360 paid months.
-- Activates 120-month retirement payout at 90 USDC per claim.
-- Enforces 30-day cadence between retirement payout claims after the first claim.
-- Lets the owner flag inactivity review without settling death automatically.
-- Consumes verified death reports from `RiskaDeathVerifier` before settlement.
-- Coordinates 0 before 12 paid months, 80% before maturity after month 12, and 90% after maturity or during payout.
+- Opens one policy per holder after the app-level World ID and beneficiary steps are complete.
+- Collects the first 30 USDC testnet unit at opening.
+- Allows holder deposits before payout activation.
+- Allocates deposits first to `remainingMinimumPrincipal`, then to `remainingExtraPrincipal`.
+- Activates payout after the minimum is fully funded.
+- Snapshots monthly payout as total principal divided by 120.
+- Pays monthly claims with final dust on the last claim.
+- Allows claim-all with no holder fee.
+- Allows heartbeat without withdrawing funds.
+- Allows holder beneficiary updates while active or in payout.
+- Cancels pending death notices on holder actions.
+- Allows configured beneficiaries to report death after the policy is at least `12 * 30 days` old.
+- Allows death claim only after another `12 * 30 days` with no holder interaction.
+- Settles death through `RiskaPremiumVault` without `RiskaDeathVerifier`.
 
 Current limitations:
 
-- World ID verification is enforced in the app/backend flow, not by an owner approval transaction in this testnet contract.
-- Governance is still a single owner, not multisig/timelock.
+- World ID verification is enforced in the app/backend flow, not directly by this testnet contract.
+- Governance is still a single owner for pause, not multisig/timelock.
 - Contract is not upgradeable yet.
 - No yield strategy accounting yet.
-- No legal terms registry yet beyond a `termsHash`.
-- `RiskaDeathVerifier` still uses a single Riska verifier address, not multi-sig or multi-oracle quorum.
-- Inactivity review is manual and does not preserve detailed reason metadata.
-- There is no external human audit.
+- No legal terms registry yet beyond `termsHash`.
+- No external human audit.
 
 Review focus:
 
-- Confirm total-principal liability accounting across death, maturity, and payout flows.
-- Confirm beneficiary dust handling routes remainder safely to the final beneficiary.
-- Confirm the manager remains aligned with `RiskaPolicyMath` before adding yield or upgrades.
-- Expand tests before moving funds into external protocols.
+- Confirm vault liability accounting across deposits, holder payouts, claim-all, and death settlement.
+- Confirm no unauthorized beneficiary report or claim.
+- Confirm every holder action cancels the pending death notice.
+- Confirm death fee never touches extra principal.
+- Confirm dust routing for monthly payouts and beneficiary splits.
 
 ### `RiskaBeneficiaryRegistry`
 
@@ -255,33 +184,8 @@ Current capabilities:
 Review focus:
 
 - Decide whether eight beneficiaries is the desired production cap.
-- Decide whether duplicate beneficiaries should stay forbidden or be merged in the UI.
-- Add beneficiary update delay and notification rules before production.
-
-### `RiskaDeathVerifier`
-
-File:
-
-- `contracts/RiskaDeathVerifier.sol`
-
-Current capabilities:
-
-- Allows a reporter to submit a death report for a policy with an evidence hash.
-- Opens a 90-day dispute window for every report.
-- Allows anyone to dispute during the window with a dispute evidence hash.
-- Allows the Riska verifier to verify after the dispute window closes.
-- Allows the Riska verifier to reject a report.
-- Allows rejected reports to be replaced by a new report.
-- Allows only the configured policy manager to consume a verified report.
-- Marks consumed reports as settled so they cannot be reused.
-
-Review focus:
-
-- Decide whether any wallet can report, or whether production needs allowlisted reporters.
-- Decide how many disputes should be stored; current version emits dispute events but stores only the report.
-- Replace the single verifier with multisig, timelock, or multi-oracle quorum before production funds.
-- Decide whether 90 days should be a constant or configurable via governance.
-- Add off-chain evidence retention and privacy process before death evidence is accepted.
+- Decide whether beneficiary updates should have a delay before production.
+- Decide whether beneficiaries should receive notifications off-chain.
 
 ### `RiskaPremiumVault`
 
@@ -292,10 +196,10 @@ File:
 Current capabilities:
 
 - Holds USDC separately from the policy manager.
-- Allows only the configured policy manager to collect premiums and release payouts.
+- Allows only the configured policy manager to collect deposits and release payouts.
 - Tracks `totalPrincipalLiability`.
-- Tracks `protocolReserveBalance` when policy formulas retain part of contributed principal.
-- Pays holders for retirement withdrawals.
+- Tracks `protocolReserveBalance` from retained death fees.
+- Pays holders for monthly claims and claim-all.
 - Pays beneficiaries by reading splits from `RiskaBeneficiaryRegistry`.
 
 Review focus:
@@ -305,93 +209,59 @@ Review focus:
 - Add strategy caps and withdrawal paths before connecting yield protocols.
 - Confirm liability accounting under every future module interaction.
 
-Functions to review:
+### `RiskaDeathVerifier`
 
-- `createPlan`
-- `openPolicy`
-- `payPremium`
-- `activateRetirement`
-- `claimRetirementPayout`
-- `reportDeath`
-- `surrenderLapsedPolicy`
-- `refreshPolicyStatus`
-- `fundRiskReserve`
-- `withdrawFees`
-- `availableRiskLiquidity`
+File:
 
-Security review targets:
+- `contracts/RiskaDeathVerifier.sol`
 
-- Access control.
-- Reentrancy.
-- ERC20 transfer assumptions.
-- Accounting invariants.
-- Payout rounding.
-- Time boundary conditions.
-- Maturity and grace period edge cases.
-- Death claim replay or double settlement.
-- Admin key compromise.
-- Upgrade storage safety.
-- Beneficiary percentage rounding and dust.
-- Policy status transitions.
+Status:
 
-## 4. Target Contract Architecture
+- Legacy/reference only for the current flexible policy.
+- Not passed into `RiskaPolicyManager`.
+- Not required to settle beneficiary claims.
 
-Recommended production modules:
+Review focus:
 
-- `RiskaToken`: RISKA governance token.
-- `RiskaPolicyManager`: policy lifecycle, policy ids, plan ids, and status coordination.
-- `WorldIdGate`: one verified human per policy.
-- `BeneficiaryRegistry`: multiple beneficiaries and percentages.
-- `PolicyTermsRegistry`: legal document hash and version registry.
-- `DeathVerifier`: death reports, evidence hashes, dispute windows, and verifier roles.
-- `PremiumVault`: USDC custody, protected principal liabilities, yield reserves, fees, and payout authorization.
-- `YieldStrategyManager`: controlled deployment of funds into allowlisted yield protocols.
-- `RiskController`: exposure caps, liquidity thresholds, health checks, and loss accounting.
-- `GovernanceTimelock`: delayed upgrades and parameter changes.
-- `EmergencyPause`: scoped pause controls.
-- `PaymentAdapter`: WLD and fiat on-ramp conversion path into USDC.
+- Remove from production-critical docs and UI if no longer needed.
+- Keep only if useful as a future optional evidence/review module.
 
-## 5. Product Rules To Validate
+## 4. Product Rules To Validate
 
 Base model:
 
-- Premium: 30 USDC per month.
-- Term: 360 months.
-- Total scheduled contribution: 10,800 USDC.
-- Retirement payout duration: 120 months.
-- Retirement payout if fully paid: 90 USDC per month.
-- No beneficiary payout before 12 paid months.
-- Beneficiary payout from month 12 to maturity: 80% of paid premiums.
-- Beneficiary payout after maturity before retirement activation: 90% of matured balance.
-- Beneficiary payout after retirement activation: 90% of remaining retirement balance.
-- Inactivity review starts after 12 months without premium payment or without monthly payout claim, but death settlement still requires a death report and Riska Team verification.
+- Minimum policy principal: 10,800 USDC.
+- Minimum unit: 30 USDC.
+- Payout duration: 120 months.
+- Deposits before payout activation only.
+- Extra principal increases future monthly payout and is not fee-bearing.
+- Holder monthly payout has no fee.
+- Holder claim-all has no fee.
+- Death report can only be made by a configured beneficiary.
+- Death report is allowed only after policy age reaches `12 * 30 days`.
+- Death claim requires another `12 * 30 days` with no holder interaction.
+- Any holder action cancels a pending death report.
+- Death fee is 20% of remaining minimum principal only.
 - Multiple beneficiaries must sum to 100%.
 - RISKA token supply is exactly 100,000, has 0 decimals, and is transferable from day 1.
-- Governance starts centralized because the owner/foundation controls all RISKA tokens.
-- Production target is World Chain mainnet.
 
 Review questions:
 
-- Are protocol fees funded only from yield/spread, external fees, treasury subsidy, or sponsors?
-- Does the contract guarantee 100% return only if all 360 premiums were paid?
-- Is the 80% beneficiary payout based only on paid principal, or paid principal plus some yield share?
-- What happens if a holder overpays, underpays, pays late, or skips payments?
-- What happens to dust from division across beneficiaries and monthly payouts?
-- Can a beneficiary be a contract wallet?
-- Can the holder be a smart account?
-- Can a policy be migrated after an upgrade?
+- Should claim-all remain available immediately after minimum funding in every jurisdiction?
+- Should future versions allow deposits after payout activation?
+- Should beneficiary updates be delayed or notify old beneficiaries?
+- What happens if a holder wants to migrate a policy after an upgrade?
 - What protocols can receive user funds for yield?
 - What is the loss waterfall if a yield strategy suffers a loss?
-- What is the emergency withdrawal path if a strategy becomes risky or illiquid?
 
-## 6. Grant / Production Boundaries
+## 5. Grant / Production Boundaries
 
 For Spark Grant and the production Mini App:
 
 - Build for World Chain mainnet production, while keeping a clearly labeled simulation/training mode.
 - Use backend verification for World ID, wallet auth, payment, and any sensitive Mini App command result.
-- Show policy quote, World ID verification, beneficiary setup, premium split, death verification, maturity, and payout.
-- Capture metrics: verified starts, completed quotes, beneficiary setup completion, simulated policy opens, return dashboard visits, trust feedback.
+- Show policy quote, World ID verification, beneficiary setup, deposit allocation, heartbeat, beneficiary death notice, and payout.
+- Capture metrics: verified starts, completed quotes, beneficiary setup completion, testnet policy opens, return dashboard visits, and trust feedback.
 
 For real-money launch:
 
@@ -401,7 +271,7 @@ For real-money launch:
 - Requires incident response plan.
 - Requires monitoring dashboard.
 
-## 7. World Developer Portal Setup
+## 6. World Developer Portal Setup
 
 Current portal objects created through the World Developer Portal MCP:
 
@@ -418,26 +288,3 @@ Current portal objects created through the World Developer Portal MCP:
 
 Local environment values were written to `.env.local`, which is ignored by git.
 The RP signing private key must remain server-only and must never be committed.
-
-## 8. Suggested Agent Review Checklist
-
-Agents reviewing this repo should produce findings with:
-
-- Severity.
-- File and line reference.
-- Impact.
-- Exploit or failure scenario.
-- Suggested fix.
-- Test that should fail before the fix and pass after the fix.
-
-Priority areas:
-
-- Smart contract accounting.
-- Smart contract access control.
-- Policy lifecycle edge cases.
-- Death verification and dispute flow.
-- Upgradeability and governance.
-- Frontend status/copy accuracy.
-- World ID integration plan.
-- Privacy and data retention.
-- Yield strategy accounting, caps, and failure modes.
