@@ -32,5 +32,53 @@
     "recipient": "0x1a3DB3E167Acc8451Ed1af92615EA2e97b8CC5ff",
     "amount": "20000",
     "transactionHash": "0x6b7fdf680990cc1df2970662d497db44675112e755415f3c9c7dca6fe2b97e18"
+  },
+  "testAuxiliaryTokens": {
+    "mockBtc": {
+      "address": "0x6f6b5eC2D2639C6773ED5CE957093dB4736E5f6D",
+      "decimals": 8,
+      "name": "Mock Bitcoin",
+      "symbol": "mBTC",
+      "transactionHash": "0xe9e34506da4ca56aabedce90e2b0119737ccb1e3456ea706de0e2e35e8a7fa25",
+      "mintTransactionHash": "0x016b0c73b4c3db7ba4aea66510e9ee46ef8c7b764f784d19375110b4aafb5499"
+    },
+    "mockEth": {
+      "address": "0x620081C44E8b1f761d8295cE1515710B3fA7aE25",
+      "decimals": 18,
+      "name": "Mock Ether",
+      "symbol": "mETH",
+      "transactionHash": "0x0586acab3a218c85f9df8d0866309135216c3d9e659e1c831cff531bc7bb13fb",
+      "mintTransactionHash": "0xa626df467984eca3381b0e33e0464ca38af0fd6476e67fc6fcef3d47395eeb13"
+    },
+    "mockSol": {
+      "address": "0xE4fa8cDDE2fF44946559e2A9228C42EC23275E26",
+      "decimals": 9,
+      "name": "Mock Solana",
+      "symbol": "mSOL",
+      "transactionHash": "0xaf2c6e3779cf8bdfa116869d2241eda0a4cc7bc0cbd240892f49b7eb12e6d6ad",
+      "mintTransactionHash": "0x4405adf71c20b822952e20c499d37dd62c7ebadc7e47d6e81ed9603e0ac4c71a"
+    }
+  },
+  "testAuxiliaryMint": {
+    "amount": "20000",
+    "mintedAt": "2026-05-28T12:45:18.121Z",
+    "recipient": "0x1a3DB3E167Acc8451Ed1af92615EA2e97b8CC5ff",
+    "tokens": {
+      "mockBtc": {
+        "address": "0x6f6b5eC2D2639C6773ED5CE957093dB4736E5f6D",
+        "mintTransactionHash": "0x016b0c73b4c3db7ba4aea66510e9ee46ef8c7b764f784d19375110b4aafb5499",
+        "symbol": "mBTC"
+      },
+      "mockEth": {
+        "address": "0x620081C44E8b1f761d8295cE1515710B3fA7aE25",
+        "mintTransactionHash": "0xa626df467984eca3381b0e33e0464ca38af0fd6476e67fc6fcef3d47395eeb13",
+        "symbol": "mETH"
+      },
+      "mockSol": {
+        "address": "0xE4fa8cDDE2fF44946559e2A9228C42EC23275E26",
+        "mintTransactionHash": "0x4405adf71c20b822952e20c499d37dd62c7ebadc7e47d6e81ed9603e0ac4c71a",
+        "symbol": "mSOL"
+      }
+    }
   }
 }
