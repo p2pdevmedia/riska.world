@@ -84,22 +84,17 @@ async function main() {
     throw new Error("Deployer has 0 World Chain Sepolia ETH. Fund it from https://www.alchemy.com/faucets/world-chain-sepolia and rerun this script.");
   }
 
-  const verifierAddress = process.env.RISKA_DEATH_VERIFIER_ADDRESS || deployerAddress;
   const mockUsdcMintRecipient = process.env.MOCK_USDC_MINT_TO || deployerAddress;
   const mockUsdcMintAmount = process.env.MOCK_USDC_MINT_AMOUNT || DEFAULT_MOCK_USDC_MINT_AMOUNT;
   const deployTestHelpers = process.env.DEPLOY_TEST_HELPERS === "true";
 
-  console.log(`Death verifier: ${verifierAddress}`);
-
   const mockUsdc = await deployContract("MockUSDC");
   const beneficiaryRegistry = await deployContract("RiskaBeneficiaryRegistry");
-  const deathVerifier = await deployContract("RiskaDeathVerifier", [verifierAddress]);
   const premiumVault = await deployContract("RiskaPremiumVault", [mockUsdc.address, beneficiaryRegistry.address]);
   const policyManager = await deployContract("RiskaPolicyManager", [
     beneficiaryRegistry.address,
     premiumVault.address
   ]);
-  const thirtyYearPolicy = await deployContract("RiskaThirtyYearPolicy", [mockUsdc.address, verifierAddress]);
 
   const setupTransactions = {
     beneficiaryRegistrySetPolicyManager: await runTransaction(
@@ -131,15 +126,12 @@ async function main() {
     deployedAt: new Date().toISOString(),
     blockNumber,
     deployer: deployerAddress,
-    verifier: verifierAddress,
     explorerBaseUrl: "https://worldchain-sepolia.explorer.alchemy.com/address/",
     contracts: {
       mockUsdc: contractRecord(mockUsdc),
       beneficiaryRegistry: contractRecord(beneficiaryRegistry),
-      deathVerifier: contractRecord(deathVerifier),
       premiumVault: contractRecord(premiumVault),
       policyManager: contractRecord(policyManager),
-      thirtyYearPolicy: contractRecord(thirtyYearPolicy),
       ...(policyMathHarness ? { policyMathHarness: contractRecord(policyMathHarness) } : {})
     },
     setupTransactions,

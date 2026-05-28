@@ -14,8 +14,6 @@ Core project files:
 - `contracts/RiskaPolicyManager.sol`: active policy lifecycle manager for flexible deposits, payout activation, holder claims, heartbeat, beneficiary death notice, and death claim.
 - `contracts/RiskaBeneficiaryRegistry.sol`: beneficiary storage module with share validation, duplicate protection, and manager-only writes.
 - `contracts/RiskaPremiumVault.sol`: USDC custody module with principal liability accounting, protocol reserve tracking, and manager-only payout operations.
-- `contracts/RiskaDeathVerifier.sol`: legacy verifier/oracle experiment; no longer used by the main beneficiary claim flow.
-- `contracts/RiskaThirtyYearPolicy.sol`: historical MVP contract retained for reference.
 - `test/RiskaPolicyMath.test.js`: Hardhat tests for constants, monthly payout estimate, death payout math, and beneficiary share validation.
 - `test/RiskaPolicyManager.test.js`: Hardhat tests for opening, deposits, payout activation, monthly claims, claim-all, death notice, heartbeat cancellation, and death settlement.
 - `lib/web3/riska-testnet.ts`: browser wallet and viem helpers for testnet policy issuance and actions.
@@ -102,7 +100,6 @@ Review focus:
 
 - Verify deployed testnet addresses after each redeploy.
 - Do not present pending or unverified modules as audited production contracts.
-- Mark `RiskaDeathVerifier` and `RiskaThirtyYearPolicy` as legacy/reference where they appear.
 
 ## 3. Current Contract Map
 
@@ -148,7 +145,7 @@ Current capabilities:
 - Cancels pending death notices on holder actions.
 - Allows configured beneficiaries to report death after the policy is at least `12 * 30 days` old.
 - Allows death claim only after another `12 * 30 days` with no holder interaction.
-- Settles death through `RiskaPremiumVault` without `RiskaDeathVerifier`.
+- Settles death through `RiskaPremiumVault`.
 
 Current limitations:
 
@@ -208,23 +205,6 @@ Review focus:
 - Add treasury/yield reserve rules before any withdrawal path.
 - Add strategy caps and withdrawal paths before connecting yield protocols.
 - Confirm liability accounting under every future module interaction.
-
-### `RiskaDeathVerifier`
-
-File:
-
-- `contracts/RiskaDeathVerifier.sol`
-
-Status:
-
-- Legacy/reference only for the current flexible policy.
-- Not passed into `RiskaPolicyManager`.
-- Not required to settle beneficiary claims.
-
-Review focus:
-
-- Remove from production-critical docs and UI if no longer needed.
-- Keep only if useful as a future optional evidence/review module.
 
 ## 4. Product Rules To Validate
 

@@ -1,10 +1,8 @@
 export type RiskaTestnetContractName =
   | "mockUsdc"
   | "beneficiaryRegistry"
-  | "deathVerifier"
   | "premiumVault"
-  | "policyManager"
-  | "thirtyYearPolicy";
+  | "policyManager";
 
 export type RiskaTestnetContractRecord = {
   address: `0x${string}`;

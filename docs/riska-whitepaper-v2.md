@@ -133,7 +133,6 @@ Current testnet modules:
 - `RiskaPolicyMath`: constants and math for minimum principal, payout months, and death fee.
 - `RiskaBeneficiaryRegistry`: beneficiary accounts and basis-point shares.
 - `RiskaPremiumVault`: USDC custody, principal liability, holder payouts, beneficiary payouts, and protocol reserve.
-- `RiskaDeathVerifier`: legacy verifier/oracle experiment, retained for reference and not used by the main flow.
 
 Future modules:
 

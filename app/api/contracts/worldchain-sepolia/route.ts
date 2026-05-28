@@ -20,10 +20,8 @@ const deploymentPath = path.join(process.cwd(), "deployments", "worldchain-sepol
 const contractNames: RiskaTestnetContractName[] = [
   "mockUsdc",
   "beneficiaryRegistry",
-  "deathVerifier",
   "premiumVault",
-  "policyManager",
-  "thirtyYearPolicy"
+  "policyManager"
 ];
 
 export async function GET() {
@@ -70,10 +68,8 @@ function readDeploymentEnv(): RiskaTestnetDeployment | null {
   const contracts = normalizeContracts({
     mockUsdc: { address: process.env.RISKA_WORLDCHAIN_SEPOLIA_MOCK_USDC },
     beneficiaryRegistry: { address: process.env.RISKA_WORLDCHAIN_SEPOLIA_BENEFICIARY_REGISTRY },
-    deathVerifier: { address: process.env.RISKA_WORLDCHAIN_SEPOLIA_DEATH_VERIFIER },
     premiumVault: { address: process.env.RISKA_WORLDCHAIN_SEPOLIA_PREMIUM_VAULT },
-    policyManager: { address: process.env.RISKA_WORLDCHAIN_SEPOLIA_POLICY_MANAGER },
-    thirtyYearPolicy: { address: process.env.RISKA_WORLDCHAIN_SEPOLIA_THIRTY_YEAR_POLICY }
+    policyManager: { address: process.env.RISKA_WORLDCHAIN_SEPOLIA_POLICY_MANAGER }
   });
 
   if (!hasRequiredContracts(contracts)) {
@@ -118,5 +114,10 @@ function normalizeOptionalAddress(address: unknown): `0x${string}` | undefined {
 }
 
 function hasRequiredContracts(contracts: RiskaTestnetContracts) {
-  return Boolean(contracts.mockUsdc?.address && contracts.premiumVault?.address && contracts.policyManager?.address);
+  return Boolean(
+    contracts.mockUsdc?.address &&
+      contracts.beneficiaryRegistry?.address &&
+      contracts.premiumVault?.address &&
+      contracts.policyManager?.address
+  );
 }

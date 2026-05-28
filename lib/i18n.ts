@@ -55,23 +55,6 @@ const worldIdErrorsEs = {
 };
 
 const contractDocsEn = {
-  thirtyYearPolicy: {
-    title: "RiskaThirtyYearPolicy",
-    summary: "Historical MVP source retained for comparison with the current flexible policy manager.",
-    status: "Legacy reference. Not used by the current testnet app flow.",
-    responsibilities: [
-      "Document the first MVP lifecycle experiment.",
-      "Remain available for auditors who want to compare the old model with the current manager."
-    ],
-    interfaceItems: [
-      { name: "Legacy open/claim functions", description: "Kept for source review only." }
-    ],
-    safeguards: [
-      "Do not treat this contract as the current policy lifecycle.",
-      "Use RiskaPolicyManager for current app and testnet review."
-    ],
-    sourceNote: "Included as historical MVP source."
-  },
   policyManager: {
     title: "RiskaPolicyManager",
     summary:
@@ -124,24 +107,6 @@ const contractDocsEn = {
     ],
     sourceNote: "The local source below is used in the current Sepolia deployment."
   },
-  deathVerifier: {
-    title: "RiskaDeathVerifier",
-    summary: "Legacy verifier/oracle experiment retained for reference.",
-    status: "Legacy reference. It does not gate the current beneficiary death claim flow.",
-    responsibilities: [
-      "Document a previous evidence-hash verifier design.",
-      "Remain available if a future optional review module is needed."
-    ],
-    interfaceItems: [
-      { name: "reportDeath", description: "Legacy evidence report path." },
-      { name: "verifyDeath", description: "Legacy verifier review path, not used by the current manager." }
-    ],
-    safeguards: [
-      "Do not require this module for the current beneficiary payout flow.",
-      "Do not present it as the current manual gate."
-    ],
-    sourceNote: "Included as legacy source only."
-  },
   premiumVault: {
     title: "RiskaPremiumVault",
     summary: "USDC custody module for deposits, holder payouts, beneficiary payouts, and protocol reserve accounting.",
@@ -164,50 +129,10 @@ const contractDocsEn = {
       "Protocol reserve is accounted but not withdrawable in this version."
     ],
     sourceNote: "The local source below is used in the current Sepolia deployment."
-  },
-  mockUsdc: {
-    title: "MockUSDC",
-    summary: "Six-decimal ERC-20 test token for World Chain Sepolia policy tests.",
-    status: "Testnet only. No production value.",
-    responsibilities: [
-      "Represent USDC-style accounting in test flows.",
-      "Hold pre-funded test balances for policy testing.",
-      "Support ERC-20 allowances for vault deposits."
-    ],
-    interfaceItems: [
-      { name: "decimals", description: "Returns 6." },
-      { name: "mint", description: "Owner-only testnet funding helper. The app does not call it." },
-      { name: "approve", description: "Approves the vault for deposits." },
-      { name: "balanceOf", description: "Reads wallet test balance." }
-    ],
-    safeguards: [
-      "Mock token only.",
-      "Wallets must be funded before interacting with the policy contract.",
-      "The app never mints MockUSDC during policy issuance or deposits.",
-      "Production must use an allowlisted payment token."
-    ],
-    sourceNote: "The local source below is the mock token used in test deployments."
   }
 };
 
 const contractDocsEs = {
-  thirtyYearPolicy: {
-    title: "RiskaThirtyYearPolicy",
-    summary: "Fuente MVP historica mantenida para comparar con el manager flexible actual.",
-    status: "Referencia legacy. No se usa en el flujo actual de la app testnet.",
-    responsibilities: [
-      "Documentar el primer experimento de ciclo de vida.",
-      "Quedar disponible para auditores que quieran comparar el modelo anterior con el manager actual."
-    ],
-    interfaceItems: [
-      { name: "Funciones legacy", description: "Conservadas solo para revision de codigo." }
-    ],
-    safeguards: [
-      "No tratar este contrato como el ciclo de poliza actual.",
-      "Usar RiskaPolicyManager para revisar la app y testnet actuales."
-    ],
-    sourceNote: "Incluido como fuente historica del MVP."
-  },
   policyManager: {
     title: "RiskaPolicyManager",
     summary:
@@ -260,24 +185,6 @@ const contractDocsEs = {
     ],
     sourceNote: "El codigo local de abajo se usa en el despliegue actual de Sepolia."
   },
-  deathVerifier: {
-    title: "RiskaDeathVerifier",
-    summary: "Experimento legacy de verificador/oraculo mantenido como referencia.",
-    status: "Referencia legacy. No bloquea el flujo actual de cobro de beneficiarios.",
-    responsibilities: [
-      "Documentar un diseno anterior con hashes de evidencia.",
-      "Quedar disponible si en el futuro se agrega un modulo opcional de revision."
-    ],
-    interfaceItems: [
-      { name: "reportDeath", description: "Ruta legacy de reporte con evidencia." },
-      { name: "verifyDeath", description: "Ruta legacy de revision, no usada por el manager actual." }
-    ],
-    safeguards: [
-      "No requerir este modulo para el pago actual a beneficiarios.",
-      "No presentarlo como compuerta manual actual."
-    ],
-    sourceNote: "Incluido solo como fuente legacy."
-  },
   premiumVault: {
     title: "RiskaPremiumVault",
     summary: "Custodia USDC para depositos, pagos al titular, pagos a beneficiarios y reserva del protocolo.",
@@ -300,29 +207,6 @@ const contractDocsEs = {
       "La reserva del protocolo esta contabilizada pero no es retirable en esta version."
     ],
     sourceNote: "El codigo local de abajo se usa en el despliegue actual de Sepolia."
-  },
-  mockUsdc: {
-    title: "MockUSDC",
-    summary: "Token ERC-20 de seis decimales para pruebas de polizas en World Chain Sepolia.",
-    status: "Solo testnet. Sin valor productivo.",
-    responsibilities: [
-      "Representar contabilidad estilo USDC en pruebas.",
-      "Mantener balances de prueba prefondados para probar polizas.",
-      "Soportar allowances ERC-20 para depositos al vault."
-    ],
-    interfaceItems: [
-      { name: "decimals", description: "Devuelve 6." },
-      { name: "mint", description: "Helper de fondeo solo para owner en testnet. La app no lo llama." },
-      { name: "approve", description: "Aprueba al vault para depositos." },
-      { name: "balanceOf", description: "Lee el balance de prueba." }
-    ],
-    safeguards: [
-      "Token mock solamente.",
-      "La wallet debe estar fondeada antes de interactuar con el contrato de poliza.",
-      "La app nunca mintea MockUSDC durante la emision ni durante depositos.",
-      "Produccion debe usar un token de pago allowlisted."
-    ],
-    sourceNote: "El codigo local de abajo es el mock usado en despliegues de prueba."
   }
 };
 
@@ -468,12 +352,9 @@ export const dictionaries = {
       explorerLabel: "View on explorer",
       docsLabel: "Read docs",
       items: [
-        { id: "thirtyYearPolicy", name: "RiskaThirtyYearPolicy", description: "Historical MVP source retained for reference." },
         { id: "policyManager", name: "PolicyManager", description: "Active flexible policy lifecycle and payout manager." },
         { id: "beneficiaryRegistry", name: "BeneficiaryRegistry", description: "Stores beneficiary wallets and allocation shares." },
-        { id: "deathVerifier", name: "DeathVerifier", description: "Legacy verifier experiment, not a current payout gate." },
-        { id: "premiumVault", name: "PremiumVault", description: "Holds USDC and releases holder or beneficiary payouts." },
-        { id: "mockUsdc", name: "MockUSDC", description: "Test ERC-20 payment token for Sepolia flows." }
+        { id: "premiumVault", name: "PremiumVault", description: "Holds USDC and releases holder or beneficiary payouts." }
       ]
     },
     contractDetail: {
@@ -542,7 +423,7 @@ export const dictionaries = {
         connecting: "Connecting...",
         disconnected: "Not connected"
       },
-      chainId: (chainId: number) => `Chain ID: ${chainId}`,
+      chainId: (chainId: number) => `Network: ${chainId}`,
       mode: { "world-app": "World App", browser: "Browser wallet" },
       actions: {
         connectWorldApp: "Sign in with World App",
@@ -562,27 +443,27 @@ export const dictionaries = {
     worldIdGate: {
       heading: "One human, one policy",
       description:
-        "Verify Proof of Human with IDKit before policy activation. Riska stores the World ID nullifier server-side so the same verified human cannot reserve a second policy.",
-      statusLabel: "World ID gate",
+        "Verify your identity with World ID before activating a policy. Riska records your verification so the same person cannot reserve a second policy.",
+      statusLabel: "World ID",
       statuses: {
         locked: "Connect a wallet first so the proof can be bound to that address.",
-        ready: "Ready to request a World ID proof for this wallet.",
-        loading: "Preparing a signed World ID request...",
-        verified: "Verified unique human. This wallet can continue to beneficiary setup.",
+        ready: "Ready to verify your identity with World ID.",
+        loading: "Preparing World ID request...",
+        verified: "Identity verified. This wallet can continue to beneficiary setup.",
         error: "World ID verification needs attention.",
-        notConfigured: "World ID app configuration is pending."
+        notConfigured: "World ID is not configured. Contact support."
       },
-      action: "Verify human",
+      action: "Verify identity",
       actionLoading: "Preparing proof...",
-      walletRequired: "Connect Wallet Auth before requesting World ID.",
-      configMissing: "Set NEXT_PUBLIC_WORLD_APP_ID before opening the IDKit flow.",
-      signatureError: "Unable to create the signed RP request.",
+      walletRequired: "Connect your wallet before verifying with World ID.",
+      configMissing: "World ID is not configured. Contact support.",
+      signatureError: "Unable to prepare the verification request.",
       verifyError: "Unable to verify the World ID proof.",
       duplicateError: "This verified human is already reserved for a Riska policy.",
-      errorPrefix: "IDKit error:",
+      errorPrefix: "Verification error:",
       errors: worldIdErrorsEn as Record<string, string>,
       signalLabel: (signal: string) => `Signal: ${signal}`,
-      proofLabel: (proofId: string) => `Reserved nullifier: ${proofId}`
+      proofLabel: (proofId: string) => `Verified: ${proofId}`
     },
     whitepaper: {
       metadata: {
@@ -873,12 +754,9 @@ export const dictionaries = {
       explorerLabel: "Ver en explorador",
       docsLabel: "Documentacion",
       items: [
-        { id: "thirtyYearPolicy", name: "RiskaThirtyYearPolicy", description: "Fuente MVP historica mantenida como referencia." },
         { id: "policyManager", name: "PolicyManager", description: "Manager activo de ciclo flexible y pagos." },
         { id: "beneficiaryRegistry", name: "BeneficiaryRegistry", description: "Guarda wallets y porcentajes de beneficiarios." },
-        { id: "deathVerifier", name: "DeathVerifier", description: "Experimento legacy, no compuerta actual de pago." },
-        { id: "premiumVault", name: "PremiumVault", description: "Custodia USDC y libera pagos a titular o beneficiarios." },
-        { id: "mockUsdc", name: "MockUSDC", description: "Token ERC-20 de prueba para Sepolia." }
+        { id: "premiumVault", name: "PremiumVault", description: "Custodia USDC y libera pagos a titular o beneficiarios." }
       ]
     },
     contractDetail: {
@@ -927,19 +805,19 @@ export const dictionaries = {
       secondary: "Contactar a Fundacion Riska"
     },
     footer: {
-      note: "© {year} riska.world · Proteccion flexible para humanos verificados.",
+      note: "© {year} riska.world · Protección flexible para humanos verificados.",
       worldChain: "World Chain",
       email: "hey@riska.world"
     },
     walletAuth: {
       heading: "Consola Riska 30",
       description:
-        "Inicia sesion desde World App para revisar estado de poliza, beneficiarios, minimo fondeado, extra principal, heartbeat y pagos.",
+        "Inicia sesión desde World App para revisar estado de póliza, beneficiarios, mínimo fondeado, extra principal, heartbeat y pagos.",
       miniApp: {
-        label: "Puente Mini App",
+        label: "Mini App",
         checking: "Detectando contexto de World App...",
-        installed: "World App detectada. Wallet Auth se verificara en el backend de Riska.",
-        browserFallback: "Modo navegador activo. Usa la wallet web como fallback para revision local."
+        installed: "World App detectada. Wallet Auth se verificará en el backend de Riska.",
+        browserFallback: "Modo navegador activo. Usa la wallet web como alternativa para revisión local."
       },
       statusLabel: "Estado",
       status: {
@@ -947,7 +825,7 @@ export const dictionaries = {
         connecting: "Conectando...",
         disconnected: "No conectado"
       },
-      chainId: (chainId: number) => `Chain ID: ${chainId}`,
+      chainId: (chainId: number) => `Red: ${chainId}`,
       mode: { "world-app": "World App", browser: "Wallet navegador" },
       actions: {
         connectWorldApp: "Entrar con World App",
@@ -956,38 +834,38 @@ export const dictionaries = {
         disconnect: "Desconectar"
       },
       messages: {
-        welcome: "Bienvenido a Riska 30. Wallet Auth esta lista para el siguiente paso.",
-        disconnected: "Sesion cerrada. Vuelve a conectar para gestionar polizas, beneficiarios, heartbeat y pagos.",
+        welcome: "Bienvenido a Riska 30. Wallet Auth está lista para el siguiente paso.",
+        disconnected: "Sesión cerrada. Vuelve a conectar para gestionar pólizas, beneficiarios, heartbeat y pagos.",
         error: "No se pudo conectar la wallet.",
-        nonceError: "No se pudo preparar el nonce de Wallet Auth.",
+        nonceError: "No se pudo preparar la sesión de Wallet Auth.",
         verifyError: "No se pudo verificar la firma de Wallet Auth.",
         worldAppRequired: "Abre Riska dentro de World App para usar Wallet Auth de Mini App."
       }
     },
     worldIdGate: {
-      heading: "Un humano, una poliza",
+      heading: "Un humano, una póliza",
       description:
-        "Verifica Proof of Human con IDKit antes de activar una poliza. Riska guarda el nullifier de World ID en backend para que el mismo humano verificado no pueda reservar una segunda poliza.",
-      statusLabel: "Gate World ID",
+        "Verificá tu identidad con World ID antes de activar una póliza. Riska registra tu verificación para que el mismo humano no pueda reservar una segunda póliza.",
+      statusLabel: "World ID",
       statuses: {
-        locked: "Primero conecta una wallet para atar la prueba a esa direccion.",
+        locked: "Primero conecta una wallet para atar la prueba a esa dirección.",
         ready: "Listo para pedir una prueba World ID para esta wallet.",
         loading: "Preparando una solicitud World ID firmada...",
-        verified: "Humano unico verificado. Esta wallet puede seguir a beneficiarios.",
-        error: "La verificacion World ID necesita atencion.",
-        notConfigured: "Falta configurar la app de World ID."
+        verified: "Humano único verificado. Esta wallet puede seguir a beneficiarios.",
+        error: "La verificación World ID necesita atención.",
+        notConfigured: "World ID no está configurado. Contactá soporte."
       },
-      action: "Verificar humano",
+      action: "Verificar identidad",
       actionLoading: "Preparando prueba...",
-      walletRequired: "Conecta Wallet Auth antes de pedir World ID.",
-      configMissing: "Configura NEXT_PUBLIC_WORLD_APP_ID antes de abrir IDKit.",
-      signatureError: "No se pudo crear la solicitud RP firmada.",
+      walletRequired: "Conectá tu wallet antes de verificar con World ID.",
+      configMissing: "World ID no está configurado. Contactá soporte.",
+      signatureError: "No se pudo crear la solicitud de verificación.",
       verifyError: "No se pudo verificar la prueba de World ID.",
-      duplicateError: "Este humano verificado ya esta reservado para una poliza Riska.",
-      errorPrefix: "Error IDKit:",
+      duplicateError: "Este humano verificado ya está reservado para una póliza Riska.",
+      errorPrefix: "Error de verificación:",
       errors: worldIdErrorsEs as Record<string, string>,
-      signalLabel: (signal: string) => `Signal: ${signal}`,
-      proofLabel: (proofId: string) => `Nullifier reservado: ${proofId}`
+      signalLabel: (signal: string) => `Señal: ${signal}`,
+      proofLabel: (proofId: string) => `Verificado: ${proofId}`
     },
     whitepaper: {
       metadata: {

@@ -37,10 +37,6 @@ contracts/RiskaBeneficiaryRegistry.sol
 contracts/RiskaPremiumVault.sol
 ```
 
-`RiskaDeathVerifier.sol` remains in the repository as a legacy verifier/oracle experiment, but it no longer gates the main beneficiary payout flow.
-
-The older `RiskaThirtyYearPolicy.sol` is kept as historical MVP source. The app and current tests target `RiskaPolicyManager`.
-
 ## White Paper
 
 The white paper source lives at:
@@ -131,9 +127,9 @@ Deploy after funding the wallet:
 npm run contracts:deploy:worldchain-sepolia
 ```
 
-The deploy script publishes `MockUSDC`, the modular Riska policy contracts, the
-legacy verifier, and the legacy `RiskaThirtyYearPolicy`. It wires the active
-policy manager only into the beneficiary registry and premium vault. Successful
+The deploy script publishes the modular Riska policy contracts plus the
+test-only `MockUSDC` payment token required by Sepolia flows. It wires the active
+policy manager into the beneficiary registry and premium vault. Successful
 deployments are saved under `deployments/worldchain-sepolia/`. Test wallets must
 already hold MockUSDC before opening or funding a policy; the app never mints
 test funds during the user flow.
