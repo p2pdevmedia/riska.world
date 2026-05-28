@@ -39,6 +39,7 @@ import type { Language } from "@/lib/i18n";
 import { RISKA_POLICY_TERMS_HASH, WORLDCHAIN_SEPOLIA_CHAIN_ID, type RiskaTestnetDeployment } from "@/lib/riska-testnet";
 import {
   formatTestnetContractError,
+  formatTokenAmount,
   formatUsdcAmount,
   getRiskaTestnetDeployment,
   getTestnetPolicy,
@@ -120,7 +121,7 @@ const copy = {
       badge: "Riska 30",
       title: "Flexible life protection for verified humans.",
       body:
-        "Riska is a World Chain USDC policy account. Any verified human can fund the 10,800 USDC minimum over time, add or withdraw extra principal, and activate programmed income when ready.",
+        "Riska is a World Chain USDC policy account. Any verified human can fund the 10,800 USDC minimum over time, add or withdraw extra principal, store other ERC20 tokens after the minimum, and activate programmed income when ready.",
       primary: "Start application",
       secondary: "Read policy rules",
       cards: [
@@ -162,7 +163,7 @@ const copy = {
       eyebrow: "Riska 30 rules",
       title: "The promise is visible before the user signs.",
       body:
-        "Any verified human can open a policy. Deposits fill the 10,800 USDC minimum first, extra deposits increase future monthly payout and can be withdrawn in parts, and beneficiaries can claim only after 12 months without holder interaction.",
+        "Any verified human can open a policy. Deposits fill the 10,800 USDC minimum first, extra USDC increases future monthly payout, auxiliary tokens stay fee-free, and beneficiaries can claim only after 12 months without holder interaction.",
       items: [
         "World ID verification is completed before policy issuance",
         "Beneficiaries must total 100%",
@@ -250,18 +251,24 @@ const copy = {
           deathNotice: "Death report",
           deposit: "Deposit",
           depositAmount: "Deposit amount",
+          depositToken: "Deposit token",
           extraPrincipal: "Extra principal",
           heartbeat: "Heartbeat",
           minimumFunded: "Minimum funded",
           monthlyEstimate: "Monthly estimate",
+          noAuxiliaryTokens: "No extra tokens",
           noDeathNotice: "No report",
           payoutProgress: "Payouts",
           refresh: "Refresh",
           reportDeath: "Report death",
           status: "Status",
           title: "Your policy",
+          tokenAddress: "ERC20 token address",
+          tokenAmount: "Token amount",
+          tokenVault: "Extra token vault",
           withdrawExtra: "Withdraw extra",
-          withdrawExtraAmount: "Extra withdrawal amount"
+          withdrawExtraAmount: "Extra withdrawal amount",
+          withdrawToken: "Withdraw token"
         }
       }
     }
@@ -271,7 +278,7 @@ const copy = {
       badge: "Riska 30",
       title: "Protección flexible para humanos verificados.",
       body:
-        "Riska es una cuenta de póliza USDC en World Chain. Cualquier humano verificado puede fondear el mínimo de 10,800 USDC con el tiempo, sumar o retirar principal extra y activar renta programada cuando quiera.",
+        "Riska es una cuenta de póliza USDC en World Chain. Cualquier humano verificado puede fondear el mínimo de 10,800 USDC con el tiempo, sumar o retirar principal extra, guardar otros ERC20 después del mínimo y activar renta programada cuando quiera.",
       primary: "Empezar solicitud",
       secondary: "Ver reglas",
       cards: [
@@ -313,7 +320,7 @@ const copy = {
       eyebrow: "Reglas Riska 30",
       title: "La promesa queda visible antes de firmar.",
       body:
-        "Cualquier humano verificado puede abrir una póliza. Los depósitos llenan primero el mínimo de 10,800 USDC, el extra aumenta el pago mensual futuro y se puede retirar en partes, y los beneficiarios solo cobran después de 12 meses sin interacción del titular.",
+        "Cualquier humano verificado puede abrir una póliza. Los depósitos llenan primero el mínimo de 10,800 USDC, el extra aumenta el pago mensual futuro, los tokens auxiliares no pagan fee y los beneficiarios solo cobran después de 12 meses sin interacción del titular.",
       items: [
         "La verificación World ID se completa antes de emitir",
         "Los beneficiarios deben sumar 100%",
@@ -401,18 +408,24 @@ const copy = {
           deathNotice: "Reporte muerte",
           deposit: "Depositar",
           depositAmount: "Monto a depositar",
+          depositToken: "Depositar token",
           extraPrincipal: "Principal extra",
           heartbeat: "Heartbeat",
           minimumFunded: "Mínimo fondeado",
           monthlyEstimate: "Estimado mensual",
+          noAuxiliaryTokens: "Sin tokens extra",
           noDeathNotice: "Sin reporte",
           payoutProgress: "Pagos",
           refresh: "Actualizar",
           reportDeath: "Reportar muerte",
           status: "Estado",
           title: "Tu póliza",
+          tokenAddress: "Dirección del token ERC20",
+          tokenAmount: "Monto del token",
+          tokenVault: "Bóveda de tokens extra",
           withdrawExtra: "Retirar extra",
-          withdrawExtraAmount: "Monto de extra a retirar"
+          withdrawExtraAmount: "Monto de extra a retirar",
+          withdrawToken: "Retirar token"
         }
       }
     }
@@ -1291,6 +1304,8 @@ function PolicyControlPanel({
   const [policy, setPolicy] = useState<RiskaTestnetPolicyView | null>(null);
   const [depositAmount, setDepositAmount] = useState("10770");
   const [extraWithdrawAmount, setExtraWithdrawAmount] = useState("100");
+  const [tokenAddress, setTokenAddress] = useState("");
+  const [tokenAmount, setTokenAmount] = useState("1");
   const [workingAction, setWorkingAction] = useState<TestnetPolicyAction | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusTone, setStatusTone] = useState("text-[#66746e]");
@@ -1334,12 +1349,15 @@ function PolicyControlPanel({
             ? depositAmount
             : action === "withdrawExtra"
               ? extraWithdrawAmount
+              : action === "depositToken" || action === "withdrawToken"
+                ? tokenAmount
               : undefined,
         holder: walletAddress,
         onStatus: (status) => {
           setStatusMessage(getPolicyActionStatusLabel(status));
         },
-        policyId
+        policyId,
+        tokenAddress: action === "depositToken" || action === "withdrawToken" ? tokenAddress : undefined
       });
       await refreshPolicy();
       setStatusMessage(text.actionComplete);
@@ -1361,6 +1379,12 @@ function PolicyControlPanel({
   const minimumFunded = policy ? policy.remainingMinimumPrincipal >= MINIMUM_POLICY_PRINCIPAL : false;
   const canDeposit = policy ? status === 1 : false;
   const canWithdrawExtra = policy ? canUseHolderAction && policy.remainingExtraPrincipal > 0n : false;
+  const canUseTokenVault = policy ? canUseHolderAction && (minimumFunded || status === 2) : false;
+  const hasTokenAddress = tokenAddress.trim().length > 0;
+  const selectedAuxiliaryToken = policy?.auxiliaryTokens.find(
+    (token) => token.address.toLowerCase() === tokenAddress.toLowerCase()
+  );
+  const canWithdrawToken = Boolean(hasTokenAddress && canUseHolderAction && selectedAuxiliaryToken && selectedAuxiliaryToken.balance > 0n);
   const canActivate = policy ? status === 1 && minimumFunded : false;
   const canClaimMonthly = policy ? status === 2 : false;
   const canClaimAll = policy ? status === 2 || (status === 1 && minimumFunded) : false;
@@ -1456,6 +1480,63 @@ function PolicyControlPanel({
               onClick={runAction}
               workingAction={workingAction}
             />
+          </div>
+
+          <div className="mt-3 border border-[#e3e8df] bg-[#fbfcf8] p-3">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#66746e]">{text.tokenVault}</p>
+              <p className="text-sm font-semibold text-[#26342d]">
+                {policy.auxiliaryTokens.length > 0 ? `${policy.auxiliaryTokens.length}` : text.noAuxiliaryTokens}
+              </p>
+            </div>
+
+            {policy.auxiliaryTokens.length > 0 && (
+              <div className="mt-3 grid gap-2 md:grid-cols-2">
+                {policy.auxiliaryTokens.map((token) => (
+                  <SummaryFact
+                    key={token.address}
+                    label={`${token.symbol} · ${shortAddress(token.address)}`}
+                    value={formatTokenAmount(token.balance, token.decimals)}
+                  />
+                ))}
+              </div>
+            )}
+
+            <div className="mt-3 grid gap-2 lg:grid-cols-[1.4fr_0.8fr_auto_auto]">
+              <input
+                aria-label={text.tokenAddress}
+                className="min-h-11 border border-[#e3e8df] bg-white px-3 text-sm outline-none focus:border-[#17231e]"
+                onChange={(event) => setTokenAddress(event.target.value)}
+                placeholder="0x..."
+                type="text"
+                value={tokenAddress}
+              />
+              <input
+                aria-label={text.tokenAmount}
+                className="min-h-11 border border-[#e3e8df] bg-white px-3 text-sm outline-none focus:border-[#17231e]"
+                min="0"
+                onChange={(event) => setTokenAmount(event.target.value)}
+                step="any"
+                type="number"
+                value={tokenAmount}
+              />
+              <PolicyActionButton
+                action="depositToken"
+                disabled={!canUseTokenVault || !hasTokenAddress || isWorking}
+                icon={Send}
+                label={text.depositToken}
+                onClick={runAction}
+                workingAction={workingAction}
+              />
+              <PolicyActionButton
+                action="withdrawToken"
+                disabled={!canWithdrawToken || isWorking}
+                icon={HandCoins}
+                label={text.withdrawToken}
+                onClick={runAction}
+                workingAction={workingAction}
+              />
+            </div>
           </div>
 
           <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -1761,7 +1842,9 @@ function getPrimaryLabel({ content, state, step, testnetIssue }: EnrollmentWizar
 
 function getTestnetStepLabel(step: TestnetIssuanceStatus) {
   const labels: Record<TestnetIssuanceStatus, string> = {
+    approving_token: "Approving token",
     approving_usdc: "Approving USDC",
+    checking_token: "Checking token",
     checking_usdc: "Checking USDC",
     issued: "Policy issued",
     loading_contracts: "Loading contracts",
@@ -1794,9 +1877,11 @@ function getPolicyActionLabel(
     claimDeath: text.claimDeath,
     claimMonthly: text.claimMonthly,
     deposit: text.deposit,
+    depositToken: text.depositToken,
     heartbeat: text.heartbeat,
     reportDeath: text.reportDeath,
-    withdrawExtra: text.withdrawExtra
+    withdrawExtra: text.withdrawExtra,
+    withdrawToken: text.withdrawToken
   };
 
   return labels[action];
@@ -1804,7 +1889,9 @@ function getPolicyActionLabel(
 
 function getPolicyActionStatusLabel(status: TestnetPolicyActionStatus) {
   const labels: Record<TestnetPolicyActionStatus, string> = {
+    approving_token: "Approving token",
     approving_usdc: "Approving USDC",
+    checking_token: "Checking token",
     checking_usdc: "Checking USDC",
     confirming_transaction: "Confirming transaction",
     issued: "Policy issued",

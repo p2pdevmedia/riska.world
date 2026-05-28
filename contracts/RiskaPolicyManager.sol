@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
@@ -39,6 +40,7 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
 
     uint256 public constant PAYMENT_PERIOD = 30 days;
     uint256 public constant DEATH_REPORT_DELAY = 12 * 30 days;
+    uint256 public constant MAX_AUXILIARY_TOKENS = 16;
 
     RiskaBeneficiaryRegistry public immutable beneficiaryRegistry;
     RiskaPremiumVault public immutable premiumVault;
@@ -48,6 +50,9 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
     mapping(uint256 => Policy) public policies;
     mapping(address => uint256) public policyOf;
     mapping(uint256 => DeathNotice) public deathNotices;
+    mapping(uint256 => mapping(address => uint256)) public auxiliaryTokenBalances;
+    mapping(uint256 => address[]) private auxiliaryTokens;
+    mapping(uint256 => mapping(address => bool)) private hasAuxiliaryToken;
 
     event PolicyOpened(uint256 indexed policyId, address indexed holder, bytes32 indexed termsHash);
     event PolicyDeposit(
@@ -64,6 +69,9 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
     event MonthlyClaimed(uint256 indexed policyId, uint256 amount, uint16 payoutsMade);
     event ClaimAll(uint256 indexed policyId, uint256 amount);
     event ExtraWithdrawn(uint256 indexed policyId, address indexed holder, uint256 amount);
+    event AuxiliaryTokenDeposited(uint256 indexed policyId, address indexed holder, address indexed token, uint256 amount);
+    event AuxiliaryTokenWithdrawn(uint256 indexed policyId, address indexed holder, address indexed token, uint256 amount);
+    event AuxiliaryTokenBeneficiariesPaid(uint256 indexed policyId, address indexed token, uint256 amount);
     event Heartbeat(uint256 indexed policyId, address indexed holder, uint256 timestamp);
     event DeathReported(uint256 indexed policyId, address indexed reporter, uint256 claimableAt);
     event DeathReportCancelled(uint256 indexed policyId);
@@ -242,6 +250,47 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
         emit ExtraWithdrawn(policyId, policy.holder, amount);
     }
 
+    function depositToken(uint256 policyId, address token, uint256 amount) external whenNotPaused nonReentrant {
+        Policy storage policy = policies[policyId];
+        require(policy.holder == msg.sender, "ONLY_HOLDER");
+        require(policy.status == PolicyStatus.Active || policy.status == PolicyStatus.PayoutActive, "POLICY_CLOSED");
+        require(_minimumCovered(policy), "MINIMUM_NOT_FUNDED");
+        require(token != address(0), "INVALID_TOKEN");
+        require(token != address(premiumVault.paymentToken()), "USE_USDC_DEPOSIT");
+        require(amount > 0, "INVALID_AMOUNT");
+
+        _recordHolderInteraction(policyId, policy);
+
+        uint256 received = premiumVault.collectAuxiliaryToken(policyId, policy.holder, IERC20(token), amount);
+
+        if (!hasAuxiliaryToken[policyId][token]) {
+            require(auxiliaryTokens[policyId].length < MAX_AUXILIARY_TOKENS, "TOO_MANY_TOKENS");
+            hasAuxiliaryToken[policyId][token] = true;
+            auxiliaryTokens[policyId].push(token);
+        }
+
+        auxiliaryTokenBalances[policyId][token] += received;
+
+        emit AuxiliaryTokenDeposited(policyId, policy.holder, token, received);
+    }
+
+    function withdrawToken(uint256 policyId, address token, uint256 amount) external whenNotPaused nonReentrant {
+        Policy storage policy = policies[policyId];
+        require(policy.holder == msg.sender, "ONLY_HOLDER");
+        require(policy.status == PolicyStatus.Active || policy.status == PolicyStatus.PayoutActive, "POLICY_CLOSED");
+        require(token != address(0), "INVALID_TOKEN");
+        require(token != address(premiumVault.paymentToken()), "USE_USDC_WITHDRAW");
+        require(amount > 0, "INVALID_AMOUNT");
+        require(amount <= auxiliaryTokenBalances[policyId][token], "TOKEN_EXCEEDS_BALANCE");
+
+        _recordHolderInteraction(policyId, policy);
+
+        auxiliaryTokenBalances[policyId][token] -= amount;
+        premiumVault.payAuxiliaryTokenHolder(policyId, policy.holder, IERC20(token), amount);
+
+        emit AuxiliaryTokenWithdrawn(policyId, policy.holder, token, amount);
+    }
+
     function heartbeat(uint256 policyId) external whenNotPaused {
         Policy storage policy = policies[policyId];
         require(policy.holder == msg.sender, "ONLY_HOLDER");
@@ -283,14 +332,16 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
             remainingMinimumPrincipal,
             remainingExtraPrincipal
         );
+        bool auxiliaryPayout = _hasAuxiliaryTokenBalance(policyId);
 
         policy.remainingMinimumPrincipal = 0;
         policy.remainingExtraPrincipal = 0;
         policy.nextPayoutAt = 0;
-        policy.status = payout > 0 ? PolicyStatus.DeathSettled : PolicyStatus.Closed;
+        policy.status = payout > 0 || auxiliaryPayout ? PolicyStatus.DeathSettled : PolicyStatus.Closed;
         delete deathNotices[policyId];
 
         premiumVault.settleBeneficiaryPayout(policyId, releasedPrincipal, payout);
+        _settleAuxiliaryTokens(policyId);
 
         emit DeathClaimed(policyId, payout, retainedFee);
         emit PolicyStatusUpdated(policyId, policy.status);
@@ -343,6 +394,15 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
         return notice.reportedAt + DEATH_REPORT_DELAY;
     }
 
+    function auxiliaryTokenCount(uint256 policyId) external view returns (uint256) {
+        return auxiliaryTokens[policyId].length;
+    }
+
+    function auxiliaryTokenAt(uint256 policyId, uint256 index) external view returns (address token, uint256 balance) {
+        token = auxiliaryTokens[policyId][index];
+        balance = auxiliaryTokenBalances[policyId][token];
+    }
+
     function _collectAndAllocateDeposit(uint256 policyId, uint256 amount) private {
         Policy storage policy = policies[policyId];
         uint256 remainingMinimumCapacity = RiskaPolicyMath.MINIMUM_POLICY_PRINCIPAL -
@@ -391,6 +451,41 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
     function _recordHolderInteraction(uint256 policyId, Policy storage policy) private {
         policy.lastHolderInteractionAt = block.timestamp;
         _cancelDeathNotice(policyId);
+    }
+
+    function _minimumCovered(Policy storage policy) private view returns (bool) {
+        return policy.status == PolicyStatus.PayoutActive ||
+            policy.remainingMinimumPrincipal == RiskaPolicyMath.MINIMUM_POLICY_PRINCIPAL;
+    }
+
+    function _hasAuxiliaryTokenBalance(uint256 policyId) private view returns (bool) {
+        address[] storage tokens = auxiliaryTokens[policyId];
+
+        for (uint256 i = 0; i < tokens.length; i++) {
+            if (auxiliaryTokenBalances[policyId][tokens[i]] > 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function _settleAuxiliaryTokens(uint256 policyId) private {
+        address[] storage tokens = auxiliaryTokens[policyId];
+
+        for (uint256 i = 0; i < tokens.length; i++) {
+            address token = tokens[i];
+            uint256 amount = auxiliaryTokenBalances[policyId][token];
+
+            if (amount == 0) {
+                continue;
+            }
+
+            auxiliaryTokenBalances[policyId][token] = 0;
+            premiumVault.settleAuxiliaryTokenBeneficiaries(policyId, IERC20(token), amount);
+
+            emit AuxiliaryTokenBeneficiariesPaid(policyId, token, amount);
+        }
     }
 
     function _resetPayout(Policy storage policy) private {

@@ -13,12 +13,14 @@ Riska is a flexible USDC policy account for verified humans.
 - Production legal reality: live insurance or retirement sales still require jurisdiction-by-jurisdiction clearance.
 - Identity rule: one policy per World ID verified human.
 - Entry rule: any verified human can open a policy; the product flow has no separate admin eligibility step.
-- Payment asset: USDC on World Chain as the accounting asset.
+- Payment asset: USDC on World Chain as the policy accounting asset.
+- Auxiliary tokens: after the USDC minimum is covered, the holder may custody non-USDC ERC20 tokens in the policy. These tokens do not count toward USDC principal, do not change monthly payout, and carry no Riska fee.
 - Minimum policy principal: 10,800 USDC.
 - Minimum policy unit: 30 USDC.
 - Minimum model: `30 USDC * 360 = 10,800 USDC`.
 - Deposits: any holder deposit fills the minimum first; amounts above 10,800 USDC become extra principal.
 - Extra principal: increases future monthly payout, can be withdrawn in parts at any time while the policy is active or in payout, and is not fee-bearing.
+- Non-USDC token custody: holder can deposit and withdraw other ERC20 tokens after the USDC minimum is covered; beneficiaries receive those token balances 100% on death settlement.
 - Holder payout: available once the minimum is fully funded.
 - Payout duration: 120 monthly payments.
 - Claim-all: holder can withdraw all remaining principal with no fee after the minimum is funded or once payout is active; living holder depletion resets the same policy to active and reusable.
@@ -57,11 +59,13 @@ The final monthly claim pays any dust left by integer division. If the holder wi
 - `activatePayout(policyId)`: allowed once the minimum principal is fully funded.
 - `claimMonthly(policyId)`: pays the next monthly amount with no fee.
 - `withdrawExtra(policyId, amount)`: lets the holder withdraw part of `remainingExtraPrincipal` with no fee; during payout it reschedules the remaining monthly amount.
+- `depositToken(policyId, token, amount)`: stores a non-USDC ERC20 token after the USDC minimum is covered; the token is custody-only and does not affect payout math.
+- `withdrawToken(policyId, token, amount)`: withdraws part of a stored non-USDC token balance with no fee.
 - `claimAll(policyId)`: pays all remaining holder principal with no fee and resets the same policy to an active zero-balance state.
 - `heartbeat(policyId)`: records holder interaction and cancels any pending death report.
 - `updateBeneficiaries(policyId, beneficiaries, sharesBps)`: updates beneficiary splits and cancels any pending death report.
 
-Deposits after payout activation are not allowed in the current model. Extra-principal withdrawals are allowed before or during payout. A future version can add top-ups during payout only after new accounting and UX rules are specified.
+USDC deposits after payout activation are not allowed in the current model. Extra-principal withdrawals and auxiliary-token custody actions are allowed before or during payout. A future version can add USDC top-ups during payout only after new accounting and UX rules are specified.
 
 ## 4. Beneficiary Death Flow
 
@@ -80,6 +84,8 @@ Death payout:
 retainedFee = remainingMinimumPrincipal * 20%
 beneficiaryPayout = remainingExtraPrincipal + remainingMinimumPrincipal - retainedFee
 ```
+
+Auxiliary ERC20 tokens are separate from USDC principal. On death settlement, every stored auxiliary token balance is sent to beneficiaries according to the same beneficiary percentages, with no protocol fee.
 
 Examples:
 
@@ -106,10 +112,10 @@ Examples:
 
 Current testnet modules:
 
-- `RiskaPolicyManager`: creates policies, enforces flexible lifecycle, partial extra withdrawals, reusable living depletion, and module coordination.
+- `RiskaPolicyManager`: creates policies, enforces flexible lifecycle, partial extra withdrawals, auxiliary token custody, reusable living depletion, and module coordination.
 - `RiskaPolicyMath`: constants and payout math.
 - `RiskaBeneficiaryRegistry`: manages beneficiaries and percentages.
-- `RiskaPremiumVault`: holds USDC and separates principal liability from protocol reserve.
+- `RiskaPremiumVault`: holds USDC, auxiliary ERC20 tokens, and separates principal liability from protocol reserve.
 
 Future production modules:
 
@@ -140,7 +146,7 @@ Future production modules:
 
 - Integrate World ID verification in production mode.
 - Build World App compatible onboarding and dashboard.
-- Add policy state, minimum progress, extra principal, partial extra withdrawal, heartbeat, payout actions, reusable-policy state, and beneficiary death report state.
+- Add policy state, minimum progress, extra principal, auxiliary token custody, partial extra withdrawal, heartbeat, payout actions, reusable-policy state, and beneficiary death report state.
 - Keep a clearly labeled simulation/training mode for grant reviewers and users not ready to transact.
 - Collect grant metrics: verified starts, quote completion, beneficiary completion, policy opens, dashboard return rate, and trust feedback.
 

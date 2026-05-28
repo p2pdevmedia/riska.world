@@ -11,11 +11,11 @@ Core project files:
 - `docs/riska-whitepaper-v2.md`: grant-oriented whitepaper source.
 - `docs/productive-development-plan.md`: captured product decisions, calculations, risks, and roadmap.
 - `contracts/RiskaPolicyMath.sol`: source of truth for flexible policy constants and death-fee math.
-- `contracts/RiskaPolicyManager.sol`: active policy lifecycle manager for flexible deposits, partial extra withdrawals, payout activation, holder claims, heartbeat, beneficiary death notice, and death claim.
+- `contracts/RiskaPolicyManager.sol`: active policy lifecycle manager for flexible deposits, partial extra withdrawals, auxiliary token custody, payout activation, holder claims, heartbeat, beneficiary death notice, and death claim.
 - `contracts/RiskaBeneficiaryRegistry.sol`: beneficiary storage module with share validation, duplicate protection, and manager-only writes.
-- `contracts/RiskaPremiumVault.sol`: USDC custody module with principal liability accounting, protocol reserve tracking, and manager-only payout operations.
+- `contracts/RiskaPremiumVault.sol`: USDC and auxiliary ERC20 custody module with principal liability accounting, protocol reserve tracking, and manager-only payout operations.
 - `test/RiskaPolicyMath.test.js`: Hardhat tests for constants, monthly payout estimate, death payout math, and beneficiary share validation.
-- `test/RiskaPolicyManager.test.js`: Hardhat tests for opening, deposits, extra withdrawals, payout activation, monthly claims, claim-all, policy reuse, death notice, heartbeat cancellation, and death settlement.
+- `test/RiskaPolicyManager.test.js`: Hardhat tests for opening, deposits, extra withdrawals, auxiliary token custody, payout activation, monthly claims, claim-all, policy reuse, death notice, heartbeat cancellation, and death settlement.
 - `lib/web3/riska-testnet.ts`: browser wallet and viem helpers for testnet policy issuance and actions.
 - `lib/contracts.ts`: contract metadata and documentation slugs used by the frontend.
 - `lib/i18n.ts`: bilingual product, whitepaper, and contract copy.
@@ -55,11 +55,11 @@ Current purpose:
 - Mobile-first Riska enrollment wizard and product entry point.
 - Wallet Auth, World ID reservation, beneficiary setup, quote review, and terms/payment readiness.
 - World Chain Sepolia issuance using the active `RiskaPolicyManager`.
-- Testnet dashboard for minimum funded amount, extra principal, partial extra withdrawal, monthly payout estimate, heartbeat, payout activation, monthly claim, claim-all, reusable policy state, beneficiary report, and beneficiary claim.
+- Testnet dashboard for minimum funded amount, extra principal, auxiliary token custody, partial extra withdrawal, monthly payout estimate, heartbeat, payout activation, monthly claim, claim-all, reusable policy state, beneficiary report, and beneficiary claim.
 
 Review focus:
 
-- Copy must match the current flexible model: any verified human can open, minimum is 10,800 USDC, extra principal is not fee-bearing and can be withdrawn in parts, living holder depletion keeps the policy reusable, holder actions cancel death reports, and beneficiary payout waits 12 months after report.
+- Copy must match the current flexible model: any verified human can open, minimum is 10,800 USDC, extra principal is not fee-bearing and can be withdrawn in parts, auxiliary tokens are allowed after the USDC minimum and are never fee-bearing, living holder depletion keeps the policy reusable, holder actions cancel death reports, and beneficiary payout waits 12 months after report.
 - World ID uses app/backend verification; current persistence remains demo/in-process until a database is added.
 - Testnet MockUSDC is not real USDC and has no production value; test wallets must be funded before the app can approve or deposit.
 - Real-money production still needs legal clearance, external audit, multisig/timelock, and monitoring.
@@ -140,6 +140,7 @@ Current capabilities:
 - Snapshots monthly payout as total principal divided by 120.
 - Pays monthly claims with final dust on the last claim.
 - Allows partial extra-principal withdrawals with no holder fee.
+- Allows auxiliary non-USDC ERC20 token deposits and withdrawals after the USDC minimum is covered.
 - Allows claim-all with no holder fee and resets living holder depletion to an active reusable policy.
 - Allows heartbeat without withdrawing funds.
 - Allows holder beneficiary updates while active or in payout.
@@ -159,10 +160,10 @@ Current limitations:
 
 Review focus:
 
-- Confirm vault liability accounting across deposits, extra withdrawals, holder payouts, claim-all, policy reuse, and death settlement.
+- Confirm vault liability accounting across deposits, extra withdrawals, auxiliary token custody, holder payouts, claim-all, policy reuse, and death settlement.
 - Confirm no unauthorized beneficiary report or claim.
 - Confirm every holder action cancels the pending death notice.
-- Confirm death fee never touches extra principal.
+- Confirm death fee never touches extra principal or auxiliary token balances.
 - Confirm dust routing for monthly payouts and beneficiary splits.
 
 ### `RiskaBeneficiaryRegistry`
@@ -193,11 +194,12 @@ File:
 
 Current capabilities:
 
-- Holds USDC separately from the policy manager.
+- Holds USDC and auxiliary ERC20 tokens separately from the policy manager.
 - Allows only the configured policy manager to collect deposits and release payouts.
 - Tracks `totalPrincipalLiability`.
+- Tracks auxiliary token liability per token address.
 - Tracks `protocolReserveBalance` from retained death fees.
-- Pays holders for monthly claims, partial extra withdrawals, and claim-all.
+- Pays holders for monthly claims, partial extra withdrawals, auxiliary token withdrawals, and claim-all.
 - Pays beneficiaries by reading splits from `RiskaBeneficiaryRegistry`.
 
 Review focus:
@@ -217,6 +219,8 @@ Base model:
 - Deposits before payout activation only.
 - Extra principal increases future monthly payout and is not fee-bearing.
 - Extra principal can be withdrawn in parts with no fee while the policy is active or in payout.
+- Auxiliary non-USDC ERC20 tokens can be deposited after the USDC minimum is covered.
+- Auxiliary tokens do not count toward USDC payout math and are never fee-bearing.
 - Holder monthly payout has no fee.
 - Holder claim-all has no fee and resets the policy to active if the holder is alive.
 - Death report can only be made by a configured beneficiary.

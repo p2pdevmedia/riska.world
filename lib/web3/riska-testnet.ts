@@ -5,6 +5,7 @@ import {
   formatUnits,
   getAddress,
   http,
+  isAddress,
   parseUnits,
   type Hash
 } from "viem";
@@ -30,13 +31,17 @@ export type TestnetIssuanceStatus =
   | "loading_contracts"
   | "switching_network"
   | "checking_usdc"
+  | "checking_token"
   | "approving_usdc"
+  | "approving_token"
   | "opening_policy"
   | "issued";
 
 export type TestnetPolicyAction =
   | "deposit"
   | "withdrawExtra"
+  | "depositToken"
+  | "withdrawToken"
   | "activatePayout"
   | "claimMonthly"
   | "claimAll"
@@ -74,6 +79,12 @@ export type RiskaTestnetPolicyView = {
   openedAt: number;
   payoutsMade: number;
   policyId: string;
+  auxiliaryTokens: Array<{
+    address: `0x${string}`;
+    balance: bigint;
+    decimals: number;
+    symbol: string;
+  }>;
   remainingExtraPrincipal: bigint;
   remainingMinimumPrincipal: bigint;
   status: number;
@@ -120,6 +131,20 @@ const erc20Abi = [
     inputs: [{ name: "account", type: "address" }],
     name: "balanceOf",
     outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    inputs: [],
+    name: "decimals",
+    outputs: [{ name: "", type: "uint8" }],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    inputs: [],
+    name: "symbol",
+    outputs: [{ name: "", type: "string" }],
     stateMutability: "view",
     type: "function"
   }
@@ -174,6 +199,28 @@ const policyManagerAbi = [
       { name: "amount", type: "uint256" }
     ],
     name: "withdrawExtra",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function"
+  },
+  {
+    inputs: [
+      { name: "policyId", type: "uint256" },
+      { name: "token", type: "address" },
+      { name: "amount", type: "uint256" }
+    ],
+    name: "depositToken",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function"
+  },
+  {
+    inputs: [
+      { name: "policyId", type: "uint256" },
+      { name: "token", type: "address" },
+      { name: "amount", type: "uint256" }
+    ],
+    name: "withdrawToken",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function"
@@ -253,6 +300,26 @@ const policyManagerAbi = [
     inputs: [{ name: "policyId", type: "uint256" }],
     name: "deathClaimableAt",
     outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    inputs: [{ name: "policyId", type: "uint256" }],
+    name: "auxiliaryTokenCount",
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    inputs: [
+      { name: "policyId", type: "uint256" },
+      { name: "index", type: "uint256" }
+    ],
+    name: "auxiliaryTokenAt",
+    outputs: [
+      { name: "token", type: "address" },
+      { name: "balance", type: "uint256" }
+    ],
     stateMutability: "view",
     type: "function"
   },
@@ -338,6 +405,7 @@ export async function getTestnetPolicy({
           })
         : Promise.resolve(false)
     ]);
+  const auxiliaryTokens = await getPolicyAuxiliaryTokens(policyManager, id);
 
   return {
     deathNotice: {
@@ -355,6 +423,7 @@ export async function getTestnetPolicy({
     openedAt: Number(policy[3]),
     payoutsMade: Number(policy[2]),
     policyId,
+    auxiliaryTokens,
     remainingExtraPrincipal: policy[7],
     remainingMinimumPrincipal: policy[6],
     status: policy[9],
@@ -374,6 +443,41 @@ export async function getTestnetPolicyIdForHolder({
   const policyId = await readPolicyIdForHolder(policyManager, account);
 
   return policyId === 0n ? null : policyId.toString();
+}
+
+async function getPolicyAuxiliaryTokens(policyManager: `0x${string}`, policyId: bigint) {
+  const count = await publicClient.readContract({
+    abi: policyManagerAbi,
+    address: policyManager,
+    args: [policyId],
+    functionName: "auxiliaryTokenCount"
+  });
+
+  const tokenRows = await Promise.all(
+    Array.from({ length: Number(count) }, (_, index) =>
+      publicClient.readContract({
+        abi: policyManagerAbi,
+        address: policyManager,
+        args: [policyId, BigInt(index)],
+        functionName: "auxiliaryTokenAt"
+      })
+    )
+  );
+
+  return Promise.all(
+    tokenRows
+      .filter(([, balance]) => balance > 0n)
+      .map(async ([address, balance]) => {
+        const metadata = await readTokenMetadata(address);
+
+        return {
+          address,
+          balance,
+          decimals: metadata.decimals,
+          symbol: metadata.symbol
+        };
+      })
+  );
 }
 
 export async function issueTestnetPolicy({
@@ -440,13 +544,15 @@ export async function runTestnetPolicyAction({
   amount,
   holder,
   onStatus,
-  policyId
+  policyId,
+  tokenAddress
 }: {
   action: TestnetPolicyAction;
   amount?: string;
   holder: string;
   onStatus?: (status: TestnetPolicyActionStatus) => void;
   policyId: string;
+  tokenAddress?: string;
 }) {
   onStatus?.("loading_contracts");
   const deployment = await getRiskaTestnetDeployment();
@@ -477,6 +583,39 @@ export async function runTestnetPolicyAction({
       account,
       address: contracts.policyManager,
       args: [id, parsedAmount],
+      functionName: action
+    });
+  } else if (action === "depositToken" || action === "withdrawToken") {
+    if (!tokenAddress || !isAddress(tokenAddress)) {
+      throw new Error("Enter a valid ERC20 token address.");
+    }
+
+    const token = getAddress(tokenAddress);
+    const metadata = await readTokenMetadata(token);
+    const parsedAmount = parseUnits(amount ?? "0", metadata.decimals);
+
+    if (parsedAmount <= 0n) {
+      throw new Error(`Amount must be greater than 0 ${metadata.symbol}.`);
+    }
+
+    if (action === "depositToken") {
+      await ensureTokenBalanceAndAllowance({
+        account,
+        amount: parsedAmount,
+        decimals: metadata.decimals,
+        onStatus,
+        spender: contracts.premiumVault,
+        symbol: metadata.symbol,
+        token
+      });
+    }
+
+    onStatus?.("sending_transaction");
+    hash = await walletClient.writeContract({
+      abi: policyManagerAbi,
+      account,
+      address: contracts.policyManager,
+      args: [id, token, parsedAmount],
       functionName: action
     });
   } else if (action === "activatePayout") {
@@ -543,7 +682,11 @@ export async function runTestnetPolicyAction({
 }
 
 export function formatUsdcAmount(value: bigint) {
-  const [whole, fraction = ""] = formatUnits(value, 6).split(".");
+  return formatTokenAmount(value, 6);
+}
+
+export function formatTokenAmount(value: bigint, decimals: number) {
+  const [whole, fraction = ""] = formatUnits(value, decimals).split(".");
   const trimmedFraction = fraction.replace(/0+$/, "");
 
   return trimmedFraction ? `${whole}.${trimmedFraction}` : whole;
@@ -612,6 +755,26 @@ async function getConnectedAccount(
   return account;
 }
 
+async function readTokenMetadata(token: `0x${string}`) {
+  const [decimalsResult, symbolResult] = await Promise.allSettled([
+    publicClient.readContract({
+      abi: erc20Abi,
+      address: token,
+      functionName: "decimals"
+    }),
+    publicClient.readContract({
+      abi: erc20Abi,
+      address: token,
+      functionName: "symbol"
+    })
+  ]);
+
+  return {
+    decimals: decimalsResult.status === "fulfilled" ? Number(decimalsResult.value) : 18,
+    symbol: symbolResult.status === "fulfilled" && symbolResult.value ? symbolResult.value : "TOKEN"
+  };
+}
+
 async function ensureMockUsdcBalanceAndAllowance({
   account,
   amount,
@@ -661,4 +824,58 @@ async function ensureMockUsdcBalanceAndAllowance({
   }
 
   return txHashes;
+}
+
+async function ensureTokenBalanceAndAllowance({
+  account,
+  amount,
+  decimals,
+  onStatus,
+  spender,
+  symbol,
+  token
+}: {
+  account: `0x${string}`;
+  amount: bigint;
+  decimals: number;
+  onStatus?: (status: TestnetPolicyActionStatus) => void;
+  spender: `0x${string}`;
+  symbol: string;
+  token: `0x${string}`;
+}) {
+  const walletClient = await createWorldchainSepoliaWalletClient();
+
+  onStatus?.("checking_token");
+  const [balance, allowance] = await Promise.all([
+    publicClient.readContract({
+      abi: erc20Abi,
+      address: token,
+      args: [account],
+      functionName: "balanceOf"
+    }),
+    publicClient.readContract({
+      abi: erc20Abi,
+      address: token,
+      args: [account, spender],
+      functionName: "allowance"
+    })
+  ]);
+
+  if (balance < amount) {
+    throw new Error(
+      `This wallet needs ${formatTokenAmount(amount, decimals)} ${symbol} before depositing this token. Current balance: ${formatTokenAmount(balance, decimals)} ${symbol}.`
+    );
+  }
+
+  if (allowance < amount) {
+    onStatus?.("approving_token");
+    const hash = await walletClient.writeContract({
+      abi: erc20Abi,
+      account,
+      address: token,
+      args: [spender, amount],
+      functionName: "approve"
+    });
+    await publicClient.waitForTransactionReceipt({ hash });
+  }
 }

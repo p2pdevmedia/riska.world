@@ -23,6 +23,7 @@ async function deployFixture() {
 
   const MockUSDC = await ethers.getContractFactory("MockUSDC");
   const token = await MockUSDC.deploy();
+  const altToken = await MockUSDC.deploy();
 
   const RiskaBeneficiaryRegistry = await ethers.getContractFactory("RiskaBeneficiaryRegistry");
   const beneficiaryRegistry = await RiskaBeneficiaryRegistry.deploy();
@@ -41,6 +42,8 @@ async function deployFixture() {
 
   await token.mint(holder.address, usdc("50000"));
   await token.connect(holder).approve(await premiumVault.getAddress(), usdc("50000"));
+  await altToken.mint(holder.address, usdc("10000"));
+  await altToken.connect(holder).approve(await premiumVault.getAddress(), usdc("10000"));
 
   return {
     owner,
@@ -50,6 +53,7 @@ async function deployFixture() {
     beneficiaryC,
     stranger,
     token,
+    altToken,
     beneficiaryRegistry,
     premiumVault,
     manager
@@ -161,6 +165,18 @@ describe("RiskaPolicyManager", function () {
 
     await expect(
       ctx.premiumVault.connect(ctx.stranger).settleBeneficiaryPayout(1, usdc("30"), usdc("24"))
+    ).to.be.revertedWith("ONLY_POLICY_MANAGER");
+
+    await expect(
+      ctx.premiumVault.connect(ctx.stranger).collectAuxiliaryToken(1, ctx.holder.address, await ctx.altToken.getAddress(), usdc("1"))
+    ).to.be.revertedWith("ONLY_POLICY_MANAGER");
+
+    await expect(
+      ctx.premiumVault.connect(ctx.stranger).payAuxiliaryTokenHolder(1, ctx.holder.address, await ctx.altToken.getAddress(), usdc("1"))
+    ).to.be.revertedWith("ONLY_POLICY_MANAGER");
+
+    await expect(
+      ctx.premiumVault.connect(ctx.stranger).settleAuxiliaryTokenBeneficiaries(1, await ctx.altToken.getAddress(), usdc("1"))
     ).to.be.revertedWith("ONLY_POLICY_MANAGER");
   });
 
@@ -312,6 +328,53 @@ describe("RiskaPolicyManager", function () {
     expect(await ctx.premiumVault.totalPrincipalLiability()).to.equal(usdc("11310"));
   });
 
+  it("stores auxiliary tokens only after the USDC minimum is covered", async function () {
+    const ctx = await deployFixture();
+    const policyId = await openPolicy(ctx);
+    const altTokenAddress = await ctx.altToken.getAddress();
+
+    await expect(
+      ctx.manager.connect(ctx.holder).depositToken(policyId, altTokenAddress, usdc("250"))
+    ).to.be.revertedWith("MINIMUM_NOT_FUNDED");
+
+    await expect(
+      ctx.manager.connect(ctx.holder).depositToken(policyId, await ctx.token.getAddress(), usdc("250"))
+    ).to.be.revertedWith("MINIMUM_NOT_FUNDED");
+
+    await fundMinimum(ctx, policyId);
+
+    await expect(
+      ctx.manager.connect(ctx.holder).depositToken(policyId, await ctx.token.getAddress(), usdc("250"))
+    ).to.be.revertedWith("USE_USDC_DEPOSIT");
+
+    await ctx.manager.connect(ctx.holder).depositToken(policyId, altTokenAddress, usdc("250"));
+
+    expect(await ctx.manager.auxiliaryTokenBalances(policyId, altTokenAddress)).to.equal(usdc("250"));
+    expect(await ctx.manager.auxiliaryTokenCount(policyId)).to.equal(1);
+    expect(await ctx.manager.auxiliaryTokenAt(policyId, 0)).to.deep.equal([altTokenAddress, usdc("250")]);
+    expect(await ctx.premiumVault.auxiliaryTokenLiability(altTokenAddress)).to.equal(usdc("250"));
+    expect(await ctx.premiumVault.totalPrincipalLiability()).to.equal(usdc("10800"));
+    expect(await ctx.manager.monthlyPayoutEstimate(policyId)).to.equal(usdc("90"));
+  });
+
+  it("lets the holder withdraw auxiliary tokens with no fee", async function () {
+    const ctx = await deployFixture();
+    const policyId = await openPolicy(ctx);
+    const altTokenAddress = await ctx.altToken.getAddress();
+
+    await fundMinimum(ctx, policyId);
+    await ctx.manager.connect(ctx.holder).depositToken(policyId, altTokenAddress, usdc("250"));
+
+    const before = await ctx.altToken.balanceOf(ctx.holder.address);
+    await ctx.manager.connect(ctx.holder).withdrawToken(policyId, altTokenAddress, usdc("75"));
+    const after = await ctx.altToken.balanceOf(ctx.holder.address);
+
+    expect(after - before).to.equal(usdc("75"));
+    expect(await ctx.manager.auxiliaryTokenBalances(policyId, altTokenAddress)).to.equal(usdc("175"));
+    expect(await ctx.premiumVault.auxiliaryTokenLiability(altTokenAddress)).to.equal(usdc("175"));
+    expect(await ctx.premiumVault.protocolReserveBalance()).to.equal(0);
+  });
+
   it("only configured beneficiaries can report death", async function () {
     const ctx = await deployFixture();
     const policyId = await openPolicy(ctx);
@@ -382,6 +445,21 @@ describe("RiskaPolicyManager", function () {
     await reportAfterPolicyAge(ctx, policyId);
     await ctx.manager.connect(ctx.holder).withdrawExtra(policyId, usdc("1"));
     expect((await ctx.manager.deathNotices(policyId)).active).to.equal(false);
+
+    ctx = await deployFixture();
+    policyId = await openPolicy(ctx);
+    await fundMinimum(ctx, policyId);
+    await reportAfterPolicyAge(ctx, policyId);
+    await ctx.manager.connect(ctx.holder).depositToken(policyId, await ctx.altToken.getAddress(), usdc("1"));
+    expect((await ctx.manager.deathNotices(policyId)).active).to.equal(false);
+
+    ctx = await deployFixture();
+    policyId = await openPolicy(ctx);
+    await fundMinimum(ctx, policyId);
+    await ctx.manager.connect(ctx.holder).depositToken(policyId, await ctx.altToken.getAddress(), usdc("5"));
+    await reportAfterPolicyAge(ctx, policyId);
+    await ctx.manager.connect(ctx.holder).withdrawToken(policyId, await ctx.altToken.getAddress(), usdc("1"));
+    expect((await ctx.manager.deathNotices(policyId)).active).to.equal(false);
   });
 
   it("pays death claims with 20% retained only from remaining minimum principal", async function () {
@@ -389,6 +467,7 @@ describe("RiskaPolicyManager", function () {
     const policyId = await openPolicy(ctx, [ctx.beneficiaryA.address, ctx.beneficiaryB.address], [6_000, 4_000]);
 
     await fundMinimum(ctx, policyId, "1200");
+    await ctx.manager.connect(ctx.holder).depositToken(policyId, await ctx.altToken.getAddress(), usdc("1200"));
     await ctx.manager.connect(ctx.holder).activatePayout(policyId);
     await ctx.manager.connect(ctx.holder).claimMonthly(policyId);
 
@@ -402,8 +481,12 @@ describe("RiskaPolicyManager", function () {
 
     expect(await ctx.token.balanceOf(ctx.beneficiaryA.address)).to.equal(usdc("5854.8"));
     expect(await ctx.token.balanceOf(ctx.beneficiaryB.address)).to.equal(usdc("3903.2"));
+    expect(await ctx.altToken.balanceOf(ctx.beneficiaryA.address)).to.equal(usdc("720"));
+    expect(await ctx.altToken.balanceOf(ctx.beneficiaryB.address)).to.equal(usdc("480"));
     expect(await ctx.premiumVault.totalPrincipalLiability()).to.equal(0);
     expect(await ctx.premiumVault.protocolReserveBalance()).to.equal(usdc("2142"));
+    expect(await ctx.premiumVault.auxiliaryTokenLiability(await ctx.altToken.getAddress())).to.equal(0);
+    expect(await ctx.manager.auxiliaryTokenBalances(policyId, await ctx.altToken.getAddress())).to.equal(0);
 
     policy = await ctx.manager.policies(policyId);
     expect(policy.status).to.equal(STATUS.DeathSettled);
