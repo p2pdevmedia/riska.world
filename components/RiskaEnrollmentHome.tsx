@@ -42,6 +42,7 @@ import {
   formatUsdcAmount,
   getRiskaTestnetDeployment,
   getTestnetPolicy,
+  getTestnetPolicyIdForHolder,
   issueTestnetPolicy,
   MINIMUM_POLICY_PRINCIPAL,
   runTestnetPolicyAction,
@@ -94,6 +95,13 @@ type TestnetIssueState =
   | { status: "idle" }
   | { status: "working"; step: TestnetIssuanceStatus }
   | { result: TestnetIssuanceResult; status: "issued" }
+  | { message: string; status: "error" };
+
+type ExistingPolicyLookupState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { policyId: string; status: "found" }
+  | { status: "none" }
   | { message: string; status: "error" };
 
 const storageKey = "riska.enrollment.v2";
@@ -220,6 +228,8 @@ const copy = {
         submitted:
           "Test policy opened on World Chain Sepolia.",
         testnetConfigured: "Testnet contracts ready",
+        testnetExisting: "Policy found for this wallet",
+        testnetLookup: "Checking this wallet for an existing policy",
         testnetMissing: "Testnet contracts pending deployment",
         testnetPolicy: "Policy ID",
         testnetTitle: "World Chain Sepolia issuance",
@@ -249,7 +259,7 @@ const copy = {
           refresh: "Refresh",
           reportDeath: "Report death",
           status: "Status",
-          title: "Flexible policy state"
+          title: "Your policy"
         }
       }
     }
@@ -367,6 +377,8 @@ const copy = {
         submitted:
           "Poliza de prueba abierta en World Chain Sepolia.",
         testnetConfigured: "Contratos testnet listos",
+        testnetExisting: "Poliza encontrada para esta wallet",
+        testnetLookup: "Buscando poliza existente para esta wallet",
         testnetMissing: "Contratos testnet pendientes de deploy",
         testnetPolicy: "Policy ID",
         testnetTitle: "Emision en World Chain Sepolia",
@@ -396,7 +408,7 @@ const copy = {
           refresh: "Actualizar",
           reportDeath: "Reportar muerte",
           status: "Estado",
-          title: "Estado flexible"
+          title: "Tu poliza"
         }
       }
     }
@@ -423,6 +435,7 @@ export function RiskaEnrollmentHome() {
   const content = copy[language];
   const [activeStepId, setActiveStepId] = useState<StepId>("identity");
   const [hydrated, setHydrated] = useState(false);
+  const [existingPolicyLookup, setExistingPolicyLookup] = useState<ExistingPolicyLookupState>({ status: "idle" });
   const [testnetDeployment, setTestnetDeployment] = useState<TestnetDeploymentState>({ status: "loading" });
   const [testnetIssue, setTestnetIssue] = useState<TestnetIssueState>({ status: "idle" });
   const [state, setState] = useState<EnrollmentState>(initialState);
@@ -477,7 +490,74 @@ export function RiskaEnrollmentHome() {
     }
   }, [state.submitted, testnetIssue.status]);
 
-  const activeStepIndex = steps.findIndex((step) => step.id === activeStepId);
+  const walletAddress = state.walletSession?.address ?? null;
+  const testnetConfigured = testnetDeployment.status === "configured";
+
+  useEffect(() => {
+    if (!hydrated || !walletAddress || !testnetConfigured) {
+      setExistingPolicyLookup({ status: "idle" });
+      return;
+    }
+
+    let mounted = true;
+    setExistingPolicyLookup({ status: "loading" });
+
+    void getTestnetPolicyIdForHolder({ holder: walletAddress })
+      .then((policyId) => {
+        if (!mounted) {
+          return;
+        }
+
+        if (!policyId) {
+          setExistingPolicyLookup({ status: "none" });
+          setState((current) => {
+            if (current.walletSession?.address !== walletAddress || !current.issuedPolicyId) {
+              return current;
+            }
+
+            return clearSubmission(current);
+          });
+          return;
+        }
+
+        setExistingPolicyLookup({ policyId, status: "found" });
+        setActiveStepId("confirm");
+        setState((current) => {
+          if (current.walletSession?.address !== walletAddress) {
+            return current;
+          }
+
+          if (current.issuedPolicyId === policyId && current.submitted) {
+            return current;
+          }
+
+          return {
+            ...current,
+            applicationId: current.applicationId ?? `RISKA-WCSP-${policyId}`,
+            issuedPolicyId: policyId,
+            submitted: true,
+            submittedAt: current.submittedAt ?? new Date().toISOString()
+          };
+        });
+      })
+      .catch((error) => {
+        if (!mounted) {
+          return;
+        }
+
+        setExistingPolicyLookup({
+          message: formatTestnetContractError(error),
+          status: "error"
+        });
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [hydrated, testnetConfigured, walletAddress]);
+
+  const visibleStepId = state.issuedPolicyId ? "confirm" : activeStepId;
+  const activeStepIndex = steps.findIndex((step) => step.id === visibleStepId);
   const activeStep = steps[activeStepIndex] ?? steps[0];
   const beneficiaryTotal = state.beneficiaries.reduce((total, beneficiary) => total + beneficiary.percent, 0);
   const completion = getCompletion(state, beneficiaryTotal);
@@ -579,6 +659,7 @@ export function RiskaEnrollmentHome() {
             onStatus: (step) => setTestnetIssue({ status: "working", step })
           });
 
+          setExistingPolicyLookup({ policyId: result.policyId, status: "found" });
           setTestnetIssue({ result, status: "issued" });
           setState((current) => ({
             ...current,
@@ -626,12 +707,14 @@ export function RiskaEnrollmentHome() {
 
         <section id="enroll" className="mx-auto max-w-7xl px-5 py-8 md:px-8 lg:py-12">
           <div className="space-y-6">
-            <StepRail
-              activeStepId={activeStepId}
-              completion={completion}
-              content={content}
-              onStepSelect={setActiveStepId}
-            />
+            {!state.issuedPolicyId && (
+              <StepRail
+                activeStepId={activeStepId}
+                completion={completion}
+                content={content}
+                onStepSelect={setActiveStepId}
+              />
+            )}
 
             <div className="grid gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-start">
               <aside className="space-y-6">
@@ -671,6 +754,7 @@ export function RiskaEnrollmentHome() {
                 readyToSubmit={readyToSubmit}
                 state={state}
                 step={activeStep}
+                existingPolicyLookup={existingPolicyLookup}
                 testnetDeployment={testnetDeployment}
                 testnetIssue={testnetIssue}
               />
@@ -771,6 +855,7 @@ type EnrollmentWizardProps = {
   canSubmit: boolean;
   completion: CompletionMap;
   content: (typeof copy)[Language];
+  existingPolicyLookup: ExistingPolicyLookupState;
   onAddBeneficiary: () => void;
   onBack: () => void;
   onHumanReservationChange: (reservation: PolicyHumanReservationView | null) => void;
@@ -868,7 +953,7 @@ function EnrollmentWizard(props: EnrollmentWizardProps) {
       <div className="px-5 py-6 md:px-7">
         {renderScreen(props)}
 
-        {state.submitted && (
+        {state.submitted && !state.issuedPolicyId && (
           <div className="mt-6 border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-900">
             <p className="font-semibold">{content.wizard.confirm.submitted}</p>
             <p className="mt-1 font-mono text-xs">{state.applicationId}</p>
@@ -881,26 +966,28 @@ function EnrollmentWizard(props: EnrollmentWizardProps) {
           </p>
         )}
 
-        <div className="mt-7 flex flex-col-reverse gap-3 border-t border-[#e7ebe2] pt-5 sm:flex-row sm:items-center sm:justify-between">
-          <button
-            className="flex h-12 items-center justify-center gap-2 border border-[#cbd7cf] bg-white px-5 text-sm font-semibold text-[#26342d] transition hover:border-[#17231e] disabled:cursor-not-allowed disabled:opacity-40"
-            disabled={activeStepIndex === 0}
-            onClick={props.onBack}
-            type="button"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            {content.wizard.back}
-          </button>
-          <button
-            className="flex h-12 items-center justify-center gap-2 bg-[#17231e] px-5 text-sm font-semibold text-white transition hover:bg-[#26342d] disabled:cursor-not-allowed disabled:bg-[#cbd6cf] disabled:text-[#728078]"
-            disabled={primaryDisabled}
-            onClick={props.onPrimary}
-            type="button"
-          >
-            {primaryLabel}
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
+        {!state.issuedPolicyId && (
+          <div className="mt-7 flex flex-col-reverse gap-3 border-t border-[#e7ebe2] pt-5 sm:flex-row sm:items-center sm:justify-between">
+            <button
+              className="flex h-12 items-center justify-center gap-2 border border-[#cbd7cf] bg-white px-5 text-sm font-semibold text-[#26342d] transition hover:border-[#17231e] disabled:cursor-not-allowed disabled:opacity-40"
+              disabled={activeStepIndex === 0}
+              onClick={props.onBack}
+              type="button"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              {content.wizard.back}
+            </button>
+            <button
+              className="flex h-12 items-center justify-center gap-2 bg-[#17231e] px-5 text-sm font-semibold text-white transition hover:bg-[#26342d] disabled:cursor-not-allowed disabled:bg-[#cbd6cf] disabled:text-[#728078]"
+              disabled={primaryDisabled}
+              onClick={props.onPrimary}
+              type="button"
+            >
+              {primaryLabel}
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        )}
       </div>
     </article>
   );
@@ -1032,6 +1119,7 @@ function ConfirmScreen({
   canSubmit,
   completion,
   content,
+  existingPolicyLookup,
   onSetState,
   state,
   testnetDeployment,
@@ -1043,6 +1131,20 @@ function ConfirmScreen({
     completion.beneficiaries,
     completion.quote
   ];
+
+  if (state.issuedPolicyId) {
+    return (
+      <div className="space-y-5">
+        <TestnetIssuePanel
+          content={content}
+          existingPolicyLookup={existingPolicyLookup}
+          state={state}
+          testnetDeployment={testnetDeployment}
+          testnetIssue={testnetIssue}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
@@ -1060,6 +1162,7 @@ function ConfirmScreen({
 
       <TestnetIssuePanel
         content={content}
+        existingPolicyLookup={existingPolicyLookup}
         state={state}
         testnetDeployment={testnetDeployment}
         testnetIssue={testnetIssue}
@@ -1093,11 +1196,13 @@ function ConfirmScreen({
 
 function TestnetIssuePanel({
   content,
+  existingPolicyLookup,
   state,
   testnetDeployment,
   testnetIssue
 }: {
   content: (typeof copy)[Language];
+  existingPolicyLookup: ExistingPolicyLookupState;
   state: EnrollmentState;
   testnetDeployment: TestnetDeploymentState;
   testnetIssue: TestnetIssueState;
@@ -1107,10 +1212,18 @@ function TestnetIssuePanel({
   const openPolicyTx =
     state.issuedTransactionHash ??
     (testnetIssue.status === "issued" ? testnetIssue.result.txHashes.openPolicy : null);
-  const policyId =
+  const issuedPolicyId =
     state.issuedPolicyId ??
     (testnetIssue.status === "issued" ? testnetIssue.result.policyId : null);
-  const status = getTestnetPanelStatus(content, testnetDeployment, testnetIssue);
+  const policyId =
+    existingPolicyLookup.status === "found"
+      ? existingPolicyLookup.policyId
+      : existingPolicyLookup.status === "none" || existingPolicyLookup.status === "error"
+        ? testnetIssue.status === "issued"
+          ? testnetIssue.result.policyId
+          : null
+        : issuedPolicyId;
+  const status = getTestnetPanelStatus(content, testnetDeployment, testnetIssue, existingPolicyLookup);
   const explorerUrl = deployment && openPolicyTx ? `${deployment.explorerBaseUrl.replace(/\/address\/$/, "/tx/")}${openPolicyTx}` : null;
 
   return (
@@ -1683,7 +1796,8 @@ function formatUnixDate(timestamp: number) {
 function getTestnetPanelStatus(
   content: (typeof copy)[Language],
   deployment: TestnetDeploymentState,
-  issue: TestnetIssueState
+  issue: TestnetIssueState,
+  existingPolicyLookup: ExistingPolicyLookupState
 ) {
   const text = content.wizard.confirm;
 
@@ -1704,6 +1818,27 @@ function getTestnetPanelStatus(
   if (issue.status === "error") {
     return {
       message: issue.message,
+      tone: "text-red-700"
+    };
+  }
+
+  if (existingPolicyLookup.status === "loading") {
+    return {
+      message: text.testnetLookup,
+      tone: "text-amber-700"
+    };
+  }
+
+  if (existingPolicyLookup.status === "found") {
+    return {
+      message: text.testnetExisting,
+      tone: "text-emerald-700"
+    };
+  }
+
+  if (existingPolicyLookup.status === "error") {
+    return {
+      message: existingPolicyLookup.message,
       tone: "text-red-700"
     };
   }

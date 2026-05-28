@@ -282,6 +282,10 @@ export async function getTestnetPolicy({
   const id = BigInt(policyId);
   const viewerAddress = viewer ? getAddress(viewer) : null;
 
+  if (id === 0n) {
+    throw new Error("This wallet does not have a Riska policy yet.");
+  }
+
   const [policy, deathNotice, totalPrincipal, monthlyPayoutEstimate, deathClaimableAt, isViewerBeneficiary] =
     await Promise.all([
       publicClient.readContract({
@@ -348,6 +352,19 @@ export async function getTestnetPolicy({
   };
 }
 
+export async function getTestnetPolicyIdForHolder({
+  holder
+}: {
+  holder: string;
+}): Promise<string | null> {
+  const deployment = await getRiskaTestnetDeployment();
+  const { policyManager } = getRequiredContracts(deployment);
+  const account = getAddress(holder);
+  const policyId = await readPolicyIdForHolder(policyManager, account);
+
+  return policyId === 0n ? null : policyId.toString();
+}
+
 export async function issueTestnetPolicy({
   beneficiaries,
   holder,
@@ -364,6 +381,11 @@ export async function issueTestnetPolicy({
   const account = await getConnectedAccount(holder, reportStatus);
   const beneficiaryAddresses = beneficiaries.map((beneficiary) => getAddress(beneficiary.wallet));
   const sharesBps = beneficiaries.map((beneficiary) => beneficiary.percent * 100);
+  const existingPolicyId = await readPolicyIdForHolder(contracts.policyManager, account);
+
+  if (existingPolicyId > 0n) {
+    throw new Error("This wallet already has a Riska policy. Use the policy dashboard instead of opening a new one.");
+  }
 
   if (sharesBps.reduce((total, share) => total + share, 0) !== 10_000) {
     throw new Error("Beneficiary shares must total 100% before issuing a policy.");
@@ -389,12 +411,7 @@ export async function issueTestnetPolicy({
   txHashes.openPolicy = openPolicyHash;
   await publicClient.waitForTransactionReceipt({ hash: openPolicyHash });
 
-  const policyId = await publicClient.readContract({
-    abi: policyManagerAbi,
-    address: contracts.policyManager,
-    args: [account],
-    functionName: "policyOf"
-  });
+  const policyId = await waitForPolicyIdForHolder(contracts.policyManager, account);
 
   onStatus?.("issued");
 
@@ -538,6 +555,29 @@ function getRequiredContracts(deployment: RiskaTestnetDeployment): ContractAddre
   }
 
   return { mockUsdc, policyManager, premiumVault };
+}
+
+async function readPolicyIdForHolder(policyManager: `0x${string}`, account: `0x${string}`) {
+  return publicClient.readContract({
+    abi: policyManagerAbi,
+    address: policyManager,
+    args: [account],
+    functionName: "policyOf"
+  });
+}
+
+async function waitForPolicyIdForHolder(policyManager: `0x${string}`, account: `0x${string}`) {
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const policyId = await readPolicyIdForHolder(policyManager, account);
+
+    if (policyId > 0n) {
+      return policyId;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 750));
+  }
+
+  throw new Error("The policy transaction was confirmed, but the policy ID is not available yet. Refresh the dashboard in a moment.");
 }
 
 async function getConnectedAccount(
