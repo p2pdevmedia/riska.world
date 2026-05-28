@@ -59,7 +59,7 @@ Current purpose:
 
 Review focus:
 
-- Copy must match the current flexible model: any verified human can open, minimum is 10,800 USDC, extra principal is not fee-bearing and can be withdrawn in parts, auxiliary tokens are allowed after the USDC minimum and are never fee-bearing, living holder depletion keeps the policy reusable, holder actions cancel death reports, and beneficiary payout waits 12 months after report.
+- Copy must match the current flexible model: any verified human can open, minimum is 10,800 USDC, extra principal is not fee-bearing and can be withdrawn in parts, auxiliary tokens are allowed after the USDC minimum, auxiliary tokens are never fee-bearing and pass 100% to beneficiaries on death settlement, living holder depletion keeps the policy reusable, holder actions cancel death reports, and beneficiary payout waits 12 months after report.
 - World ID uses app/backend verification; current persistence remains demo/in-process until a database is added.
 - Testnet MockUSDC is not real USDC and has no production value; test wallets must be funded before the app can approve or deposit.
 - Real-money production still needs legal clearance, external audit, multisig/timelock, and monitoring.
@@ -115,7 +115,7 @@ Current capabilities:
 - Defines `MINIMUM_POLICY_MONTHS = 360`.
 - Defines `MINIMUM_POLICY_PRINCIPAL = 10,800 USDC`.
 - Defines `PAYOUT_MONTHS = 120`.
-- Defines death payout as 80% of remaining minimum principal plus 100% of remaining extra principal.
+- Defines death payout as 80% of remaining minimum principal plus 100% of remaining extra principal and 100% of stored auxiliary ERC20 balances.
 - Defines retained death fee as 20% of remaining minimum principal.
 - Validates beneficiary share percentages sum to 100%.
 
@@ -163,7 +163,7 @@ Review focus:
 - Confirm vault liability accounting across deposits, extra withdrawals, auxiliary token custody, holder payouts, claim-all, policy reuse, and death settlement.
 - Confirm no unauthorized beneficiary report or claim.
 - Confirm every holder action cancels the pending death notice.
-- Confirm death fee never touches extra principal or auxiliary token balances.
+- Confirm death fee never touches extra principal or auxiliary token balances, and auxiliary tokens pass fully to beneficiaries on death settlement.
 - Confirm dust routing for monthly payouts and beneficiary splits.
 
 ### `RiskaBeneficiaryRegistry`

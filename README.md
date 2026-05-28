@@ -2,7 +2,7 @@
 
 Riska 30 is a flexible USDC policy account for World ID verified humans.
 
-> Any verified human can open a policy. The minimum policy is 10,800 USDC, payable over time or prepaid. Extra USDC deposits increase future monthly payout and are not fee-bearing. Once the USDC minimum is covered, the holder can store other ERC20 tokens in the policy with no Riska fee. Beneficiaries can claim only after a death report plus 12 months without holder interaction.
+> Any verified human can open a policy. The minimum policy is 10,800 USDC, payable over time or prepaid. Extra USDC deposits increase future monthly payout and are not fee-bearing. Once the USDC minimum is covered, the holder can store other ERC20 tokens in the policy with no Riska fee. Beneficiaries can claim only after a death report plus 12 months without holder interaction, and stored non-USDC ERC20 tokens pass 100% to beneficiaries.
 
 The product combines an electronic policy document with a smart-contract lifecycle:
 
@@ -28,7 +28,8 @@ The product combines an electronic policy document with a smart-contract lifecyc
 7. If the holder withdraws the full living USDC balance, the policy resets to an active zero-balance state and can be funded again.
 8. A configured beneficiary can report death only after the policy has existed for 12 months.
 9. If the holder does not interact for 12 months after the report, any configured beneficiary can claim.
-10. If the holder interacts with the contract, the pending death report is cancelled.
+10. Death settlement pays 100% of stored non-USDC ERC20 tokens to beneficiaries with no protocol fee.
+11. If the holder interacts with the contract, the pending death report is cancelled.
 
 ## Current Smart Contracts
 

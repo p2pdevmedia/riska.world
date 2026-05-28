@@ -128,7 +128,7 @@ const copy = {
         {
           icon: HeartHandshake,
           title: "Family protection",
-          body: "Beneficiaries can claim only after a death report plus 12 months without holder interaction."
+          body: "Beneficiaries can claim only after a death report plus 12 months without holder interaction, including 100% of stored non-USDC tokens."
         },
         {
           icon: CircleDollarSign,
@@ -163,11 +163,12 @@ const copy = {
       eyebrow: "Riska 30 rules",
       title: "The promise is visible before the user signs.",
       body:
-        "Any verified human can open a policy. Deposits fill the 10,800 USDC minimum first, extra USDC increases future monthly payout, auxiliary tokens stay fee-free, and beneficiaries can claim only after 12 months without holder interaction.",
+        "Any verified human can open a policy. Deposits fill the 10,800 USDC minimum first, extra USDC increases future monthly payout, auxiliary tokens stay fee-free, and beneficiaries receive those stored tokens 100% after the death notice window.",
       items: [
         "World ID verification is completed before policy issuance",
         "Beneficiaries must total 100%",
         "Extra deposits can be withdrawn without fee",
+        "Stored ERC20 tokens pass fully to beneficiaries on death settlement",
         "Holder heartbeat cancels pending death reports"
       ]
     },
@@ -265,6 +266,8 @@ const copy = {
           title: "Your policy",
           tokenAddress: "ERC20 token address",
           tokenAmount: "Token amount",
+          tokenVaultNote:
+            "These tokens are separate from USDC payout math. The holder can withdraw them in parts with no fee, and if death settlement happens they pass 100% to beneficiaries.",
           tokenVault: "Extra token vault",
           withdrawExtra: "Withdraw extra",
           withdrawExtraAmount: "Extra withdrawal amount",
@@ -285,7 +288,7 @@ const copy = {
         {
           icon: HeartHandshake,
           title: "Protección familiar",
-          body: "Los beneficiarios pueden cobrar solo después de reportar fallecimiento y esperar 12 meses sin interacción del titular."
+          body: "Los beneficiarios pueden cobrar solo después de reportar fallecimiento y esperar 12 meses sin interacción del titular, incluyendo 100% de los tokens no-USDC guardados."
         },
         {
           icon: CircleDollarSign,
@@ -320,11 +323,12 @@ const copy = {
       eyebrow: "Reglas Riska 30",
       title: "La promesa queda visible antes de firmar.",
       body:
-        "Cualquier humano verificado puede abrir una póliza. Los depósitos llenan primero el mínimo de 10,800 USDC, el extra aumenta el pago mensual futuro, los tokens auxiliares no pagan fee y los beneficiarios solo cobran después de 12 meses sin interacción del titular.",
+        "Cualquier humano verificado puede abrir una póliza. Los depósitos llenan primero el mínimo de 10,800 USDC, el extra aumenta el pago mensual futuro, los tokens auxiliares no pagan fee y los beneficiarios reciben esos tokens 100% después de la ventana de muerte.",
       items: [
         "La verificación World ID se completa antes de emitir",
         "Los beneficiarios deben sumar 100%",
         "El extra se puede retirar sin fee",
+        "Los ERC20 guardados pasan completos a beneficiarios en liquidación por muerte",
         "El heartbeat del titular cancela reportes pendientes"
       ]
     },
@@ -422,6 +426,8 @@ const copy = {
           title: "Tu póliza",
           tokenAddress: "Dirección del token ERC20",
           tokenAmount: "Monto del token",
+          tokenVaultNote:
+            "Estos tokens quedan separados del cálculo de pago en USDC. El titular puede retirarlos en partes sin fee y, si hay liquidación por muerte, pasan 100% a beneficiarios.",
           tokenVault: "Bóveda de tokens extra",
           withdrawExtra: "Retirar extra",
           withdrawExtraAmount: "Monto de extra a retirar",
@@ -1489,6 +1495,7 @@ function PolicyControlPanel({
                 {policy.auxiliaryTokens.length > 0 ? `${policy.auxiliaryTokens.length}` : text.noAuxiliaryTokens}
               </p>
             </div>
+            <p className="mt-2 text-sm leading-6 text-[#66746e]">{text.tokenVaultNote}</p>
 
             {policy.auxiliaryTokens.length > 0 && (
               <div className="mt-3 grid gap-2 md:grid-cols-2">

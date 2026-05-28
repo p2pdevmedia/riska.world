@@ -8,7 +8,7 @@
 
 ## Abstract
 
-Riska 30 is a transparent policy account for World ID verified humans. Any verified human can open a policy, configure beneficiaries, and fund a 10,800 USDC minimum over time or upfront. Deposits above the minimum become extra principal, increasing the holder's future monthly payout. Extra principal can be withdrawn in parts with no fee. Once the USDC minimum is covered, the holder can also custody non-USDC ERC20 tokens in the policy; those auxiliary tokens do not change payout math and carry no Riska fee.
+Riska 30 is a transparent policy account for World ID verified humans. Any verified human can open a policy, configure beneficiaries, and fund a 10,800 USDC minimum over time or upfront. Deposits above the minimum become extra principal, increasing the holder's future monthly payout. Extra principal can be withdrawn in parts with no fee. Once the USDC minimum is covered, the holder can also custody non-USDC ERC20 tokens in the policy; those auxiliary tokens do not change payout math, carry no Riska fee, and pass 100% to beneficiaries on death settlement.
 
 The beneficiary flow is intentionally simple: a configured beneficiary can report death only after the policy has existed for 12 months. If the holder does not interact with the contract for another 12 months, beneficiaries can claim. A holder heartbeat, deposit, auxiliary token action, beneficiary update, monthly claim, or claim-all cancels the pending report. The protocol fee on death claims is 20% of remaining minimum principal only; extra principal and auxiliary tokens are not fee-bearing.
 
@@ -23,7 +23,7 @@ Riska reframes the product around explicit state:
 - Any verified human can open one policy.
 - The minimum policy is 10,800 USDC.
 - Extra deposits increase future monthly payout and can be withdrawn in parts.
-- Other ERC20 tokens can be stored after the USDC minimum is covered; they stay separate from payout math and have no Riska fee.
+- Other ERC20 tokens can be stored after the USDC minimum is covered; they stay separate from payout math, have no Riska fee, and pass 100% to beneficiaries on death settlement.
 - Holder withdrawals have no fee.
 - Beneficiary death claims require a 12-month notice window with no holder interaction.
 - Fees are charged only on death claims and only on remaining minimum principal.
@@ -70,7 +70,7 @@ The holder passes the World ID flow in the app, signs the terms hash, sets benef
 
 The holder deposits USDC before payout activation. Deposits fill `remainingMinimumPrincipal` until it reaches 10,800 USDC. Additional deposits increase `remainingExtraPrincipal`. Extra principal can be withdrawn in partial amounts with no fee.
 
-After the USDC minimum is covered, the holder can deposit non-USDC ERC20 tokens into the policy. These auxiliary tokens are tracked per token address, can be withdrawn in partial amounts by the holder, and do not increase or reduce the USDC monthly payout.
+After the USDC minimum is covered, the holder can deposit non-USDC ERC20 tokens into the policy. These auxiliary tokens are tracked per token address, can be withdrawn in partial amounts by the holder, do not increase or reduce the USDC monthly payout, and pass 100% to beneficiaries on death settlement.
 
 ### Payout Active
 
@@ -101,7 +101,7 @@ retainedFee = remainingMinimumPrincipal * 20%
 beneficiaryPayout = remainingExtraPrincipal + remainingMinimumPrincipal - retainedFee
 ```
 
-Auxiliary ERC20 token balances are distributed to beneficiaries according to the same beneficiary percentages. They are not included in the death-fee base.
+Auxiliary ERC20 token balances are distributed 100% to beneficiaries according to the same beneficiary percentages. They are not included in the death-fee base and do not pay a protocol fee.
 
 ### Reusable or Closed
 
@@ -115,7 +115,7 @@ The base model treats deposited USDC as policy principal. Yield and protocol eco
 | --- | --- | --- |
 | Minimum principal | Funds the base policy promise | Tracked per policy until paid out or death-settled |
 | Extra principal | Increases future holder payout and beneficiary death payout | Tracked separately and never fee-bearing |
-| Auxiliary ERC20 tokens | Lets the holder custody other token balances once the USDC minimum is covered | Tracked per token, excluded from USDC payout math, and never fee-bearing |
+| Auxiliary ERC20 tokens | Lets the holder custody other token balances once the USDC minimum is covered | Tracked per token, excluded from USDC payout math, never fee-bearing, and paid 100% to beneficiaries on death settlement |
 | Protocol reserve | Receives retained death fee from remaining minimum principal | Tracked separately in the vault |
 | Yield reserve | Future source for operations, risk buffers, audits, and growth | Must be separated from principal liabilities |
 

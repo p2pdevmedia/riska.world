@@ -14,7 +14,7 @@ Riska is a flexible USDC policy account for verified humans.
 - Identity rule: one policy per World ID verified human.
 - Entry rule: any verified human can open a policy; the product flow has no separate admin eligibility step.
 - Payment asset: USDC on World Chain as the policy accounting asset.
-- Auxiliary tokens: after the USDC minimum is covered, the holder may custody non-USDC ERC20 tokens in the policy. These tokens do not count toward USDC principal, do not change monthly payout, and carry no Riska fee.
+- Auxiliary tokens: after the USDC minimum is covered, the holder may custody non-USDC ERC20 tokens in the policy. These tokens do not count toward USDC principal, do not change monthly payout, carry no Riska fee, and pass 100% to beneficiaries on death settlement.
 - Minimum policy principal: 10,800 USDC.
 - Minimum policy unit: 30 USDC.
 - Minimum model: `30 USDC * 360 = 10,800 USDC`.
@@ -28,7 +28,7 @@ Riska is a flexible USDC policy account for verified humans.
 - Beneficiaries: multiple beneficiaries with configurable percentages.
 - Beneficiary changes: holder may change beneficiaries while the policy is active or in payout.
 - Death flow: a configured beneficiary reports death, waits 12 months, and can claim only if the holder does not interact.
-- Death fee: 20% of remaining minimum principal only; extra principal goes 100% to beneficiaries.
+- Death fee: 20% of remaining minimum principal only; extra principal and auxiliary ERC20 tokens go 100% to beneficiaries.
 - Main death flow: beneficiary report plus 12 months without holder interaction.
 - Current audit stage: AI-agent review, internal hardening, testnet deployment, and staging user testing.
 
@@ -85,7 +85,7 @@ retainedFee = remainingMinimumPrincipal * 20%
 beneficiaryPayout = remainingExtraPrincipal + remainingMinimumPrincipal - retainedFee
 ```
 
-Auxiliary ERC20 tokens are separate from USDC principal. On death settlement, every stored auxiliary token balance is sent to beneficiaries according to the same beneficiary percentages, with no protocol fee.
+Auxiliary ERC20 tokens are separate from USDC principal. On death settlement, every stored auxiliary token balance is sent 100% to beneficiaries according to the same beneficiary percentages, with no protocol fee.
 
 Examples:
 
