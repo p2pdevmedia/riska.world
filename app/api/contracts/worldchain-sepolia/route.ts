@@ -8,6 +8,7 @@ import {
   WORLDCHAIN_SEPOLIA_CHAIN_ID,
   WORLDCHAIN_SEPOLIA_EXPLORER_URL,
   type RiskaTestnetConfigResponse,
+  type RiskaTestnetAuxiliaryTokenRecord,
   type RiskaTestnetContractName,
   type RiskaTestnetContractRecord,
   type RiskaTestnetContracts,
@@ -44,6 +45,7 @@ function readDeploymentFile(): RiskaTestnetDeployment | null {
   try {
     const parsed = JSON.parse(fs.readFileSync(deploymentPath, "utf8")) as Partial<RiskaTestnetDeployment>;
     const contracts = normalizeContracts(parsed.contracts);
+    const testAuxiliaryTokens = normalizeTestAuxiliaryTokens(parsed.testAuxiliaryTokens);
 
     if (!hasRequiredContracts(contracts)) {
       return null;
@@ -57,6 +59,7 @@ function readDeploymentFile(): RiskaTestnetDeployment | null {
       deployer: normalizeOptionalAddress(parsed.deployer),
       explorerBaseUrl: parsed.explorerBaseUrl ?? WORLDCHAIN_SEPOLIA_EXPLORER_URL,
       network: parsed.network ?? "worldchainSepolia",
+      ...(Object.keys(testAuxiliaryTokens).length > 0 ? { testAuxiliaryTokens } : {}),
       verifier: normalizeOptionalAddress(parsed.verifier)
     };
   } catch {
@@ -109,8 +112,42 @@ function normalizeContracts(input: unknown): RiskaTestnetContracts {
   }, {});
 }
 
+function normalizeTestAuxiliaryTokens(input: unknown): Record<string, RiskaTestnetAuxiliaryTokenRecord> {
+  if (!input || typeof input !== "object") {
+    return {};
+  }
+
+  const record = input as Record<string, Partial<RiskaTestnetAuxiliaryTokenRecord>>;
+
+  return Object.entries(record).reduce<Record<string, RiskaTestnetAuxiliaryTokenRecord>>((tokens, [key, token]) => {
+    const address = normalizeOptionalAddress(token.address);
+    const decimals = Number(token.decimals);
+    const name = typeof token.name === "string" && token.name.trim() ? token.name : undefined;
+    const symbol = typeof token.symbol === "string" && token.symbol.trim() ? token.symbol : undefined;
+
+    if (!address || !name || !symbol || !Number.isInteger(decimals) || decimals < 0 || decimals > 255) {
+      return tokens;
+    }
+
+    tokens[key] = {
+      address,
+      decimals,
+      mintTransactionHash: normalizeOptionalHash(token.mintTransactionHash),
+      name,
+      symbol,
+      transactionHash: normalizeOptionalHash(token.transactionHash)
+    };
+
+    return tokens;
+  }, {});
+}
+
 function normalizeOptionalAddress(address: unknown): `0x${string}` | undefined {
   return typeof address === "string" && isAddress(address) ? getAddress(address) : undefined;
+}
+
+function normalizeOptionalHash(hash: unknown): `0x${string}` | null {
+  return typeof hash === "string" && hash.startsWith("0x") ? (hash as `0x${string}`) : null;
 }
 
 function hasRequiredContracts(contracts: RiskaTestnetContracts) {

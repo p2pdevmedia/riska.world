@@ -11,6 +11,15 @@ export type RiskaTestnetContractRecord = {
 
 export type RiskaTestnetContracts = Partial<Record<RiskaTestnetContractName, RiskaTestnetContractRecord>>;
 
+export type RiskaTestnetAuxiliaryTokenRecord = {
+  address: `0x${string}`;
+  decimals: number;
+  mintTransactionHash?: `0x${string}` | null;
+  name: string;
+  symbol: string;
+  transactionHash?: `0x${string}` | null;
+};
+
 export type RiskaTestnetDeployment = {
   blockNumber?: number;
   chainId: string;
@@ -19,6 +28,7 @@ export type RiskaTestnetDeployment = {
   deployer?: `0x${string}`;
   explorerBaseUrl: string;
   network: string;
+  testAuxiliaryTokens?: Record<string, RiskaTestnetAuxiliaryTokenRecord>;
   verifier?: `0x${string}`;
 };
 

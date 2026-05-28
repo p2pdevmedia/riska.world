@@ -24,6 +24,7 @@ import {
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
   type ComponentType,
   type Dispatch,
@@ -105,8 +106,11 @@ type ExistingPolicyLookupState =
   | { status: "none" }
   | { message: string; status: "error" };
 
+type TestnetAuxiliaryTokenOption = NonNullable<RiskaTestnetDeployment["testAuxiliaryTokens"]>[string];
+
 const storageKey = "riska.enrollment.v2";
 const beneficiaryColors = ["bg-rose-500", "bg-amber-500", "bg-emerald-500", "bg-cyan-500", "bg-violet-500"];
+const testAuxiliaryTokenOrder = ["mBTC", "mETH", "mSOL"];
 
 const steps: WizardStep[] = [
   { accent: "bg-emerald-500", icon: Fingerprint, id: "identity" },
@@ -249,6 +253,8 @@ const copy = {
           claimDeath: "Claim death",
           claimMonthly: "Claim monthly",
           claimableAt: "Claimable after",
+          commonTokens: "Common test tokens",
+          customToken: "Custom 0x",
           deathNotice: "Death report",
           deposit: "Deposit",
           depositAmount: "Deposit amount",
@@ -262,9 +268,11 @@ const copy = {
           payoutProgress: "Payouts",
           refresh: "Refresh",
           reportDeath: "Report death",
+          selectedToken: "Selected token",
           status: "Status",
           title: "Your policy",
           tokenAddress: "ERC20 token address",
+          tokenAddressInvalid: "Enter a valid ERC20 token address.",
           tokenAmount: "Token amount",
           tokenVaultNote:
             "These tokens are separate from USDC payout math. The holder can withdraw them in parts with no fee, and if death settlement happens they pass 100% to beneficiaries.",
@@ -409,6 +417,8 @@ const copy = {
           claimDeath: "Cobrar muerte",
           claimMonthly: "Cobrar mes",
           claimableAt: "Cobrable desde",
+          commonTokens: "Tokens de prueba comunes",
+          customToken: "0x custom",
           deathNotice: "Reporte muerte",
           deposit: "Depositar",
           depositAmount: "Monto a depositar",
@@ -422,9 +432,11 @@ const copy = {
           payoutProgress: "Pagos",
           refresh: "Actualizar",
           reportDeath: "Reportar muerte",
+          selectedToken: "Token seleccionado",
           status: "Estado",
           title: "Tu póliza",
           tokenAddress: "Dirección del token ERC20",
+          tokenAddressInvalid: "Ingresá una dirección ERC20 válida.",
           tokenAmount: "Monto del token",
           tokenVaultNote:
             "Estos tokens quedan separados del cálculo de pago en USDC. El titular puede retirarlos en partes sin fee y, si hay liquidación por muerte, pasan 100% a beneficiarios.",
@@ -1289,6 +1301,7 @@ function TestnetIssuePanel({
       {policyId && state.walletSession && (
         <PolicyControlPanel
           content={content}
+          deployment={deployment}
           policyId={policyId}
           walletAddress={state.walletSession.address}
         />
@@ -1299,10 +1312,12 @@ function TestnetIssuePanel({
 
 function PolicyControlPanel({
   content,
+  deployment,
   policyId,
   walletAddress
 }: {
   content: (typeof copy)[Language];
+  deployment: RiskaTestnetDeployment | null;
   policyId: string;
   walletAddress: string;
 }) {
@@ -1315,6 +1330,7 @@ function PolicyControlPanel({
   const [workingAction, setWorkingAction] = useState<TestnetPolicyAction | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusTone, setStatusTone] = useState("text-[#66746e]");
+  const tokenAddressInputRef = useRef<HTMLInputElement | null>(null);
 
   const refreshPolicy = useCallback(async () => {
     const nextPolicy = await getTestnetPolicy({ policyId, viewer: walletAddress });
@@ -1386,9 +1402,13 @@ function PolicyControlPanel({
   const canDeposit = policy ? status === 1 : false;
   const canWithdrawExtra = policy ? canUseHolderAction && policy.remainingExtraPrincipal > 0n : false;
   const canUseTokenVault = policy ? canUseHolderAction && (minimumFunded || status === 2) : false;
-  const hasTokenAddress = tokenAddress.trim().length > 0;
+  const auxiliaryTokenOptions = getTestnetAuxiliaryTokenOptions(deployment);
+  const normalizedTokenAddress = tokenAddress.trim().toLowerCase();
+  const hasTokenAddress = isWalletAddress(tokenAddress);
+  const tokenAddressInvalid = tokenAddress.trim().length > 0 && !hasTokenAddress;
+  const selectedPresetToken = auxiliaryTokenOptions.find((token) => token.address.toLowerCase() === normalizedTokenAddress);
   const selectedAuxiliaryToken = policy?.auxiliaryTokens.find(
-    (token) => token.address.toLowerCase() === tokenAddress.toLowerCase()
+    (token) => token.address.toLowerCase() === normalizedTokenAddress
   );
   const canWithdrawToken = Boolean(hasTokenAddress && canUseHolderAction && selectedAuxiliaryToken && selectedAuxiliaryToken.balance > 0n);
   const canActivate = policy ? status === 1 && minimumFunded : false;
@@ -1509,12 +1529,58 @@ function PolicyControlPanel({
               </div>
             )}
 
+            {auxiliaryTokenOptions.length > 0 && (
+              <div className="mt-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#66746e]">{text.commonTokens}</p>
+                <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {auxiliaryTokenOptions.map((token) => {
+                    const selected = selectedPresetToken?.address === token.address;
+
+                    return (
+                      <button
+                        aria-pressed={selected}
+                        className={`flex min-h-14 flex-col justify-center border px-3 py-2 text-left transition ${
+                          selected
+                            ? "border-emerald-500 bg-emerald-50 text-emerald-900"
+                            : "border-[#dce4d8] bg-white text-[#26342d] hover:border-[#17231e]"
+                        }`}
+                        key={token.address}
+                        onClick={() => setTokenAddress(token.address)}
+                        type="button"
+                      >
+                        <span className="text-sm font-semibold">{token.symbol}</span>
+                        <span className="mt-1 font-mono text-[11px] leading-none text-[#66746e]">{shortAddress(token.address)}</span>
+                      </button>
+                    );
+                  })}
+                  <button
+                    className="flex min-h-14 flex-col justify-center border border-[#dce4d8] bg-white px-3 py-2 text-left text-[#26342d] transition hover:border-[#17231e]"
+                    onClick={() => {
+                      tokenAddressInputRef.current?.focus();
+                      tokenAddressInputRef.current?.select();
+                    }}
+                    type="button"
+                  >
+                    <span className="text-sm font-semibold">{text.customToken}</span>
+                    <span className="mt-1 font-mono text-[11px] leading-none text-[#66746e]">0x...</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {selectedPresetToken && (
+              <p className="mt-3 text-xs font-semibold text-emerald-800">
+                {text.selectedToken}: {selectedPresetToken.name} ({selectedPresetToken.symbol})
+              </p>
+            )}
+
             <div className="mt-3 grid gap-2 lg:grid-cols-[1.4fr_0.8fr_auto_auto]">
               <input
                 aria-label={text.tokenAddress}
                 className="min-h-11 border border-[#e3e8df] bg-white px-3 text-sm outline-none focus:border-[#17231e]"
                 onChange={(event) => setTokenAddress(event.target.value)}
                 placeholder="0x..."
+                ref={tokenAddressInputRef}
                 type="text"
                 value={tokenAddress}
               />
@@ -1544,6 +1610,7 @@ function PolicyControlPanel({
                 workingAction={workingAction}
               />
             </div>
+            {tokenAddressInvalid && <p className="mt-2 text-sm text-red-700">{text.tokenAddressInvalid}</p>}
           </div>
 
           <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -1602,6 +1669,21 @@ function PolicyControlPanel({
       {statusMessage && <p className={`mt-3 text-sm ${statusTone}`}>{statusMessage}</p>}
     </div>
   );
+}
+
+function getTestnetAuxiliaryTokenOptions(deployment: RiskaTestnetDeployment | null): TestnetAuxiliaryTokenOption[] {
+  const order = new Map(testAuxiliaryTokenOrder.map((symbol, index) => [symbol, index]));
+
+  return Object.values(deployment?.testAuxiliaryTokens ?? {}).sort((left, right) => {
+    const leftOrder = order.get(left.symbol) ?? Number.MAX_SAFE_INTEGER;
+    const rightOrder = order.get(right.symbol) ?? Number.MAX_SAFE_INTEGER;
+
+    if (leftOrder !== rightOrder) {
+      return leftOrder - rightOrder;
+    }
+
+    return left.symbol.localeCompare(right.symbol);
+  });
 }
 
 function PolicyActionButton({
