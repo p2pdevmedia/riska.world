@@ -42,6 +42,8 @@ export type TestnetPolicyAction =
   | "withdrawExtra"
   | "depositToken"
   | "withdrawToken"
+  | "depositYield"
+  | "withdrawYield"
   | "activatePayout"
   | "claimMonthly"
   | "claimAll"
@@ -85,6 +87,26 @@ export type RiskaTestnetPolicyView = {
     decimals: number;
     symbol: string;
   }>;
+  yieldPositions: Array<{
+    active: boolean;
+    costBasis: bigint;
+    depositCap: bigint;
+    depositsEnabled: boolean;
+    estimatedAssets: bigint;
+    metadataURI: string;
+    name: string;
+    shares: bigint;
+    strategyId: number;
+    totalCostBasis: bigint;
+    totalShares: bigint;
+  }>;
+  yieldStrategies: Array<{
+    active: boolean;
+    depositCap: bigint;
+    depositsEnabled: boolean;
+    name: string;
+    strategyId: number;
+  }>;
   remainingExtraPrincipal: bigint;
   remainingMinimumPrincipal: bigint;
   status: number;
@@ -96,6 +118,7 @@ type ContractAddresses = {
   mockUsdc: `0x${string}`;
   policyManager: `0x${string}`;
   premiumVault: `0x${string}`;
+  yieldStrategyManager?: `0x${string}`;
 };
 
 const FIRST_PREMIUM = parseUnits("30", 6);
@@ -217,6 +240,30 @@ const policyManagerAbi = [
   {
     inputs: [
       { name: "policyId", type: "uint256" },
+      { name: "strategyId", type: "uint256" },
+      { name: "amount", type: "uint256" },
+      { name: "minSharesOut", type: "uint256" }
+    ],
+    name: "depositYield",
+    outputs: [{ name: "shares", type: "uint256" }],
+    stateMutability: "nonpayable",
+    type: "function"
+  },
+  {
+    inputs: [
+      { name: "policyId", type: "uint256" },
+      { name: "strategyId", type: "uint256" },
+      { name: "shares", type: "uint256" },
+      { name: "minAssetsOut", type: "uint256" }
+    ],
+    name: "withdrawYield",
+    outputs: [{ name: "returnedAssets", type: "uint256" }],
+    stateMutability: "nonpayable",
+    type: "function"
+  },
+  {
+    inputs: [
+      { name: "policyId", type: "uint256" },
       { name: "token", type: "address" },
       { name: "amount", type: "uint256" }
     ],
@@ -324,12 +371,69 @@ const policyManagerAbi = [
     type: "function"
   },
   {
+    inputs: [{ name: "policyId", type: "uint256" }],
+    name: "yieldStrategyCount",
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    inputs: [
+      { name: "policyId", type: "uint256" },
+      { name: "index", type: "uint256" }
+    ],
+    name: "yieldStrategyAt",
+    outputs: [
+      { name: "strategyId", type: "uint256" },
+      { name: "shares", type: "uint256" },
+      { name: "costBasis", type: "uint256" }
+    ],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
     inputs: [
       { name: "policyId", type: "uint256" },
       { name: "account", type: "address" }
     ],
     name: "isBeneficiary",
     outputs: [{ name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function"
+  }
+] as const;
+
+const yieldStrategyManagerAbi = [
+  {
+    inputs: [],
+    name: "strategyCount",
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    inputs: [{ name: "strategyId", type: "uint256" }],
+    name: "strategyAt",
+    outputs: [
+      { name: "adapter", type: "address" },
+      { name: "name", type: "string" },
+      { name: "metadataURI", type: "string" },
+      { name: "depositCap", type: "uint256" },
+      { name: "totalCostBasis", type: "uint256" },
+      { name: "totalShares", type: "uint256" },
+      { name: "active", type: "bool" },
+      { name: "depositsEnabled", type: "bool" }
+    ],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    inputs: [
+      { name: "strategyId", type: "uint256" },
+      { name: "shares", type: "uint256" }
+    ],
+    name: "previewRedeem",
+    outputs: [{ name: "assets", type: "uint256" }],
     stateMutability: "view",
     type: "function"
   }
@@ -406,6 +510,12 @@ export async function getTestnetPolicy({
         : Promise.resolve(false)
     ]);
   const auxiliaryTokens = await getPolicyAuxiliaryTokens(policyManager, id);
+  const yieldPositions = await getPolicyYieldPositions({
+    policyId: id,
+    policyManager,
+    yieldStrategyManager: deployment.contracts.yieldStrategyManager?.address
+  });
+  const yieldStrategies = await getYieldStrategies(deployment.contracts.yieldStrategyManager?.address);
 
   return {
     deathNotice: {
@@ -424,12 +534,46 @@ export async function getTestnetPolicy({
     payoutsMade: Number(policy[2]),
     policyId,
     auxiliaryTokens,
+    yieldPositions,
+    yieldStrategies,
     remainingExtraPrincipal: policy[7],
     remainingMinimumPrincipal: policy[6],
     status: policy[9],
     termsHash: policy[1],
     totalPrincipal
   };
+}
+
+async function getYieldStrategies(yieldStrategyManager?: `0x${string}`) {
+  if (!yieldStrategyManager) return [];
+
+  try {
+    const count = await publicClient.readContract({
+      abi: yieldStrategyManagerAbi,
+      address: yieldStrategyManager,
+      functionName: "strategyCount"
+    });
+    const strategies = await Promise.all(
+      Array.from({ length: Number(count) }, (_, index) =>
+        publicClient.readContract({
+          abi: yieldStrategyManagerAbi,
+          address: yieldStrategyManager,
+          args: [BigInt(index)],
+          functionName: "strategyAt"
+        })
+      )
+    );
+
+    return strategies.map((strategy, strategyId) => ({
+      active: strategy[6],
+      depositCap: strategy[3],
+      depositsEnabled: strategy[7],
+      name: strategy[1],
+      strategyId
+    }));
+  } catch {
+    return [];
+  }
 }
 
 export async function getTestnetPolicyIdForHolder({
@@ -478,6 +622,79 @@ async function getPolicyAuxiliaryTokens(policyManager: `0x${string}`, policyId: 
         };
       })
   );
+}
+
+async function getPolicyYieldPositions({
+  policyId,
+  policyManager,
+  yieldStrategyManager
+}: {
+  policyId: bigint;
+  policyManager: `0x${string}`;
+  yieldStrategyManager?: `0x${string}`;
+}): Promise<RiskaTestnetPolicyView["yieldPositions"]> {
+  if (!yieldStrategyManager) {
+    return [];
+  }
+
+  try {
+    const count = await publicClient.readContract({
+      abi: policyManagerAbi,
+      address: policyManager,
+      args: [policyId],
+      functionName: "yieldStrategyCount"
+    });
+
+    const rows = await Promise.all(
+      Array.from({ length: Number(count) }, (_, index) =>
+        publicClient.readContract({
+          abi: policyManagerAbi,
+          address: policyManager,
+          args: [policyId, BigInt(index)],
+          functionName: "yieldStrategyAt"
+        })
+      )
+    );
+
+    const activeRows = rows.filter(([, shares]) => shares > 0n);
+
+    return Promise.all(
+      activeRows.map(async ([strategyId, shares, costBasis]) => {
+        const [strategy, estimatedAssets] = await Promise.all([
+          publicClient.readContract({
+            abi: yieldStrategyManagerAbi,
+            address: yieldStrategyManager,
+            args: [strategyId],
+            functionName: "strategyAt"
+          }),
+          publicClient
+            .readContract({
+              abi: yieldStrategyManagerAbi,
+              address: yieldStrategyManager,
+              args: [strategyId, shares],
+              functionName: "previewRedeem"
+            })
+            .catch(() => 0n)
+        ]);
+
+        return {
+          active: strategy[6],
+          costBasis,
+          depositCap: strategy[3],
+          depositsEnabled: strategy[7],
+          estimatedAssets,
+          metadataURI: strategy[2],
+          name: strategy[1],
+          shares,
+          strategyId: Number(strategyId),
+          totalCostBasis: strategy[4],
+          totalShares: strategy[5]
+        };
+      })
+    );
+  } catch {
+    return [];
+  }
 }
 
 export async function issueTestnetPolicy({
@@ -545,6 +762,7 @@ export async function runTestnetPolicyAction({
   holder,
   onStatus,
   policyId,
+  strategyId,
   tokenAddress
 }: {
   action: TestnetPolicyAction;
@@ -552,6 +770,7 @@ export async function runTestnetPolicyAction({
   holder: string;
   onStatus?: (status: TestnetPolicyActionStatus) => void;
   policyId: string;
+  strategyId?: number;
   tokenAddress?: string;
 }) {
   onStatus?.("loading_contracts");
@@ -562,7 +781,7 @@ export async function runTestnetPolicyAction({
   const id = BigInt(policyId);
   let hash: Hash;
 
-  if (action === "deposit" || action === "withdrawExtra") {
+  if (action === "deposit" || action === "withdrawExtra" || action === "depositYield" || action === "withdrawYield") {
     const parsedAmount = parseUnits(amount ?? "0", 6);
     if (parsedAmount <= 0n) {
       throw new Error("Amount must be greater than 0 USDC.");
@@ -577,14 +796,36 @@ export async function runTestnetPolicyAction({
       });
     }
 
+    if ((action === "depositYield" || action === "withdrawYield") && strategyId === undefined) {
+      throw new Error("Select a yield strategy first.");
+    }
+
     onStatus?.("sending_transaction");
-    hash = await walletClient.writeContract({
-      abi: policyManagerAbi,
-      account,
-      address: contracts.policyManager,
-      args: [id, parsedAmount],
-      functionName: action
-    });
+    if (action === "depositYield") {
+      hash = await walletClient.writeContract({
+        abi: policyManagerAbi,
+        account,
+        address: contracts.policyManager,
+        args: [id, BigInt(strategyId ?? 0), parsedAmount, 0n],
+        functionName: "depositYield"
+      });
+    } else if (action === "withdrawYield") {
+      hash = await walletClient.writeContract({
+        abi: policyManagerAbi,
+        account,
+        address: contracts.policyManager,
+        args: [id, BigInt(strategyId ?? 0), parsedAmount, 0n],
+        functionName: "withdrawYield"
+      });
+    } else {
+      hash = await walletClient.writeContract({
+        abi: policyManagerAbi,
+        account,
+        address: contracts.policyManager,
+        args: [id, parsedAmount],
+        functionName: action
+      });
+    }
   } else if (action === "depositToken" || action === "withdrawToken") {
     if (!tokenAddress || !isAddress(tokenAddress)) {
       throw new Error("Enter a valid ERC20 token address.");
@@ -705,12 +946,13 @@ function getRequiredContracts(deployment: RiskaTestnetDeployment): ContractAddre
   const mockUsdc = deployment.contracts.mockUsdc?.address;
   const premiumVault = deployment.contracts.premiumVault?.address;
   const policyManager = deployment.contracts.policyManager?.address;
+  const yieldStrategyManager = deployment.contracts.yieldStrategyManager?.address;
 
   if (!mockUsdc || !premiumVault || !policyManager) {
     throw new Error("The testnet deployment is missing MockUSDC, PremiumVault, or PolicyManager.");
   }
 
-  return { mockUsdc, policyManager, premiumVault };
+  return { mockUsdc, policyManager, premiumVault, yieldStrategyManager };
 }
 
 async function readPolicyIdForHolder(policyManager: `0x${string}`, account: `0x${string}`) {

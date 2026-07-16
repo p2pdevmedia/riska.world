@@ -7,6 +7,7 @@ library RiskaPolicyMath {
     uint16 internal constant PAYOUT_MONTHS = 120;
     uint16 internal constant DEATH_BENEFICIARY_BPS = 8_000;
     uint16 internal constant DEATH_FEE_BPS = 2_000;
+    uint16 internal constant YIELD_FEE_BPS = 1_000;
 
     uint8 internal constant USDC_DECIMALS = 6;
     uint256 internal constant MINIMUM_MONTHLY_UNIT = 30 * 10 ** USDC_DECIMALS;

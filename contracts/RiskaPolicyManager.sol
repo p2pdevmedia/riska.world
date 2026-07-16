@@ -9,6 +9,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 import {RiskaBeneficiaryRegistry} from "./RiskaBeneficiaryRegistry.sol";
 import {RiskaPolicyMath} from "./RiskaPolicyMath.sol";
 import {RiskaPremiumVault} from "./RiskaPremiumVault.sol";
+import {RiskaYieldStrategyManager} from "./RiskaYieldStrategyManager.sol";
 
 contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
     enum PolicyStatus {
@@ -38,12 +39,19 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
         bool active;
     }
 
+    struct YieldPosition {
+        uint256 shares;
+        uint256 costBasis;
+    }
+
     uint256 public constant PAYMENT_PERIOD = 30 days;
     uint256 public constant DEATH_REPORT_DELAY = 12 * 30 days;
     uint256 public constant MAX_AUXILIARY_TOKENS = 16;
+    uint256 public constant MAX_YIELD_STRATEGIES_PER_POLICY = 16;
 
     RiskaBeneficiaryRegistry public immutable beneficiaryRegistry;
     RiskaPremiumVault public immutable premiumVault;
+    RiskaYieldStrategyManager public yieldStrategyManager;
 
     uint256 public nextPolicyId = 1;
 
@@ -53,7 +61,12 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
     mapping(uint256 => mapping(address => uint256)) public auxiliaryTokenBalances;
     mapping(uint256 => address[]) private auxiliaryTokens;
     mapping(uint256 => mapping(address => bool)) private hasAuxiliaryToken;
+    mapping(uint256 => mapping(uint256 => YieldPosition)) public yieldPositions;
+    mapping(uint256 => uint256[]) private policyYieldStrategies;
+    mapping(uint256 => mapping(uint256 => bool)) private hasYieldStrategy;
+    mapping(uint256 => uint256) public yieldPrincipalAllocated;
 
+    event YieldStrategyManagerUpdated(address indexed yieldStrategyManager);
     event PolicyOpened(uint256 indexed policyId, address indexed holder, bytes32 indexed termsHash);
     event PolicyDeposit(
         uint256 indexed policyId,
@@ -76,6 +89,22 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
     event DeathReported(uint256 indexed policyId, address indexed reporter, uint256 claimableAt);
     event DeathReportCancelled(uint256 indexed policyId);
     event DeathClaimed(uint256 indexed policyId, uint256 payout, uint256 retainedFee);
+    event PolicyYieldDeposited(
+        uint256 indexed policyId,
+        uint256 indexed strategyId,
+        uint256 assets,
+        uint256 shares
+    );
+    event PolicyYieldWithdrawn(
+        uint256 indexed policyId,
+        uint256 indexed strategyId,
+        uint256 shares,
+        uint256 costBasis,
+        uint256 returnedAssets,
+        uint256 protocolFee,
+        uint256 policyGain,
+        uint256 policyLoss
+    );
 
     constructor(
         RiskaBeneficiaryRegistry beneficiaryRegistry_,
@@ -94,6 +123,12 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
 
     function unpause() external onlyOwner {
         _unpause();
+    }
+
+    function setYieldStrategyManager(RiskaYieldStrategyManager nextYieldStrategyManager) external onlyOwner {
+        require(address(nextYieldStrategyManager) != address(0), "INVALID_YIELD_MANAGER");
+        yieldStrategyManager = nextYieldStrategyManager;
+        emit YieldStrategyManagerUpdated(address(nextYieldStrategyManager));
     }
 
     function openPolicy(
@@ -159,6 +194,7 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
             policy.remainingMinimumPrincipal == RiskaPolicyMath.MINIMUM_POLICY_PRINCIPAL,
             "MINIMUM_NOT_FUNDED"
         );
+        require(!hasOpenYieldPositions(policyId), "OPEN_YIELD_POSITION");
 
         uint256 totalBalance = _totalPrincipal(policy);
         uint256 monthlyAmount = RiskaPolicyMath.monthlyPayout(totalBalance);
@@ -179,6 +215,7 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
         require(policy.holder == msg.sender, "ONLY_HOLDER");
         require(policy.status == PolicyStatus.PayoutActive, "NOT_IN_PAYOUT");
         require(block.timestamp >= policy.nextPayoutAt, "PAYOUT_NOT_READY");
+        require(!hasOpenYieldPositions(policyId), "OPEN_YIELD_POSITION");
 
         uint256 amount = policy.monthlyPayoutAmount;
         uint256 totalBalance = _totalPrincipal(policy);
@@ -214,6 +251,7 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
                 policy.remainingMinimumPrincipal == RiskaPolicyMath.MINIMUM_POLICY_PRINCIPAL,
             "MINIMUM_NOT_FUNDED"
         );
+        require(!hasOpenYieldPositions(policyId), "OPEN_YIELD_POSITION");
 
         uint256 remainingMinimumPrincipal = policy.remainingMinimumPrincipal;
         uint256 remainingExtraPrincipal = policy.remainingExtraPrincipal;
@@ -243,6 +281,7 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
         require(policy.status == PolicyStatus.Active || policy.status == PolicyStatus.PayoutActive, "POLICY_CLOSED");
         require(amount > 0, "INVALID_AMOUNT");
         require(amount <= policy.remainingExtraPrincipal, "EXTRA_EXCEEDS_BALANCE");
+        require(!hasOpenYieldPositions(policyId), "OPEN_YIELD_POSITION");
 
         _recordHolderInteraction(policyId, policy);
 
@@ -255,6 +294,107 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
         premiumVault.payHolder(policyId, policy.holder, amount);
 
         emit ExtraWithdrawn(policyId, policy.holder, amount);
+    }
+
+    function depositYield(uint256 policyId, uint256 strategyId, uint256 amount, uint256 minSharesOut)
+        external
+        whenNotPaused
+        nonReentrant
+        returns (uint256 shares)
+    {
+        Policy storage policy = policies[policyId];
+        require(address(yieldStrategyManager) != address(0), "YIELD_NOT_CONFIGURED");
+        require(policy.holder == msg.sender, "ONLY_HOLDER");
+        require(policy.status == PolicyStatus.Active, "YIELD_ONLY_ACCUMULATION");
+        require(amount > 0, "INVALID_AMOUNT");
+        require(amount <= _yieldAvailable(policyId, policy), "YIELD_EXCEEDS_AVAILABLE");
+
+        _recordHolderInteraction(policyId, policy);
+
+        shares = yieldStrategyManager.depositPolicyPrincipal(policyId, strategyId, amount, minSharesOut);
+        require(shares > 0, "NO_SHARES");
+
+        if (!hasYieldStrategy[policyId][strategyId]) {
+            require(policyYieldStrategies[policyId].length < MAX_YIELD_STRATEGIES_PER_POLICY, "TOO_MANY_YIELD_STRATEGIES");
+            hasYieldStrategy[policyId][strategyId] = true;
+            policyYieldStrategies[policyId].push(strategyId);
+        }
+
+        YieldPosition storage position = yieldPositions[policyId][strategyId];
+        position.shares += shares;
+        position.costBasis += amount;
+        yieldPrincipalAllocated[policyId] += amount;
+
+        emit PolicyYieldDeposited(policyId, strategyId, amount, shares);
+    }
+
+    function withdrawYield(uint256 policyId, uint256 strategyId, uint256 shares, uint256 minAssetsOut)
+        public
+        whenNotPaused
+        nonReentrant
+        returns (uint256 returnedAssets)
+    {
+        Policy storage policy = policies[policyId];
+        require(address(yieldStrategyManager) != address(0), "YIELD_NOT_CONFIGURED");
+        require(policy.status == PolicyStatus.Active, "YIELD_ONLY_ACCUMULATION");
+
+        bool holderAction = policy.holder == msg.sender;
+        require(holderAction || _canSettleDeathYield(policyId, msg.sender, policy), "ONLY_HOLDER_OR_CLAIMABLE_BENEFICIARY");
+
+        YieldPosition storage position = yieldPositions[policyId][strategyId];
+        require(shares > 0, "INVALID_SHARES");
+        require(shares <= position.shares, "SHARES_EXCEED_POSITION");
+
+        uint256 costBasis = shares == position.shares
+            ? position.costBasis
+            : (position.costBasis * shares) / position.shares;
+        require(costBasis > 0, "INVALID_COST_BASIS");
+
+        if (holderAction) {
+            _recordHolderInteraction(policyId, policy);
+        }
+
+        uint256 protocolFee;
+        uint256 policyGain;
+        uint256 policyLoss;
+        (returnedAssets, protocolFee, policyGain, policyLoss) = yieldStrategyManager.withdrawPolicyPrincipal(
+            policyId,
+            strategyId,
+            shares,
+            costBasis,
+            minAssetsOut
+        );
+
+        position.shares -= shares;
+        position.costBasis -= costBasis;
+        yieldPrincipalAllocated[policyId] -= costBasis;
+
+        if (policyGain > 0) {
+            policy.remainingExtraPrincipal += policyGain;
+        }
+
+        if (policyLoss > 0) {
+            _absorbPrincipalLoss(policy, policyLoss);
+        }
+
+        emit PolicyYieldWithdrawn(
+            policyId,
+            strategyId,
+            shares,
+            costBasis,
+            returnedAssets,
+            protocolFee,
+            policyGain,
+            policyLoss
+        );
+    }
+
+    function withdrawAllYield(uint256 policyId, uint256 strategyId, uint256 minAssetsOut)
+        external
+        returns (uint256 returnedAssets)
+    {
+        YieldPosition storage position = yieldPositions[policyId][strategyId];
+        return withdrawYield(policyId, strategyId, position.shares, minAssetsOut);
     }
 
     function depositToken(uint256 policyId, address token, uint256 amount) external whenNotPaused nonReentrant {
@@ -331,6 +471,7 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
         require(notice.active, "NO_DEATH_REPORT");
         require(block.timestamp >= notice.reportedAt + DEATH_REPORT_DELAY, "DEATH_CLAIM_NOT_READY");
         require(policy.lastHolderInteractionAt <= notice.reportedAt, "HOLDER_INTERACTED");
+        require(!hasOpenYieldPositions(policyId), "OPEN_YIELD_POSITION");
 
         uint256 remainingMinimumPrincipal = policy.remainingMinimumPrincipal;
         uint256 remainingExtraPrincipal = policy.remainingExtraPrincipal;
@@ -408,6 +549,58 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
     function auxiliaryTokenAt(uint256 policyId, uint256 index) external view returns (address token, uint256 balance) {
         token = auxiliaryTokens[policyId][index];
         balance = auxiliaryTokenBalances[policyId][token];
+    }
+
+    function yieldStrategyCount(uint256 policyId) external view returns (uint256) {
+        return policyYieldStrategies[policyId].length;
+    }
+
+    function yieldStrategyAt(uint256 policyId, uint256 index)
+        external
+        view
+        returns (uint256 strategyId, uint256 shares, uint256 costBasis)
+    {
+        strategyId = policyYieldStrategies[policyId][index];
+        YieldPosition storage position = yieldPositions[policyId][strategyId];
+        shares = position.shares;
+        costBasis = position.costBasis;
+    }
+
+    function hasOpenYieldPositions(uint256 policyId) public view returns (bool) {
+        uint256[] storage strategyIds = policyYieldStrategies[policyId];
+
+        for (uint256 i = 0; i < strategyIds.length; i++) {
+            if (yieldPositions[policyId][strategyIds[i]].shares > 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function _yieldAvailable(uint256 policyId, Policy storage policy) private view returns (uint256) {
+        return _totalPrincipal(policy) - yieldPrincipalAllocated[policyId];
+    }
+
+    function _canSettleDeathYield(uint256 policyId, address account, Policy storage policy) private view returns (bool) {
+        DeathNotice storage notice = deathNotices[policyId];
+
+        return isBeneficiary(policyId, account) &&
+            notice.active &&
+            block.timestamp >= notice.reportedAt + DEATH_REPORT_DELAY &&
+            policy.lastHolderInteractionAt <= notice.reportedAt;
+    }
+
+    function _absorbPrincipalLoss(Policy storage policy, uint256 loss) private {
+        if (loss <= policy.remainingExtraPrincipal) {
+            policy.remainingExtraPrincipal -= loss;
+            return;
+        }
+
+        uint256 remainingLoss = loss - policy.remainingExtraPrincipal;
+        policy.remainingExtraPrincipal = 0;
+        require(remainingLoss <= policy.remainingMinimumPrincipal, "LOSS_EXCEEDS_PRINCIPAL");
+        policy.remainingMinimumPrincipal -= remainingLoss;
     }
 
     function _collectAndAllocateDeposit(uint256 policyId, uint256 amount) private {

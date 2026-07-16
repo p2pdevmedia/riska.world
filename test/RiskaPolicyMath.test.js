@@ -18,6 +18,7 @@ describe("RiskaPolicyMath", function () {
     expect(await math.minimumPolicyPrincipal()).to.equal(usdc("10800"));
     expect(await math.deathBeneficiaryBps()).to.equal(8000);
     expect(await math.deathFeeBps()).to.equal(2000);
+    expect(await math.yieldFeeBps()).to.equal(1000);
   });
 
   it("estimates monthly payout from the full remaining balance", async function () {

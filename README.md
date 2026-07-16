@@ -2,6 +2,36 @@
 
 Riska 30 is a flexible USDC policy account for World ID verified humans.
 
+## Morpho USDC on World Chain
+
+The yield manager uses the ERC-4626 interface implemented by MetaMorpho vaults. Production strategy onboarding is deliberately an owner-controlled, allowlisted operation: a holder can choose only a strategy that Riska has already approved, and each strategy has a cap and an independent deposit pause.
+
+After the Riska contracts have been deployed with Circle USDC on World Chain, configure an approved Morpho USDC vault with:
+
+```bash
+WORLDCHAIN_RPC_URL=... \
+WORLDCHAIN_PRIVATE_KEY=... \
+RISKA_YIELD_STRATEGY_MANAGER=0x... \
+MORPHO_USDC_VAULT=0x... \
+MORPHO_USDC_DEPOSIT_CAP=25000 \
+MORPHO_USDC_METADATA_URI=https://... \
+npm run contracts:configure:morpho-usdc:worldchain
+```
+
+The script refuses the wrong chain and rejects a vault unless its `asset()` is World Chain's official USDC (`0x79A02482A880bCE3F13e09Da970dC34db4CD24d1`). Choose and review the vault address, curator, markets, liquidity, cap, and audit status before running it; the script does not treat a vault address as trusted merely because it is supplied in an environment variable.
+
+Official Morpho production contracts on World Chain are recorded here for operational reference. Riska's ERC-4626 adapter deposits into an approved MetaMorpho vault, so it does not call Morpho Blue or its oracle/IRM contracts directly.
+
+| Contract | Address |
+| --- | --- |
+| Morpho Blue | `0xE741BC7c34758b4caE05062794E8Ae24978AF432` |
+| Adaptive Curve IRM | `0x34E99D604751a72cF8d0CFDf87069292d82De472` |
+| Chainlink Oracle V2 Factory | `0xd706690BA1Fe26b70c4AD89e60ff62cEB3A2eD02` |
+| MetaMorpho V1.1 Factory | `0x4DBB3a642a2146d5413750Cca3647086D9ba5F12` |
+| Public Allocator | `0xef9889B4e443DEd35FA0Bd060f2104Cca94e6A43` |
+
+Morpho does not list a World Chain Sepolia deployment in its official contract-address page. On World Chain Sepolia, use the included ERC-4626 mock vault and the official test USDC at `0x66145f38cBAC35Ca6F1Dfb4914dF98F1614aeA88`; do not point testnet contracts at mainnet Morpho addresses.
+
 > Any verified human can open a policy. The minimum policy is 10,800 USDC, payable over time or prepaid. Extra USDC deposits increase future monthly payout and are not fee-bearing. Once the USDC minimum is covered, the holder can store other ERC20 tokens in the policy with no Riska fee. Beneficiaries can claim only after a death report plus 12 months without holder interaction, and stored non-USDC ERC20 tokens pass 100% to beneficiaries.
 
 The product combines an electronic policy document with a smart-contract lifecycle:
@@ -13,6 +43,7 @@ The product combines an electronic policy document with a smart-contract lifecyc
 - Holder payout is `total remaining principal / 120` monthly payments, with final dust paid on the last claim.
 - Holder can withdraw extra principal in parts with no fee.
 - Holder can deposit and withdraw non-USDC ERC20 tokens after the USDC minimum is covered; these tokens do not count toward monthly payout, carry no protocol fee, and pass 100% to beneficiaries on death settlement.
+- Holder can opt in to allowlisted World Chain yield strategies during the accumulation phase. Realized positive yield retains 10% for the Riska yield reserve and credits 90% back to the policy as extra principal; realized losses reduce extra principal first, then minimum principal.
 - Holder can claim all remaining USDC principal early; Riska retains 20% only from the remaining minimum principal, extra principal has no fee, and the same policy can be funded and activated again.
 - Holder `heartbeat` proves life and cancels pending beneficiary death reports.
 - Beneficiary death claims also retain 20% only from remaining minimum principal; extra principal and auxiliary ERC20 tokens go 100% to beneficiaries.
@@ -24,12 +55,15 @@ The product combines an electronic policy document with a smart-contract lifecyc
 3. Any amount above 10,800 USDC becomes extra principal and increases the future monthly payout estimate.
 4. Once the minimum is fully funded, the holder can activate 120 monthly payouts.
 5. After the USDC minimum is covered, the holder can deposit other ERC20 tokens as auxiliary token custody.
-6. The holder can withdraw extra principal or auxiliary tokens in parts, claim monthly, claim all USDC principal with the minimum-principal fee, or send a heartbeat without withdrawing.
-7. If the holder withdraws the full living USDC balance, the policy resets to an active zero-balance state and can be funded again.
-8. A configured beneficiary can report death only after the policy has existed for 12 months.
-9. If the holder does not interact for 12 months after the report, any configured beneficiary can claim.
-10. Death settlement pays 100% of stored non-USDC ERC20 tokens to beneficiaries with no protocol fee.
-11. If the holder interacts with the contract, the pending death report is cancelled.
+6. During accumulation, the holder can deploy policy principal into allowlisted yield strategies and must exit open yield positions before payout activation, claim-all, or extra withdrawal.
+7. Realized yield gain sends 10% to the Riska yield reserve and 90% to policy extra principal; realized losses reduce extra principal first, then minimum principal.
+8. The holder can withdraw extra principal or auxiliary tokens in parts, claim monthly, claim all USDC principal with the minimum-principal fee, or send a heartbeat without withdrawing.
+9. If the holder withdraws the full living USDC balance, the policy resets to an active zero-balance state and can be funded again.
+10. A configured beneficiary can report death only after the policy has existed for 12 months.
+11. If the holder does not interact for 12 months after the report, any configured beneficiary can claim.
+12. A claim-ready beneficiary can exit open yield positions before death settlement.
+13. Death settlement pays 100% of stored non-USDC ERC20 tokens to beneficiaries with no protocol fee.
+14. If the holder interacts with the contract, the pending death report is cancelled.
 
 ## Canonical Auxiliary Token Rule
 
@@ -44,6 +78,8 @@ contracts/RiskaPolicyManager.sol
 contracts/RiskaPolicyMath.sol
 contracts/RiskaBeneficiaryRegistry.sol
 contracts/RiskaPremiumVault.sol
+contracts/RiskaYieldStrategyManager.sol
+contracts/RiskaERC4626YieldAdapter.sol
 ```
 
 ## White Paper
