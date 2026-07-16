@@ -4,7 +4,18 @@ Riska 30 is a flexible USDC policy account for World ID verified humans.
 
 ## Morpho USDC on World Chain
 
-The yield manager uses the ERC-4626 interface implemented by MetaMorpho vaults. Production strategy onboarding is deliberately an owner-controlled, allowlisted operation: a holder can choose only a strategy that Riska has already approved, and each strategy has a cap and an independent deposit pause.
+The legacy yield manager uses the ERC-4626 interface implemented by MetaMorpho vaults. Its production strategy onboarding is allowlisted, with a cap and an independent deposit pause per strategy.
+
+## User-owned vaults and governance
+
+The repository also includes the isolated-custody architecture for new accounts:
+
+- `RiskaUserVaultFactory` is permissionless: a wallet calls `createVault()` and receives one deterministic, user-owned `RiskaUserVault`.
+- Idle USDC remains in that individual vault. The owner may keep it static, or explicitly deposit it into an ERC-4626 vault such as a MetaMorpho USDC vault approved by governance.
+- `RiskaProtocolConfig` is the parent contract shared by all user vaults. It contains the USDC token, the approved yield-vault allowlist, protocol yield fee, fee recipient, and the account-creation switch.
+- `RiskaGovernanceToken` + `RiskaProtocolGovernor` govern every mutable config value on-chain. No deployer/admin wallet can directly add a yield vault or change fees after deployment.
+
+For a real launch, distribute/delegate the governance token to its intended holders before proposals are made, and review the governor timing/quorum plus each ERC-4626 vault in a security audit. The factory path is intentionally separate from the legacy policy-manager path, allowing existing policies to continue operating without a custody migration.
 
 After the Riska contracts have been deployed with Circle USDC on World Chain, configure an approved Morpho USDC vault with:
 

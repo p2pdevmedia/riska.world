@@ -6,6 +6,7 @@ const { ethers } = hre;
 
 const WORLDCHAIN_SEPOLIA_CHAIN_ID = 4801n;
 const DEFAULT_MOCK_USDC_MINT_AMOUNT = "20000";
+const DEFAULT_GOVERNANCE_SUPPLY = "1000000";
 
 async function deployContract(name, args = []) {
   const factory = await ethers.getContractFactory(name);
@@ -100,6 +101,7 @@ async function main() {
 
   const mockUsdcMintRecipient = process.env.MOCK_USDC_MINT_TO || deployerAddress;
   const mockUsdcMintAmount = process.env.MOCK_USDC_MINT_AMOUNT || DEFAULT_MOCK_USDC_MINT_AMOUNT;
+  const governanceSupply = process.env.RISKA_GOVERNANCE_SUPPLY || DEFAULT_GOVERNANCE_SUPPLY;
   const deployTestHelpers = process.env.DEPLOY_TEST_HELPERS === "true";
 
   const previousDeployment = readLatestDeployment("worldchain-sepolia");
@@ -114,6 +116,18 @@ async function main() {
     mockUsdc.address,
     premiumVault.address
   ]);
+  const governanceToken = await deployContract("RiskaGovernanceToken", [
+    deployerAddress,
+    ethers.parseEther(governanceSupply)
+  ]);
+  const protocolGovernor = await deployContract("RiskaProtocolGovernor", [governanceToken.address]);
+  const protocolConfig = await deployContract("RiskaProtocolConfig", [
+    mockUsdc.address,
+    protocolGovernor.address,
+    deployerAddress,
+    1000
+  ]);
+  const userVaultFactory = await deployContract("RiskaUserVaultFactory", [protocolConfig.address]);
 
   const setupTransactions = {
     beneficiaryRegistrySetPolicyManager: await runTransaction(
@@ -142,6 +156,10 @@ async function main() {
   const mockUsdcMintTx = await runTransaction(
     "MockUSDC.mint",
     mockUsdc.instance.mint(mockUsdcMintRecipient, mintedAmount)
+  );
+  const governanceDelegationTx = await runTransaction(
+    "RiskaGovernanceToken.delegate",
+    governanceToken.instance.delegate(deployerAddress)
   );
 
   let policyMathHarness = null;
@@ -179,11 +197,16 @@ async function main() {
       premiumVault: contractRecord(premiumVault),
       policyManager: contractRecord(policyManager),
       yieldStrategyManager: contractRecord(yieldStrategyManager),
+      governanceToken: contractRecord(governanceToken),
+      protocolGovernor: contractRecord(protocolGovernor),
+      protocolConfig: contractRecord(protocolConfig),
+      userVaultFactory: contractRecord(userVaultFactory),
       ...(policyMathHarness ? { policyMathHarness: contractRecord(policyMathHarness) } : {}),
       ...(mockYieldAdapter ? { mockYieldAdapter: contractRecord(mockYieldAdapter) } : {})
     },
     setupTransactions: {
       ...setupTransactions,
+      governanceDelegation: governanceDelegationTx,
       ...(addMockYieldStrategyTx ? { yieldStrategyManagerAddMockStrategy: addMockYieldStrategyTx } : {})
     },
     testMint: {
