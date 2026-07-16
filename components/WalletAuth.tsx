@@ -28,19 +28,21 @@ type MessageState =
   | { type: "custom"; text: string };
 
 export function WalletAuth({
+  initialSession,
   onHumanReservationChange,
   onSessionChange,
   variant = "dark"
 }: {
+  initialSession?: WalletAuthSession | null;
   onHumanReservationChange?: Parameters<typeof WorldIdGate>[0]["onReservationChange"];
   onSessionChange?: (session: WalletAuthSession | null) => void;
-  variant?: "dark" | "light";
+  variant?: "dark" | "light" | "start";
 }) {
   const { t } = useLanguage();
   const { isInstalled } = useMiniKit();
   const walletText = t.walletAuth;
 
-  const [state, setState] = useState<AuthState>({ status: "disconnected" });
+  const [state, setState] = useState<AuthState>(() => initialSession ?? { status: "disconnected" });
   const [message, setMessage] = useState<MessageState | null>(null);
 
   const connectMiniAppWallet = useCallback(async () => {
@@ -212,6 +214,19 @@ export function WalletAuth({
   const messageClass = isLight
     ? "border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs text-emerald-800"
     : "rounded-xl border border-aurora-500/20 bg-aurora-500/10 px-4 py-2 text-xs text-aurora-500/90";
+
+  if (variant === "start") {
+    return (
+      <button
+        className="flex h-12 items-center justify-center rounded-full bg-[#202027] px-6 text-sm font-semibold text-white transition hover:bg-[#5868ea] disabled:cursor-not-allowed disabled:bg-[#d9d9e0] disabled:text-[#858590]"
+        disabled={state.status === "connecting"}
+        onClick={connect}
+        type="button"
+      >
+        {actionLabel}
+      </button>
+    );
+  }
 
   return (
     <div className={panelClass}>

@@ -248,8 +248,8 @@ export const dictionaries = {
     navbar: {
       brand: "RISKA",
       links: [
-        { href: "/#enroll", label: "Enroll" },
-        { href: "/#rules", label: "Policy rules" },
+        { href: "/apply", label: "Enroll" },
+        { href: "/rules", label: "Policy rules" },
         { href: "/whitepaper", label: "White paper" },
         { href: "/docs", label: "Contracts" }
       ],
@@ -672,8 +672,8 @@ export const dictionaries = {
     navbar: {
       brand: "RISKA",
       links: [
-        { href: "/#enroll", label: "Inscripcion" },
-        { href: "/#rules", label: "Reglas" },
+        { href: "/apply", label: "Inscripcion" },
+        { href: "/rules", label: "Reglas" },
         { href: "/whitepaper", label: "White paper" },
         { href: "/docs", label: "Contratos" }
       ],

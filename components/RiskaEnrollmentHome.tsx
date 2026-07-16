@@ -109,14 +109,15 @@ type ExistingPolicyLookupState =
 type TestnetAuxiliaryTokenOption = NonNullable<RiskaTestnetDeployment["testAuxiliaryTokens"]>[string];
 
 const storageKey = "riska.enrollment.v2";
+const pendingWalletStorageKey = "riska.pending-wallet-session";
 const beneficiaryColors = ["bg-rose-500", "bg-amber-500", "bg-emerald-500", "bg-cyan-500", "bg-violet-500"];
 const testAuxiliaryTokenOrder = ["mBTC", "mETH", "mSOL"];
 
 const steps: WizardStep[] = [
-  { accent: "bg-emerald-500", icon: Fingerprint, id: "identity" },
-  { accent: "bg-rose-500", icon: Users, id: "beneficiaries" },
-  { accent: "bg-amber-500", icon: CircleDollarSign, id: "quote" },
-  { accent: "bg-violet-500", icon: FileCheck2, id: "confirm" }
+  { accent: "bg-[#5868ea]", icon: Fingerprint, id: "identity" },
+  { accent: "bg-[#5868ea]", icon: Users, id: "beneficiaries" },
+  { accent: "bg-[#5868ea]", icon: CircleDollarSign, id: "quote" },
+  { accent: "bg-[#5868ea]", icon: FileCheck2, id: "confirm" }
 ];
 
 const copy = {
@@ -497,7 +498,7 @@ const initialState: EnrollmentState = {
   walletSession: null
 };
 
-export function RiskaEnrollmentHome() {
+export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home" | "rules" }) {
   const { language } = useLanguage();
   const content = copy[language];
   const [activeStepId, setActiveStepId] = useState<StepId>("identity");
@@ -510,9 +511,25 @@ export function RiskaEnrollmentHome() {
   useEffect(() => {
     try {
       const storedState = window.localStorage.getItem(storageKey);
+      const pendingWallet = window.sessionStorage.getItem(pendingWalletStorageKey);
+      let restoredState = initialState;
+
       if (storedState) {
-        setState(restoreEnrollmentState(JSON.parse(storedState)));
+        restoredState = restoreEnrollmentState(JSON.parse(storedState));
       }
+
+      if (pendingWallet) {
+        const walletSession = JSON.parse(pendingWallet) as WalletAuthSession;
+        if (walletSession?.status === "connected" && walletSession.address) {
+          restoredState = {
+            ...clearSubmission(restoredState),
+            humanReservation: null,
+            walletSession
+          };
+        }
+      }
+
+      setState(restoredState);
     } catch {
       window.localStorage.removeItem(storageKey);
     } finally {
@@ -654,6 +671,19 @@ export function RiskaEnrollmentHome() {
     });
   }, []);
 
+  const startApplication = useCallback(
+    (walletSession: WalletAuthSession | null) => {
+      if (!walletSession) {
+        return;
+      }
+
+      window.sessionStorage.setItem(pendingWalletStorageKey, JSON.stringify(walletSession));
+      handleWalletSessionChange(walletSession);
+      window.location.assign("/apply");
+    },
+    [handleWalletSessionChange]
+  );
+
   const handleHumanReservationChange = useCallback((humanReservation: PolicyHumanReservationView | null) => {
     setState((current) => {
       if (sameHumanReservation(current.humanReservation, humanReservation)) {
@@ -767,12 +797,12 @@ export function RiskaEnrollmentHome() {
       : !completion[activeStep.id];
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#f5f7f2] text-[#18211d]">
+    <div className="min-h-screen overflow-x-hidden bg-[#f4f4f8] text-[#202027]">
       <Navbar />
       <main>
-        <WelcomeScreen content={content} />
+        {view === "home" && <WelcomeScreen content={content} onStartApplication={startApplication} />}
 
-        <section id="enroll" className="mx-auto max-w-7xl px-5 py-8 md:px-8 lg:py-12">
+        {view === "apply" && <section id="enroll" className="mx-auto max-w-6xl px-5 py-10 md:px-8 lg:py-14">
           <div className="space-y-6">
             {!state.issuedPolicyId && (
               <StepRail
@@ -783,21 +813,21 @@ export function RiskaEnrollmentHome() {
               />
             )}
 
-            <div className="grid gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-start">
-              <aside className="space-y-6">
+            <div className="grid gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-start">
+              <aside className="space-y-7 px-1 pt-3 lg:sticky lg:top-24">
                 <div>
-                  <p className="text-sm font-semibold text-emerald-700">{content.hero.badge}</p>
-                  <h1 className="mt-3 max-w-2xl text-4xl font-semibold leading-tight md:text-6xl">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5868ea]">{content.hero.badge}</p>
+                  <h1 className="mt-4 max-w-2xl text-4xl font-semibold leading-[1.04] tracking-[-0.055em] md:text-6xl">
                     {content.hero.title}
                   </h1>
-                  <p className="mt-5 max-w-xl text-base leading-7 text-[#516159]">{content.hero.body}</p>
+                  <p className="mt-5 max-w-xl text-base leading-7 text-[#696975]">{content.hero.body}</p>
                 </div>
 
                 <div className="grid grid-cols-3 gap-3">
                   {content.hero.metrics.map(([label, value]) => (
-                    <div key={label} className="border border-[#d9ded5] bg-white px-3 py-3">
-                      <p className="text-xs text-[#6b766f]">{label}</p>
-                      <p className="mt-1 text-lg font-semibold">{value}</p>
+                    <div key={label} className="rounded-xl border border-[#e2e2e8] bg-white/80 px-3 py-3">
+                      <p className="text-xs text-[#777782]">{label}</p>
+                      <p className="mt-1 text-lg font-semibold tracking-[-0.035em]">{value}</p>
                     </div>
                   ))}
                 </div>
@@ -827,57 +857,58 @@ export function RiskaEnrollmentHome() {
               />
             </div>
           </div>
-        </section>
+        </section>}
 
-        <section id="rules" className="border-y border-[#dce4d8] bg-white">
-          <div className="mx-auto grid max-w-7xl gap-8 px-5 py-12 md:px-8 lg:grid-cols-[0.9fr_1.1fr]">
+        {view === "rules" && <section id="rules" className="mx-3 my-8 rounded-[28px] border border-[#e2e2e8] bg-white md:mx-6 md:my-10">
+          <div className="mx-auto grid max-w-6xl gap-8 px-5 py-10 md:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:py-14">
             <div>
-              <p className="text-sm font-semibold text-emerald-700">{content.rules.eyebrow}</p>
-              <h2 className="mt-2 text-3xl font-semibold leading-tight md:text-4xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5868ea]">{content.rules.eyebrow}</p>
+              <h2 className="mt-3 text-3xl font-semibold leading-tight tracking-[-0.045em] md:text-4xl">
                 {content.rules.title}
               </h2>
-              <p className="mt-4 text-base leading-7 text-[#516159]">{content.rules.body}</p>
+              <p className="mt-4 text-base leading-7 text-[#696975]">{content.rules.body}</p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               {content.rules.items.map((item) => (
-                <div key={item} className="flex gap-3 border border-[#dce4d8] bg-[#f8faf6] p-4">
-                  <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center bg-emerald-100 text-emerald-700">
+                <div key={item} className="flex gap-3 rounded-xl border border-[#e8e8ed] bg-[#fafafd] p-4">
+                  <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#e6e9ff] text-[#5868ea]">
                     <Check className="h-4 w-4" />
                   </span>
-                  <p className="text-sm leading-6 text-[#405047]">{item}</p>
+                  <p className="text-sm leading-6 text-[#54545f]">{item}</p>
                 </div>
               ))}
             </div>
           </div>
-        </section>
+        </section>}
       </main>
       <Footer />
     </div>
   );
 }
 
-function WelcomeScreen({ content }: { content: (typeof copy)[Language] }) {
+function WelcomeScreen({
+  content,
+  onStartApplication
+}: {
+  content: (typeof copy)[Language];
+  onStartApplication: (walletSession: WalletAuthSession | null) => void;
+}) {
   const welcome = content.welcome;
 
   return (
-    <section className="border-b border-[#dce4d8] bg-[#f5f7f2]">
-      <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 md:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:py-20">
+    <section className="px-3 pt-8 md:px-6 md:pt-10">
+      <div className="mx-auto grid max-w-6xl gap-10 rounded-[28px] border border-[#e2e2e8] bg-white px-6 py-10 shadow-[0_18px_60px_rgba(30,30,45,0.05)] md:px-10 lg:grid-cols-[1.05fr_0.95fr] lg:py-16">
         <div className="max-w-3xl">
-          <p className="text-sm font-semibold text-emerald-700">{welcome.badge}</p>
-          <h1 className="mt-4 text-4xl font-semibold leading-tight md:text-6xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5868ea]">{welcome.badge}</p>
+          <h1 className="mt-4 text-4xl font-semibold leading-[1.03] tracking-[-0.06em] md:text-6xl">
             {welcome.title}
           </h1>
-          <p className="mt-5 max-w-2xl text-lg leading-8 text-[#516159]">{welcome.body}</p>
+          <p className="mt-5 max-w-2xl text-lg leading-8 text-[#696975]">{welcome.body}</p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <WalletAuth onSessionChange={onStartApplication} variant="start" />
             <a
-              className="flex h-12 items-center justify-center bg-[#17231e] px-5 text-sm font-semibold text-white transition hover:bg-[#26342d] hover:text-white"
-              href="#enroll"
-            >
-              {welcome.primary}
-            </a>
-            <a
-              className="flex h-12 items-center justify-center border border-[#cbd7cf] bg-white px-5 text-sm font-semibold text-[#26342d] transition hover:border-[#17231e] hover:text-[#18211d]"
-              href="#rules"
+              className="flex h-12 items-center justify-center rounded-full border border-[#dedee5] bg-white px-6 text-sm font-semibold text-[#42424c] transition hover:border-[#aeb8ff] hover:text-[#4f63e8]"
+              href="/rules"
             >
               {welcome.secondary}
             </a>
@@ -887,9 +918,9 @@ function WelcomeScreen({ content }: { content: (typeof copy)[Language] }) {
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             {welcome.facts.map(([label, value]) => (
-              <div className="border border-[#d9ded5] bg-white p-4" key={label}>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#66746e]">{label}</p>
-                <p className="mt-2 text-xl font-semibold">{value}</p>
+              <div className="rounded-2xl border border-[#e6e6ec] bg-[#fafafd] p-4" key={label}>
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#777782]">{label}</p>
+                <p className="mt-2 text-xl font-semibold tracking-[-0.04em]">{value}</p>
               </div>
             ))}
           </div>
@@ -898,13 +929,13 @@ function WelcomeScreen({ content }: { content: (typeof copy)[Language] }) {
               const Icon = card.icon;
 
               return (
-                <article className="flex gap-4 border border-[#d9ded5] bg-white p-4" key={card.title}>
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center bg-emerald-50 text-emerald-700">
+                <article className="flex gap-4 rounded-2xl border border-[#e6e6ec] bg-[#fafafd] p-4" key={card.title}>
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#e6e9ff] text-[#5868ea]">
                     <Icon className="h-5 w-5" />
                   </span>
                   <div>
                     <h2 className="font-semibold">{card.title}</h2>
-                    <p className="mt-1 text-sm leading-6 text-[#516159]">{card.body}</p>
+                    <p className="mt-1 text-sm leading-6 text-[#696975]">{card.body}</p>
                   </div>
                 </article>
               );
@@ -951,7 +982,7 @@ function StepRail({
   onStepSelect: (stepId: StepId) => void;
 }) {
   return (
-    <div className="border border-[#d9ded5] bg-white p-2">
+    <div className="rounded-2xl border border-[#e2e2e8] bg-white p-2 shadow-[0_8px_24px_rgba(30,30,45,0.03)]">
       <div className="overflow-x-auto">
         <div className="grid min-w-[680px] grid-cols-4 gap-2">
           {steps.map((step, index) => {
@@ -963,8 +994,8 @@ function StepRail({
             return (
               <button
                 aria-current={selected ? "step" : undefined}
-                className={`flex min-h-[76px] w-full items-center gap-3 border px-3 py-3 text-left transition ${
-                  selected ? "border-[#17231e] bg-[#f8faf6]" : "border-transparent hover:border-[#d9ded5] hover:bg-[#fbfcf8]"
+                className={`flex min-h-[76px] w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition ${
+                  selected ? "border-[#cbd2ff] bg-[#f2f3ff]" : "border-transparent hover:border-[#e6e6ec] hover:bg-[#fafafd]"
                 }`}
                 key={step.id}
                 onClick={() => onStepSelect(step.id)}
@@ -974,10 +1005,10 @@ function StepRail({
                   {complete ? <Check className="h-4 w-4 text-white" /> : <Icon className="h-4 w-4 text-white" />}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-xs text-[#66746e]">{content.wizard.step(index)}</span>
+                  <span className="block text-xs text-[#777782]">{content.wizard.step(index)}</span>
                   <span className="block truncate text-sm font-semibold">{stepCopy.meta}</span>
                 </span>
-                <span className={`shrink-0 text-xs ${complete ? "text-emerald-700" : "text-[#7a867e]"}`}>
+                <span className={`shrink-0 text-xs ${complete ? "text-[#5868ea]" : "text-[#92929d]"}`}>
                   {complete ? content.wizard.complete : content.wizard.pending}
                 </span>
               </button>
@@ -996,15 +1027,15 @@ function EnrollmentWizard(props: EnrollmentWizardProps) {
   const primaryLabel = getPrimaryLabel(props);
 
   return (
-    <article className="border border-[#d9ded5] bg-white shadow-2xl shadow-[#22332a]/10">
-      <header className="flex flex-col gap-4 border-b border-[#e7ebe2] px-5 py-5 md:flex-row md:items-center md:justify-between md:px-7">
+    <article className="rounded-[24px] border border-[#e2e2e8] bg-white shadow-[0_20px_60px_rgba(30,30,45,0.09)]">
+      <header className="flex flex-col gap-4 border-b border-[#eeeeF2] px-5 py-5 md:flex-row md:items-center md:justify-between md:px-7">
         <div className="flex items-center gap-3">
-          <div className={`flex h-12 w-12 items-center justify-center ${step.accent}`}>
+          <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${step.accent}`}>
             <Icon className="h-6 w-6 text-white" />
           </div>
           <div>
-            <p className="text-xs text-[#6b766f]">{content.wizard.step(activeStepIndex)}</p>
-            <h2 className="text-2xl font-semibold leading-tight">{stepCopy.title}</h2>
+            <p className="text-xs text-[#777782]">{content.wizard.step(activeStepIndex)}</p>
+            <h2 className="text-2xl font-semibold leading-tight tracking-[-0.04em]">{stepCopy.title}</h2>
           </div>
         </div>
         <StatusPill
@@ -1013,7 +1044,7 @@ function EnrollmentWizard(props: EnrollmentWizardProps) {
         />
       </header>
 
-      <div className="h-1 bg-[#e4eae1]">
+      <div className="h-1 bg-[#eeeeF2]">
         <div className={`h-full ${step.accent}`} style={{ width: `${((activeStepIndex + 1) / steps.length) * 100}%` }} />
       </div>
 
@@ -1034,9 +1065,9 @@ function EnrollmentWizard(props: EnrollmentWizardProps) {
         )}
 
         {!state.issuedPolicyId && (
-          <div className="mt-7 flex flex-col-reverse gap-3 border-t border-[#e7ebe2] pt-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-7 flex flex-col-reverse gap-3 border-t border-[#eeeeF2] pt-5 sm:flex-row sm:items-center sm:justify-between">
             <button
-              className="flex h-12 items-center justify-center gap-2 border border-[#cbd7cf] bg-white px-5 text-sm font-semibold text-[#26342d] transition hover:border-[#17231e] disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex h-12 items-center justify-center gap-2 rounded-full border border-[#dedee5] bg-white px-5 text-sm font-semibold text-[#42424c] transition hover:border-[#aeb8ff] hover:text-[#4f63e8] disabled:cursor-not-allowed disabled:opacity-40"
               disabled={activeStepIndex === 0}
               onClick={props.onBack}
               type="button"
@@ -1045,7 +1076,7 @@ function EnrollmentWizard(props: EnrollmentWizardProps) {
               {content.wizard.back}
             </button>
             <button
-              className="flex h-12 items-center justify-center gap-2 bg-[#17231e] px-5 text-sm font-semibold text-white transition hover:bg-[#26342d] disabled:cursor-not-allowed disabled:bg-[#cbd6cf] disabled:text-[#728078]"
+              className="flex h-12 items-center justify-center gap-2 rounded-full bg-[#202027] px-5 text-sm font-semibold text-white transition hover:bg-[#5868ea] disabled:cursor-not-allowed disabled:bg-[#d9d9e0] disabled:text-[#858590]"
               disabled={primaryDisabled}
               onClick={props.onPrimary}
               type="button"
@@ -1099,6 +1130,8 @@ function IdentityScreen({
         />
       </div>
       <WalletAuth
+        initialSession={state.walletSession}
+        key={state.walletSession?.address ?? "disconnected"}
         onHumanReservationChange={onHumanReservationChange}
         onSessionChange={onWalletSessionChange}
         variant="light"

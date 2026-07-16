@@ -3,25 +3,31 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
-  @apply bg-[#f5f7f2] text-[#18211d] font-sans antialiased;
+  @apply bg-[#f4f4f8] text-[#202027] font-sans antialiased;
+  letter-spacing: -0.012em;
 }
 
 a {
-  @apply text-emerald-700 hover:text-[#18211d] transition-colors;
+  @apply text-[#4f63e8] hover:text-[#202027] transition-colors;
 }
 
 .glass-panel {
-  @apply border border-[#d9ded5] bg-white shadow-lg shadow-[#22332a]/5;
+  @apply rounded-2xl border border-[#e2e2e8] bg-white shadow-[0_12px_36px_rgba(30,30,45,0.06)];
 }
 
 .section-title {
-  @apply text-4xl md:text-5xl font-semibold tracking-tight text-[#18211d];
+  @apply text-4xl md:text-5xl font-semibold tracking-tight text-[#202027];
 }
 
 .section-subtitle {
-  @apply text-lg md:text-xl text-[#516159];
+  @apply text-lg md:text-xl text-[#696975];
+}
+
+::selection {
+  background: #dfe3ff;
+  color: #202027;
 }
