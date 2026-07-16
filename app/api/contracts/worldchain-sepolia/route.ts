@@ -22,7 +22,8 @@ const contractNames: RiskaTestnetContractName[] = [
   "mockUsdc",
   "beneficiaryRegistry",
   "premiumVault",
-  "policyManager"
+  "policyManager",
+  "yieldStrategyManager"
 ];
 
 export async function GET() {
@@ -72,7 +73,8 @@ function readDeploymentEnv(): RiskaTestnetDeployment | null {
     mockUsdc: { address: process.env.RISKA_WORLDCHAIN_SEPOLIA_MOCK_USDC },
     beneficiaryRegistry: { address: process.env.RISKA_WORLDCHAIN_SEPOLIA_BENEFICIARY_REGISTRY },
     premiumVault: { address: process.env.RISKA_WORLDCHAIN_SEPOLIA_PREMIUM_VAULT },
-    policyManager: { address: process.env.RISKA_WORLDCHAIN_SEPOLIA_POLICY_MANAGER }
+    policyManager: { address: process.env.RISKA_WORLDCHAIN_SEPOLIA_POLICY_MANAGER },
+    yieldStrategyManager: { address: process.env.RISKA_WORLDCHAIN_SEPOLIA_YIELD_STRATEGY_MANAGER }
   });
 
   if (!hasRequiredContracts(contracts)) {

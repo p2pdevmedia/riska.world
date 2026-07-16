@@ -28,6 +28,10 @@ contract RiskaPolicyMathHarness {
         return RiskaPolicyMath.DEATH_FEE_BPS;
     }
 
+    function yieldFeeBps() external pure returns (uint16) {
+        return RiskaPolicyMath.YIELD_FEE_BPS;
+    }
+
     function monthlyPayout(uint256 principal) external pure returns (uint256) {
         return RiskaPolicyMath.monthlyPayout(principal);
     }

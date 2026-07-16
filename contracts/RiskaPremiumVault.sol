@@ -17,21 +17,40 @@ contract RiskaPremiumVault is Ownable, Pausable, ReentrancyGuard {
     RiskaBeneficiaryRegistry public immutable beneficiaryRegistry;
 
     address public policyManager;
+    address public yieldStrategyManager;
     uint256 public totalPrincipalLiability;
+    uint256 public totalYieldPrincipal;
     uint256 public protocolReserveBalance;
+    uint256 public protocolYieldReserveBalance;
     mapping(address => uint256) public auxiliaryTokenLiability;
 
     event PolicyManagerUpdated(address indexed policyManager);
+    event YieldStrategyManagerUpdated(address indexed yieldStrategyManager);
     event PremiumCollected(uint256 indexed policyId, address indexed holder, uint256 amount);
     event HolderPaid(uint256 indexed policyId, address indexed holder, uint256 amount);
     event HolderClaimAllSettled(uint256 indexed policyId, address indexed holder, uint256 payout, uint256 retained);
     event BeneficiariesPaid(uint256 indexed policyId, uint256 payout, uint256 retained);
+    event YieldPrincipalDeployed(uint256 indexed policyId, address indexed recipient, uint256 amount);
+    event YieldPrincipalReturned(
+        uint256 indexed policyId,
+        uint256 costBasis,
+        uint256 returnedAssets,
+        uint256 protocolFee,
+        uint256 policyGain,
+        uint256 policyLoss
+    );
+    event ProtocolYieldReserveWithdrawn(address indexed recipient, uint256 amount);
     event AuxiliaryTokenCollected(uint256 indexed policyId, address indexed holder, address indexed token, uint256 amount);
     event AuxiliaryTokenHolderPaid(uint256 indexed policyId, address indexed holder, address indexed token, uint256 amount);
     event AuxiliaryTokenBeneficiariesPaid(uint256 indexed policyId, address indexed token, uint256 amount);
 
     modifier onlyPolicyManager() {
         require(msg.sender == policyManager, "ONLY_POLICY_MANAGER");
+        _;
+    }
+
+    modifier onlyYieldStrategyManager() {
+        require(msg.sender == yieldStrategyManager, "ONLY_YIELD_MANAGER");
         _;
     }
 
@@ -55,6 +74,12 @@ contract RiskaPremiumVault is Ownable, Pausable, ReentrancyGuard {
         require(nextPolicyManager != address(0), "INVALID_POLICY_MANAGER");
         policyManager = nextPolicyManager;
         emit PolicyManagerUpdated(nextPolicyManager);
+    }
+
+    function setYieldStrategyManager(address nextYieldStrategyManager) external onlyOwner {
+        require(nextYieldStrategyManager != address(0), "INVALID_YIELD_MANAGER");
+        yieldStrategyManager = nextYieldStrategyManager;
+        emit YieldStrategyManagerUpdated(nextYieldStrategyManager);
     }
 
     function collectPremium(uint256 policyId, address holder, uint256 amount)
@@ -83,6 +108,7 @@ contract RiskaPremiumVault is Ownable, Pausable, ReentrancyGuard {
         require(holder != address(0), "INVALID_HOLDER");
         require(amount > 0, "INVALID_AMOUNT");
         require(amount <= totalPrincipalLiability, "INSUFFICIENT_LIABILITY");
+        require(amount <= idlePrincipalLiability(), "PRINCIPAL_DEPLOYED");
 
         totalPrincipalLiability -= amount;
         paymentToken.safeTransfer(holder, amount);
@@ -100,6 +126,7 @@ contract RiskaPremiumVault is Ownable, Pausable, ReentrancyGuard {
         require(holder != address(0), "INVALID_HOLDER");
         require(payout <= releasedPrincipal, "PAYOUT_EXCEEDS_RELEASED");
         require(releasedPrincipal <= totalPrincipalLiability, "INSUFFICIENT_LIABILITY");
+        require(releasedPrincipal <= idlePrincipalLiability(), "PRINCIPAL_DEPLOYED");
 
         totalPrincipalLiability -= releasedPrincipal;
 
@@ -123,6 +150,7 @@ contract RiskaPremiumVault is Ownable, Pausable, ReentrancyGuard {
         require(policyId != 0, "INVALID_POLICY");
         require(payout <= releasedPrincipal, "PAYOUT_EXCEEDS_RELEASED");
         require(releasedPrincipal <= totalPrincipalLiability, "INSUFFICIENT_LIABILITY");
+        require(releasedPrincipal <= idlePrincipalLiability(), "PRINCIPAL_DEPLOYED");
 
         totalPrincipalLiability -= releasedPrincipal;
 
@@ -134,6 +162,76 @@ contract RiskaPremiumVault is Ownable, Pausable, ReentrancyGuard {
         }
 
         emit BeneficiariesPaid(policyId, payout, retained);
+    }
+
+    function transferPrincipalToYield(uint256 policyId, address recipient, uint256 amount)
+        external
+        onlyYieldStrategyManager
+        whenNotPaused
+        nonReentrant
+    {
+        require(policyId != 0, "INVALID_POLICY");
+        require(recipient != address(0), "INVALID_RECIPIENT");
+        require(amount > 0, "INVALID_AMOUNT");
+        require(amount <= idlePrincipalLiability(), "INSUFFICIENT_IDLE_PRINCIPAL");
+
+        totalYieldPrincipal += amount;
+        paymentToken.safeTransfer(recipient, amount);
+
+        emit YieldPrincipalDeployed(policyId, recipient, amount);
+    }
+
+    function receiveYieldReturn(uint256 policyId, uint256 costBasis, uint256 returnedAssets)
+        external
+        onlyYieldStrategyManager
+        whenNotPaused
+        nonReentrant
+        returns (uint256 protocolFee, uint256 policyGain, uint256 policyLoss)
+    {
+        require(policyId != 0, "INVALID_POLICY");
+        require(costBasis > 0, "INVALID_COST_BASIS");
+        require(costBasis <= totalYieldPrincipal, "YIELD_PRINCIPAL_EXCEEDED");
+
+        totalYieldPrincipal -= costBasis;
+
+        if (returnedAssets > 0) {
+            paymentToken.safeTransferFrom(msg.sender, address(this), returnedAssets);
+        }
+
+        if (returnedAssets >= costBasis) {
+            uint256 grossGain = returnedAssets - costBasis;
+            protocolFee = (grossGain * RiskaPolicyMath.YIELD_FEE_BPS) / RiskaPolicyMath.BPS_DENOMINATOR;
+            policyGain = grossGain - protocolFee;
+
+            totalPrincipalLiability += policyGain;
+            protocolYieldReserveBalance += protocolFee;
+        } else {
+            policyLoss = costBasis - returnedAssets;
+            require(policyLoss <= totalPrincipalLiability, "LOSS_EXCEEDS_LIABILITY");
+            totalPrincipalLiability -= policyLoss;
+        }
+
+        emit YieldPrincipalReturned(policyId, costBasis, returnedAssets, protocolFee, policyGain, policyLoss);
+    }
+
+    function withdrawProtocolYieldReserve(address recipient, uint256 amount)
+        external
+        onlyOwner
+        whenNotPaused
+        nonReentrant
+    {
+        require(recipient != address(0), "INVALID_RECIPIENT");
+        require(amount > 0, "INVALID_AMOUNT");
+        require(amount <= protocolYieldReserveBalance, "YIELD_RESERVE_EXCEEDED");
+
+        uint256 requiredIdlePrincipal = idlePrincipalLiability();
+        uint256 available = paymentToken.balanceOf(address(this));
+        require(available >= requiredIdlePrincipal + amount, "INSUFFICIENT_RESERVE_LIQUIDITY");
+
+        protocolYieldReserveBalance -= amount;
+        paymentToken.safeTransfer(recipient, amount);
+
+        emit ProtocolYieldReserveWithdrawn(recipient, amount);
     }
 
     function collectAuxiliaryToken(uint256 policyId, address holder, IERC20 token, uint256 amount)
@@ -198,6 +296,10 @@ contract RiskaPremiumVault is Ownable, Pausable, ReentrancyGuard {
 
     function _payBeneficiaries(uint256 policyId, uint256 amount) private {
         _payBeneficiaries(policyId, paymentToken, amount);
+    }
+
+    function idlePrincipalLiability() public view returns (uint256) {
+        return totalPrincipalLiability - totalYieldPrincipal;
     }
 
     function _payBeneficiaries(uint256 policyId, IERC20 token, uint256 amount) private {

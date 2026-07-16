@@ -10,7 +10,7 @@ export function Hero() {
   return (
     <section className="relative overflow-hidden">
       <div className="absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.4),_transparent_60%)]" />
-      <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-14 px-6 pb-24 pt-28 text-center md:flex-row md:text-left md:pt-32">
+      <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-12 px-6 pb-16 pt-20 text-center md:flex-row md:text-left md:pt-24">
         <div className="flex-1 space-y-8">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-2 text-sm text-slate-200/80 backdrop-blur">
             <span className="h-2 w-2 rounded-full bg-aurora-500" />

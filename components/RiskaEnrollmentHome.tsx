@@ -262,8 +262,21 @@ const copy = {
           depositToken: "Deposit token",
           extraPrincipal: "Extra principal",
           heartbeat: "Heartbeat",
+          yieldAmount: "Yield amount",
+          yieldCostBasis: "Cost basis",
+          yieldDeposit: "Start yield",
+          yieldEstimated: "Estimated assets",
+          yieldStrategy: "Strategy",
+          chooseYieldStrategy: "Choose Morpho strategy",
+          staticUsdc: "Keep USDC static",
+          staticUsdcNote: (amount: string) => `${amount} USDC remain in the Riska contract. They earn no yield and are not exposed to Morpho.`,
+          yieldVault: "Yield opt-in",
+          yieldVaultNote:
+            "Yield is opt-in and can use minimum or extra principal. Realized positive yield pays 10% to RISKA and credits 90% to this policy as extra principal; realized losses reduce extra principal first and then minimum principal.",
+          yieldWithdraw: "Exit yield",
           minimumFunded: "Minimum funded",
           monthlyEstimate: "Monthly estimate",
+          noYieldPositions: "No yield positions",
           noAuxiliaryTokens: "No extra tokens",
           noDeathNotice: "No report",
           payoutProgress: "Payouts",
@@ -429,8 +442,21 @@ const copy = {
           depositToken: "Depositar token",
           extraPrincipal: "Principal extra",
           heartbeat: "Heartbeat",
+          yieldAmount: "Monto yield",
+          yieldCostBasis: "Costo base",
+          yieldDeposit: "Activar yield",
+          yieldEstimated: "Activos estimados",
+          yieldStrategy: "Estrategia",
+          chooseYieldStrategy: "Elegí una estrategia Morpho",
+          staticUsdc: "Mantener USDC estático",
+          staticUsdcNote: (amount: string) => `${amount} USDC quedan en el contrato de Riska. No generan yield ni quedan expuestos a Morpho.`,
+          yieldVault: "Yield opt-in",
+          yieldVaultNote:
+            "El yield es opcional y puede usar principal mínimo o extra. El yield positivo realizado paga 10% a RISKA y acredita 90% a esta póliza como principal extra; las pérdidas realizadas reducen primero el extra y luego el mínimo.",
+          yieldWithdraw: "Salir de yield",
           minimumFunded: "Mínimo fondeado",
           monthlyEstimate: "Estimado mensual",
+          noYieldPositions: "Sin posiciones yield",
           noAuxiliaryTokens: "Sin tokens extra",
           noDeathNotice: "Sin reporte",
           payoutProgress: "Pagos",
@@ -1331,6 +1357,8 @@ function PolicyControlPanel({
   const [policy, setPolicy] = useState<RiskaTestnetPolicyView | null>(null);
   const [depositAmount, setDepositAmount] = useState("10770");
   const [extraWithdrawAmount, setExtraWithdrawAmount] = useState("100");
+  const [yieldAmount, setYieldAmount] = useState("100");
+  const [yieldStrategyId, setYieldStrategyId] = useState("");
   const [tokenAddress, setTokenAddress] = useState("");
   const [tokenAmount, setTokenAmount] = useState("1");
   const [workingAction, setWorkingAction] = useState<TestnetPolicyAction | null>(null);
@@ -1364,7 +1392,7 @@ function PolicyControlPanel({
     };
   }, [policyId, walletAddress]);
 
-  async function runAction(action: TestnetPolicyAction) {
+  async function runAction(action: TestnetPolicyAction, options?: { amount?: string; strategyId?: number }) {
     setWorkingAction(action);
     setStatusTone("text-amber-700");
     setStatusMessage(getPolicyActionLabel(action, text));
@@ -1372,19 +1400,25 @@ function PolicyControlPanel({
     try {
       await runTestnetPolicyAction({
         action,
-        amount:
+        amount: options?.amount ?? (
           action === "deposit"
             ? depositAmount
             : action === "withdrawExtra"
               ? extraWithdrawAmount
+              : action === "depositYield"
+                ? yieldAmount
               : action === "depositToken" || action === "withdrawToken"
                 ? tokenAmount
-              : undefined,
+              : undefined
+        ),
         holder: walletAddress,
         onStatus: (status) => {
           setStatusMessage(getPolicyActionStatusLabel(status));
         },
         policyId,
+        strategyId:
+          options?.strategyId ??
+          (action === "depositYield" || action === "withdrawYield" ? Number(yieldStrategyId) : undefined),
         tokenAddress: action === "depositToken" || action === "withdrawToken" ? tokenAddress : undefined
       });
       await refreshPolicy();
@@ -1407,6 +1441,12 @@ function PolicyControlPanel({
   const minimumFunded = policy ? policy.remainingMinimumPrincipal >= MINIMUM_POLICY_PRINCIPAL : false;
   const canDeposit = policy ? status === 1 : false;
   const canWithdrawExtra = policy ? canUseHolderAction && policy.remainingExtraPrincipal > 0n : false;
+  const yieldAllocated = policy?.yieldPositions.reduce((total, position) => total + position.costBasis, 0n) ?? 0n;
+  const yieldConfigured = Boolean(deployment?.contracts.yieldStrategyManager?.address);
+  const availableYieldStrategies = policy?.yieldStrategies.filter((strategy) => strategy.active && strategy.depositsEnabled) ?? [];
+  const canDepositYield = policy
+    ? yieldConfigured && availableYieldStrategies.length > 0 && status === 1 && policy.totalPrincipal > yieldAllocated
+    : false;
   const canUseTokenVault = policy ? canUseHolderAction && (minimumFunded || status === 2) : false;
   const tokenVaultShortfall = policy && policy.remainingMinimumPrincipal < MINIMUM_POLICY_PRINCIPAL
     ? MINIMUM_POLICY_PRINCIPAL - policy.remainingMinimumPrincipal
@@ -1520,6 +1560,90 @@ function PolicyControlPanel({
               onClick={runAction}
               workingAction={workingAction}
             />
+          </div>
+
+          <div className="mt-3 border border-[#e3e8df] bg-[#fbfcf8] p-3">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#66746e]">{text.yieldVault}</p>
+              <p className="text-sm font-semibold text-[#26342d]">
+                {policy.yieldPositions.length > 0 ? `${policy.yieldPositions.length}` : text.noYieldPositions}
+              </p>
+            </div>
+            <p className="mt-2 text-sm leading-6 text-[#66746e]">{text.yieldVaultNote}</p>
+            <div className="mt-3 border border-[#dce4d8] bg-white p-3">
+              <p className="text-sm font-semibold text-[#26342d]">{text.staticUsdc}</p>
+              <p className="mt-1 text-sm text-[#66746e]">
+                {text.staticUsdcNote(formatUsdcAmount(policy.totalPrincipal - yieldAllocated))}
+              </p>
+            </div>
+
+            {policy.yieldPositions.length > 0 && (
+              <div className="mt-3 grid gap-2 md:grid-cols-2">
+                {policy.yieldPositions.map((position) => (
+                  <div className="border border-[#dce4d8] bg-white p-3" key={position.strategyId}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-[#26342d]">{position.name}</p>
+                        <p className="mt-1 text-xs text-[#66746e]">
+                          {text.yieldStrategy} #{position.strategyId}
+                        </p>
+                      </div>
+                      <button
+                        className="flex h-9 shrink-0 items-center justify-center gap-2 border border-[#cbd7cf] px-3 text-xs font-semibold text-[#26342d] transition hover:border-[#17231e] disabled:opacity-50"
+                        disabled={isWorking || status !== 1}
+                        onClick={() =>
+                          void runAction("withdrawYield", {
+                            amount: formatUsdcAmount(position.shares),
+                            strategyId: position.strategyId
+                          })
+                        }
+                        type="button"
+                      >
+                        <HandCoins className="h-4 w-4" />
+                        {text.yieldWithdraw}
+                      </button>
+                    </div>
+                    <div className="mt-3 grid gap-2">
+                      <SummaryFact label={text.yieldCostBasis} value={`${formatUsdcAmount(position.costBasis)} USDC`} />
+                      <SummaryFact label={text.yieldEstimated} value={`${formatUsdcAmount(position.estimatedAssets)} USDC`} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="mt-3 grid gap-2 lg:grid-cols-[0.7fr_1fr_auto]">
+              <select
+                aria-label={text.yieldStrategy}
+                className="min-h-11 border border-[#e3e8df] bg-white px-3 text-sm outline-none focus:border-[#17231e]"
+                onChange={(event) => setYieldStrategyId(event.target.value)}
+                value={yieldStrategyId}
+              >
+                <option value="">{text.chooseYieldStrategy}</option>
+                {availableYieldStrategies.map((strategy) => (
+                  <option key={strategy.strategyId} value={strategy.strategyId}>
+                    {strategy.name}
+                  </option>
+                ))}
+              </select>
+              <input
+                aria-label={text.yieldAmount}
+                className="min-h-11 border border-[#e3e8df] bg-white px-3 text-sm outline-none focus:border-[#17231e]"
+                min="0"
+                onChange={(event) => setYieldAmount(event.target.value)}
+                step="0.000001"
+                type="number"
+                value={yieldAmount}
+              />
+              <PolicyActionButton
+                action="depositYield"
+                disabled={!canDepositYield || yieldStrategyId === "" || isWorking}
+                icon={Percent}
+                label={text.yieldDeposit}
+                onClick={runAction}
+                workingAction={workingAction}
+              />
+            </div>
           </div>
 
           <div className="mt-3 border border-[#e3e8df] bg-[#fbfcf8] p-3">
@@ -1990,10 +2114,12 @@ function getPolicyActionLabel(
     claimMonthly: text.claimMonthly,
     deposit: text.deposit,
     depositToken: text.depositToken,
+    depositYield: text.yieldDeposit,
     heartbeat: text.heartbeat,
     reportDeath: text.reportDeath,
     withdrawExtra: text.withdrawExtra,
-    withdrawToken: text.withdrawToken
+    withdrawToken: text.withdrawToken,
+    withdrawYield: text.yieldWithdraw
   };
 
   return labels[action];

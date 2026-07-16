@@ -37,8 +37,26 @@ async function deployFixture() {
     await premiumVault.getAddress()
   );
 
+  const RiskaYieldStrategyManager = await ethers.getContractFactory("RiskaYieldStrategyManager");
+  const yieldStrategyManager = await RiskaYieldStrategyManager.deploy(
+    await token.getAddress(),
+    await premiumVault.getAddress()
+  );
+
   await beneficiaryRegistry.connect(owner).setPolicyManager(await manager.getAddress());
   await premiumVault.connect(owner).setPolicyManager(await manager.getAddress());
+  await premiumVault.connect(owner).setYieldStrategyManager(await yieldStrategyManager.getAddress());
+  await yieldStrategyManager.connect(owner).setPolicyManager(await manager.getAddress());
+  await manager.connect(owner).setYieldStrategyManager(await yieldStrategyManager.getAddress());
+
+  const MockYieldAdapter = await ethers.getContractFactory("MockYieldAdapter");
+  const yieldAdapter = await MockYieldAdapter.deploy(
+    await token.getAddress(),
+    await yieldStrategyManager.getAddress()
+  );
+  await yieldStrategyManager
+    .connect(owner)
+    .addStrategy(await yieldAdapter.getAddress(), "Mock USDC lending", "ipfs://mock-usdc-lending", usdc("25000"));
 
   await token.mint(holder.address, usdc("50000"));
   await token.connect(holder).approve(await premiumVault.getAddress(), usdc("50000"));
@@ -56,8 +74,26 @@ async function deployFixture() {
     altToken,
     beneficiaryRegistry,
     premiumVault,
-    manager
+    manager,
+    yieldAdapter,
+    yieldStrategyId: 0,
+    yieldStrategyManager
   };
+}
+
+async function deployErc4626YieldFixture() {
+  const [owner] = await ethers.getSigners();
+  const MockUSDC = await ethers.getContractFactory("MockUSDC");
+  const token = await MockUSDC.deploy();
+  const MockERC4626Vault = await ethers.getContractFactory("MockERC4626Vault");
+  const vault = await MockERC4626Vault.deploy(await token.getAddress());
+  const RiskaERC4626YieldAdapter = await ethers.getContractFactory("RiskaERC4626YieldAdapter");
+  const adapter = await RiskaERC4626YieldAdapter.deploy(await vault.getAddress(), owner.address);
+
+  await token.mint(owner.address, usdc("1000"));
+  await token.approve(await adapter.getAddress(), usdc("1000"));
+
+  return { owner, token, vault, adapter };
 }
 
 async function openPolicy(ctx, beneficiaries = [ctx.beneficiaryA.address], shares = [10_000]) {
@@ -75,6 +111,18 @@ async function reportAfterPolicyAge(ctx, policyId, reporter = ctx.beneficiaryA) 
 }
 
 describe("RiskaPolicyManager", function () {
+  it("uses the ERC-4626 surface required by a Morpho USDC vault", async function () {
+    const { owner, token, vault, adapter } = await deployErc4626YieldFixture();
+
+    expect(await adapter.asset()).to.equal(await token.getAddress());
+    await adapter.connect(owner).deposit(usdc("1000"));
+    expect(await vault.balanceOf(await adapter.getAddress())).to.equal(usdc("1000"));
+    expect(await adapter.totalAssets()).to.equal(usdc("1000"));
+
+    await adapter.connect(owner).redeem(usdc("1000"));
+    expect(await token.balanceOf(owner.address)).to.equal(usdc("1000"));
+  });
+
   it("keeps MockUSDC minting under the deployer instead of user wallets", async function () {
     const ctx = await deployFixture();
 
@@ -348,6 +396,173 @@ describe("RiskaPolicyManager", function () {
     expect(policy.monthlyPayoutAmount).to.equal(usdc("95.042016"));
     expect(await ctx.manager.monthlyPayoutEstimate(policyId)).to.equal(usdc("95.042016"));
     expect(await ctx.premiumVault.totalPrincipalLiability()).to.equal(usdc("11310"));
+  });
+
+  it("deploys opt-in policy principal into an allowlisted yield strategy", async function () {
+    const ctx = await deployFixture();
+    const policyId = await openPolicy(ctx);
+
+    await fundMinimum(ctx, policyId, "1000");
+    await ctx.manager.connect(ctx.holder).depositYield(policyId, ctx.yieldStrategyId, usdc("1000"), usdc("1000"));
+
+    const position = await ctx.manager.yieldPositions(policyId, ctx.yieldStrategyId);
+    expect(position.shares).to.equal(usdc("1000"));
+    expect(position.costBasis).to.equal(usdc("1000"));
+    expect(await ctx.manager.yieldPrincipalAllocated(policyId)).to.equal(usdc("1000"));
+    expect(await ctx.manager.totalPrincipal(policyId)).to.equal(usdc("11800"));
+    expect(await ctx.premiumVault.totalPrincipalLiability()).to.equal(usdc("11800"));
+    expect(await ctx.premiumVault.totalYieldPrincipal()).to.equal(usdc("1000"));
+    expect(await ctx.premiumVault.idlePrincipalLiability()).to.equal(usdc("10800"));
+    expect(await ctx.token.balanceOf(await ctx.yieldAdapter.getAddress())).to.equal(usdc("1000"));
+
+    const strategy = await ctx.yieldStrategyManager.strategyAt(ctx.yieldStrategyId);
+    expect(strategy.totalCostBasis).to.equal(usdc("1000"));
+    expect(strategy.totalShares).to.equal(usdc("1000"));
+  });
+
+  it("realizes yield with a 10% protocol fee and credits 90% to extra principal", async function () {
+    const ctx = await deployFixture();
+    const policyId = await openPolicy(ctx);
+
+    await fundMinimum(ctx, policyId, "1000");
+    await ctx.manager.connect(ctx.holder).depositYield(policyId, ctx.yieldStrategyId, usdc("1000"), 0);
+    await ctx.token.mint(await ctx.yieldAdapter.getAddress(), usdc("200"));
+    await ctx.yieldAdapter.connect(ctx.owner).setAssetsPerShare(ethers.parseEther("1.2"));
+
+    await ctx.manager.connect(ctx.holder).withdrawAllYield(policyId, ctx.yieldStrategyId, usdc("1200"));
+
+    const policy = await ctx.manager.policies(policyId);
+    expect(policy.remainingMinimumPrincipal).to.equal(usdc("10800"));
+    expect(policy.remainingExtraPrincipal).to.equal(usdc("1180"));
+    expect(await ctx.manager.totalPrincipal(policyId)).to.equal(usdc("11980"));
+    expect(await ctx.manager.yieldPrincipalAllocated(policyId)).to.equal(0);
+    expect(await ctx.premiumVault.totalYieldPrincipal()).to.equal(0);
+    expect(await ctx.premiumVault.totalPrincipalLiability()).to.equal(usdc("11980"));
+    expect(await ctx.premiumVault.protocolYieldReserveBalance()).to.equal(usdc("20"));
+
+    const ownerBefore = await ctx.token.balanceOf(ctx.owner.address);
+    await ctx.premiumVault.connect(ctx.owner).withdrawProtocolYieldReserve(ctx.owner.address, usdc("20"));
+    const ownerAfter = await ctx.token.balanceOf(ctx.owner.address);
+    expect(ownerAfter - ownerBefore).to.equal(usdc("20"));
+    expect(await ctx.premiumVault.protocolYieldReserveBalance()).to.equal(0);
+  });
+
+  it("applies realized yield losses to extra principal before minimum principal", async function () {
+    const ctx = await deployFixture();
+    const policyId = await openPolicy(ctx);
+
+    await fundMinimum(ctx, policyId, "1000");
+    await ctx.manager.connect(ctx.holder).depositYield(policyId, ctx.yieldStrategyId, usdc("1000"), 0);
+    await ctx.yieldAdapter.connect(ctx.owner).setAssetsPerShare(ethers.parseEther("0.7"));
+    await ctx.manager.connect(ctx.holder).withdrawAllYield(policyId, ctx.yieldStrategyId, 0);
+
+    let policy = await ctx.manager.policies(policyId);
+    expect(policy.remainingMinimumPrincipal).to.equal(usdc("10800"));
+    expect(policy.remainingExtraPrincipal).to.equal(usdc("700"));
+    expect(await ctx.premiumVault.totalPrincipalLiability()).to.equal(usdc("11500"));
+    expect(await ctx.premiumVault.protocolYieldReserveBalance()).to.equal(0);
+
+    const ctxMinimumOnly = await deployFixture();
+    const minimumOnlyPolicyId = await openPolicy(ctxMinimumOnly);
+    await fundMinimum(ctxMinimumOnly, minimumOnlyPolicyId);
+    await ctxMinimumOnly.manager
+      .connect(ctxMinimumOnly.holder)
+      .depositYield(minimumOnlyPolicyId, ctxMinimumOnly.yieldStrategyId, usdc("1000"), 0);
+    await ctxMinimumOnly.yieldAdapter.connect(ctxMinimumOnly.owner).setAssetsPerShare(ethers.parseEther("0.5"));
+    await ctxMinimumOnly.manager
+      .connect(ctxMinimumOnly.holder)
+      .withdrawAllYield(minimumOnlyPolicyId, ctxMinimumOnly.yieldStrategyId, 0);
+
+    policy = await ctxMinimumOnly.manager.policies(minimumOnlyPolicyId);
+    expect(policy.remainingMinimumPrincipal).to.equal(usdc("10300"));
+    expect(policy.remainingExtraPrincipal).to.equal(0);
+    expect(await ctxMinimumOnly.premiumVault.totalPrincipalLiability()).to.equal(usdc("10300"));
+  });
+
+  it("does not charge yield fees while a position only recovers to its cost basis", async function () {
+    const ctx = await deployFixture();
+    const policyId = await openPolicy(ctx);
+
+    await fundMinimum(ctx, policyId, "1000");
+    await ctx.manager.connect(ctx.holder).depositYield(policyId, ctx.yieldStrategyId, usdc("1000"), 0);
+
+    await ctx.yieldAdapter.connect(ctx.owner).setAssetsPerShare(ethers.parseEther("0.8"));
+    await ctx.manager.connect(ctx.holder).withdrawYield(policyId, ctx.yieldStrategyId, usdc("500"), 0);
+
+    let policy = await ctx.manager.policies(policyId);
+    expect(policy.remainingExtraPrincipal).to.equal(usdc("900"));
+    expect(await ctx.premiumVault.protocolYieldReserveBalance()).to.equal(0);
+
+    await ctx.yieldAdapter.connect(ctx.owner).setAssetsPerShare(ethers.parseEther("1"));
+    await ctx.manager.connect(ctx.holder).withdrawAllYield(policyId, ctx.yieldStrategyId, 0);
+
+    policy = await ctx.manager.policies(policyId);
+    expect(policy.remainingMinimumPrincipal).to.equal(usdc("10800"));
+    expect(policy.remainingExtraPrincipal).to.equal(usdc("900"));
+    expect(await ctx.premiumVault.protocolYieldReserveBalance()).to.equal(0);
+  });
+
+  it("enforces strategy caps, deposit disablement, and withdrawal slippage guards", async function () {
+    const ctx = await deployFixture();
+    const policyId = await openPolicy(ctx);
+
+    await fundMinimum(ctx, policyId, "1000");
+    await ctx.yieldStrategyManager.connect(ctx.owner).setStrategyCap(ctx.yieldStrategyId, usdc("500"));
+    await expect(
+      ctx.manager.connect(ctx.holder).depositYield(policyId, ctx.yieldStrategyId, usdc("1000"), 0)
+    ).to.be.revertedWith("STRATEGY_CAP_EXCEEDED");
+
+    await ctx.yieldStrategyManager.connect(ctx.owner).setStrategyCap(ctx.yieldStrategyId, usdc("25000"));
+    await ctx.yieldStrategyManager.connect(ctx.owner).setStrategyStatus(ctx.yieldStrategyId, true, false);
+    await expect(
+      ctx.manager.connect(ctx.holder).depositYield(policyId, ctx.yieldStrategyId, usdc("100"), 0)
+    ).to.be.revertedWith("DEPOSITS_DISABLED");
+
+    await ctx.yieldStrategyManager.connect(ctx.owner).setStrategyStatus(ctx.yieldStrategyId, true, true);
+    await ctx.manager.connect(ctx.holder).depositYield(policyId, ctx.yieldStrategyId, usdc("1000"), 0);
+    await ctx.yieldStrategyManager.connect(ctx.owner).setStrategyStatus(ctx.yieldStrategyId, true, false);
+    await expect(
+      ctx.manager.connect(ctx.holder).withdrawAllYield(policyId, ctx.yieldStrategyId, usdc("1001"))
+    ).to.be.revertedWith("SLIPPAGE_ASSETS");
+
+    await ctx.manager.connect(ctx.holder).withdrawAllYield(policyId, ctx.yieldStrategyId, usdc("1000"));
+    expect(await ctx.manager.yieldPrincipalAllocated(policyId)).to.equal(0);
+  });
+
+  it("blocks payout and extra withdrawals while yield positions are open", async function () {
+    const ctx = await deployFixture();
+    const policyId = await openPolicy(ctx);
+
+    await fundMinimum(ctx, policyId, "1000");
+    await ctx.manager.connect(ctx.holder).depositYield(policyId, ctx.yieldStrategyId, usdc("1000"), 0);
+
+    await expect(ctx.manager.connect(ctx.holder).activatePayout(policyId)).to.be.revertedWith("OPEN_YIELD_POSITION");
+    await expect(ctx.manager.connect(ctx.holder).claimAll(policyId)).to.be.revertedWith("OPEN_YIELD_POSITION");
+    await expect(ctx.manager.connect(ctx.holder).withdrawExtra(policyId, usdc("1"))).to.be.revertedWith("OPEN_YIELD_POSITION");
+
+    await ctx.manager.connect(ctx.holder).withdrawAllYield(policyId, ctx.yieldStrategyId, 0);
+    await ctx.manager.connect(ctx.holder).activatePayout(policyId);
+    expect((await ctx.manager.policies(policyId)).status).to.equal(STATUS.PayoutActive);
+  });
+
+  it("lets a claim-ready beneficiary close yield before death settlement", async function () {
+    const ctx = await deployFixture();
+    const policyId = await openPolicy(ctx, [ctx.beneficiaryA.address, ctx.beneficiaryB.address], [6_000, 4_000]);
+
+    await fundMinimum(ctx, policyId, "1000");
+    await ctx.manager.connect(ctx.holder).depositYield(policyId, ctx.yieldStrategyId, usdc("1000"), 0);
+    await reportAfterPolicyAge(ctx, policyId, ctx.beneficiaryA);
+    await advance(DEATH_REPORT_DELAY);
+
+    await expect(ctx.manager.connect(ctx.beneficiaryA).claimDeath(policyId)).to.be.revertedWith("OPEN_YIELD_POSITION");
+    await ctx.manager.connect(ctx.beneficiaryB).withdrawAllYield(policyId, ctx.yieldStrategyId, 0);
+    expect((await ctx.manager.deathNotices(policyId)).active).to.equal(true);
+
+    await ctx.manager.connect(ctx.beneficiaryA).claimDeath(policyId);
+    expect(await ctx.token.balanceOf(ctx.beneficiaryA.address)).to.equal(usdc("5784"));
+    expect(await ctx.token.balanceOf(ctx.beneficiaryB.address)).to.equal(usdc("3856"));
+    expect(await ctx.premiumVault.totalPrincipalLiability()).to.equal(0);
+    expect((await ctx.manager.policies(policyId)).status).to.equal(STATUS.DeathSettled);
   });
 
   it("stores auxiliary tokens only after the USDC minimum is covered", async function () {

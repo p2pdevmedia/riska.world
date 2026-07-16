@@ -122,7 +122,9 @@ The base model treats deposited USDC as policy principal. Yield and protocol eco
 | Extra principal | Increases future holder payout and beneficiary death payout | Tracked separately and never fee-bearing |
 | Auxiliary ERC20 tokens | Lets the holder custody other token balances once the USDC minimum is covered | Tracked per token, excluded from USDC payout math, never fee-bearing, and paid 100% to beneficiaries on death settlement |
 | Protocol reserve | Receives retained claim-all and death fees from remaining minimum principal | Tracked separately in the vault |
-| Yield reserve | Future source for operations, risk buffers, audits, and growth | Must be separated from principal liabilities |
+| Yield reserve | Receives 10% of positive realized opt-in yield | Separated from principal liabilities; withdrawable only from idle reserve liquidity |
+
+Opt-in yield is available only through allowlisted World Chain strategies. Positive realized yield is split 10% to the Riska yield reserve and 90% to the holder's policy as extra principal. Realized losses reduce extra principal first and then minimum principal, because the holder explicitly opted into yield risk.
 
 Base examples for claim-all or death settlement:
 
@@ -150,12 +152,13 @@ Current testnet modules:
 - `RiskaPolicyMath`: constants and math for minimum principal, payout months, and the minimum-principal fee.
 - `RiskaBeneficiaryRegistry`: beneficiary accounts and basis-point shares.
 - `RiskaPremiumVault`: USDC custody, auxiliary ERC20 token custody, principal liability, holder payouts, beneficiary payouts, and protocol reserve.
+- `RiskaYieldStrategyManager`: allowlisted yield deployment, strategy caps, deposit pause controls, and realized yield gain/loss settlement.
+- `RiskaERC4626YieldAdapter`: generic ERC-4626 adapter for approved World Chain yield vaults.
 
 Future modules:
 
 - `WorldIdGate`: durable one-human-one-policy enforcement.
 - `PolicyTermsRegistry`: legal document hashes and versioning.
-- `YieldStrategyManager`: allowlisted yield deployment and withdrawals.
 - `RiskController`: strategy caps, liquidity thresholds, and health checks.
 - `GovernanceTimelock`: delayed upgrades and parameter changes.
 - `PaymentAdapter`: WLD and fiat on-ramp conversion into USDC.

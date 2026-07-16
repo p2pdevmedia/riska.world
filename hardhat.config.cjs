@@ -40,9 +40,9 @@ function loadEnvFile(fileName) {
   }
 }
 
-[".env", ".env.local", ".env.worldchain-sepolia.local"].forEach(loadEnvFile);
+[".env", ".env.local", ".env.worldchain-sepolia.local", ".env.worldchain.local"].forEach(loadEnvFile);
 
-function privateKeyAccounts(privateKey) {
+function privateKeyAccounts(privateKey, variableName = "WORLDCHAIN_SEPOLIA_PRIVATE_KEY") {
   if (!privateKey) {
     return [];
   }
@@ -52,7 +52,7 @@ function privateKeyAccounts(privateKey) {
     : `0x${privateKey.trim()}`;
 
   if (!/^0x[0-9a-fA-F]{64}$/.test(normalized)) {
-    throw new Error("WORLDCHAIN_SEPOLIA_PRIVATE_KEY must be a 32-byte hex private key.");
+    throw new Error(`${variableName} must be a 32-byte hex private key.`);
   }
 
   return [normalized];
@@ -66,7 +66,8 @@ module.exports = {
       optimizer: {
         enabled: true,
         runs: 200
-      }
+      },
+      evmVersion: "cancun"
     }
   },
   networks: {
@@ -74,6 +75,11 @@ module.exports = {
       url: process.env.WORLDCHAIN_SEPOLIA_RPC_URL ?? "https://worldchain-sepolia.g.alchemy.com/public",
       chainId: 4801,
       accounts: privateKeyAccounts(process.env.WORLDCHAIN_SEPOLIA_PRIVATE_KEY)
+    },
+    worldchain: {
+      url: process.env.WORLDCHAIN_RPC_URL ?? "https://worldchain-mainnet.g.alchemy.com/public",
+      chainId: 480,
+      accounts: privateKeyAccounts(process.env.WORLDCHAIN_PRIVATE_KEY, "WORLDCHAIN_PRIVATE_KEY")
     }
   },
   mocha: {
