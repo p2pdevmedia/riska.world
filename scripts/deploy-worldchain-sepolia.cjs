@@ -105,7 +105,14 @@ async function main() {
   const deployTestHelpers = process.env.DEPLOY_TEST_HELPERS === "true";
 
   const previousDeployment = readLatestDeployment("worldchain-sepolia");
-  const mockUsdc = await deployContract("MockUSDC");
+  const previousMockUsdc = previousDeployment?.contracts?.mockUsdc?.address;
+  const mockUsdc = previousMockUsdc
+    ? {
+        address: previousMockUsdc,
+        instance: await ethers.getContractAt("MockUSDC", previousMockUsdc),
+        transactionHash: null
+      }
+    : await deployContract("MockUSDC");
   const beneficiaryRegistry = await deployContract("RiskaBeneficiaryRegistry");
   const premiumVault = await deployContract("RiskaPremiumVault", [mockUsdc.address, beneficiaryRegistry.address]);
   const policyManager = await deployContract("RiskaPolicyManager", [
@@ -152,11 +159,12 @@ async function main() {
     )
   };
 
-  const mintedAmount = ethers.parseUnits(mockUsdcMintAmount, 6);
-  const mockUsdcMintTx = await runTransaction(
-    "MockUSDC.mint",
-    mockUsdc.instance.mint(mockUsdcMintRecipient, mintedAmount)
-  );
+  const mockUsdcMintTx = previousMockUsdc
+    ? null
+    : await runTransaction(
+        "MockUSDC.mint",
+        mockUsdc.instance.mint(mockUsdcMintRecipient, ethers.parseUnits(mockUsdcMintAmount, 6))
+      );
   const governanceDelegationTx = await runTransaction(
     "RiskaGovernanceToken.delegate",
     governanceToken.instance.delegate(deployerAddress)
@@ -201,6 +209,9 @@ async function main() {
       protocolGovernor: contractRecord(protocolGovernor),
       protocolConfig: contractRecord(protocolConfig),
       userVaultFactory: contractRecord(userVaultFactory),
+      ...(previousDeployment?.contracts?.testnetTokenFaucet
+        ? { testnetTokenFaucet: previousDeployment.contracts.testnetTokenFaucet }
+        : {}),
       ...(policyMathHarness ? { policyMathHarness: contractRecord(policyMathHarness) } : {}),
       ...(mockYieldAdapter ? { mockYieldAdapter: contractRecord(mockYieldAdapter) } : {})
     },
@@ -209,7 +220,7 @@ async function main() {
       governanceDelegation: governanceDelegationTx,
       ...(addMockYieldStrategyTx ? { yieldStrategyManagerAddMockStrategy: addMockYieldStrategyTx } : {})
     },
-    testMint: {
+    testMint: previousDeployment?.testMint ?? {
       token: mockUsdc.address,
       recipient: mockUsdcMintRecipient,
       amount: mockUsdcMintAmount,

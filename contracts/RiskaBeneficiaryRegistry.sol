@@ -40,9 +40,8 @@ contract RiskaBeneficiaryRegistry is Ownable {
     ) external onlyPolicyManager {
         require(policyId != 0, "INVALID_POLICY");
         require(accounts.length == sharesBps.length, "BENEFICIARY_LENGTH");
-        require(accounts.length > 0, "NO_BENEFICIARIES");
         require(accounts.length <= MAX_BENEFICIARIES, "TOO_MANY_BENEFICIARIES");
-        require(RiskaPolicyMath.validateBeneficiaryShares(sharesBps), "INVALID_SHARES");
+        require(accounts.length == 0 || RiskaPolicyMath.validateBeneficiaryShares(sharesBps), "INVALID_SHARES");
 
         delete policyBeneficiaries[policyId];
 

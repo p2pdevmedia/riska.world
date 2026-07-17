@@ -110,6 +110,7 @@ type ExistingPolicyLookupState =
   | { message: string; status: "error" };
 
 type AssetOperation = "dashboard" | "deposit" | "withdraw" | "yield";
+type PolicyConfirmationAction = "activatePayout" | "claimAll";
 
 const storageKey = "riska.enrollment.v2";
 const pendingWalletStorageKey = "riska.pending-wallet-session";
@@ -608,7 +609,7 @@ const copy = {
 
 const initialState: EnrollmentState = {
   applicationId: null,
-  beneficiaries: [createEmptyBeneficiary(1, 100)],
+  beneficiaries: [],
   humanReservation: null,
   paymentReady: false,
   issuedPolicyId: null,
@@ -771,7 +772,8 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
   const activeStep = steps[activeStepIndex] ?? steps[0];
   const beneficiaryTotal = state.beneficiaries.reduce((total, beneficiary) => total + beneficiary.percent, 0);
   const completion = getCompletion(state, beneficiaryTotal);
-  const canSubmit = completion.identity && completion.beneficiaries && completion.quote;
+  const beneficiariesReady = state.beneficiaries.length === 0 || completion.beneficiaries;
+  const canSubmit = completion.identity && beneficiariesReady && completion.quote;
   const readyToSubmit = canSubmit && state.termsAccepted && state.riskAccepted && state.paymentReady;
   const testnetReady = testnetDeployment.status === "configured";
   const testnetWorking = testnetIssue.status === "working";
@@ -870,6 +872,11 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
     });
   }
 
+  function skipBeneficiaries() {
+    setState((current) => ({ ...clearSubmission(current), beneficiaries: [] }));
+    setActiveStepId("confirm");
+  }
+
   function goBack() {
     const previousStep = steps[Math.max(activeStepIndex - 1, 0)];
     setActiveStepId(previousStep.id);
@@ -956,6 +963,7 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
                 onPrimary={continueEnrollment}
                 onRemoveBeneficiary={removeBeneficiary}
                 onSetState={setState}
+                onSkipBeneficiaries={skipBeneficiaries}
                 onUpdateBeneficiary={updateBeneficiary}
                 onWalletSessionChange={handleWalletSessionChange}
                 primaryDisabled={primaryDisabled}
@@ -1065,6 +1073,7 @@ type EnrollmentWizardProps = {
   onPrimary: () => void;
   onRemoveBeneficiary: (id: string) => void;
   onSetState: Dispatch<SetStateAction<EnrollmentState>>;
+  onSkipBeneficiaries: () => void;
   onUpdateBeneficiary: (id: string, field: keyof Pick<Beneficiary, "name" | "percent" | "wallet">, value: string) => void;
   onWalletSessionChange: (session: WalletAuthSession | null) => void;
   primaryDisabled: boolean;
@@ -1236,6 +1245,7 @@ function BeneficiariesScreen({
   content,
   onAddBeneficiary,
   onRemoveBeneficiary,
+  onSkipBeneficiaries,
   onUpdateBeneficiary,
   state
 }: EnrollmentWizardProps) {
@@ -1267,6 +1277,15 @@ function BeneficiariesScreen({
         </span>
         <span className="font-semibold">{text.add}</span>
       </button>
+      {state.beneficiaries.length === 0 && (
+        <button
+          className="w-full rounded-xl border border-[#334052] bg-[#151d28] px-4 py-3 text-sm font-semibold text-[#d8e0ee] transition hover:border-[#5868ea] hover:text-[#aeb8ff]"
+          onClick={onSkipBeneficiaries}
+          type="button"
+        >
+          Configurar beneficiarios después
+        </button>
+      )}
       <div className="h-2 overflow-hidden rounded-full bg-[#202936]">
         <div className="h-full bg-[#5868ea]" style={{ width: `${Math.min(beneficiaryTotal, 100)}%` }} />
       </div>
@@ -1481,6 +1500,7 @@ function PolicyControlPanel({
   const [tokenAddress, setTokenAddress] = useState("");
   const [tokenAmount, setTokenAmount] = useState("1");
   const [assetOperation, setAssetOperation] = useState<AssetOperation>("dashboard");
+  const [pendingConfirmation, setPendingConfirmation] = useState<PolicyConfirmationAction | null>(null);
   const [canChooseAsset, setCanChooseAsset] = useState(false);
   const [dashboardView, setDashboardView] = useState<"overview" | "beneficiaries">("overview");
   const [beneficiaryDrafts, setBeneficiaryDrafts] = useState<TestnetPolicyBeneficiary[]>([]);
@@ -2011,10 +2031,6 @@ function PolicyControlPanel({
             </div>
           )}
 
-          <p className="mt-3 rounded-lg border border-amber-800/60 bg-amber-950/30 px-3 py-2 text-xs leading-5 text-amber-200">
-            {text.claimAllFeeNote}
-          </p>
-
           <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             <PolicyActionButton
               action="heartbeat"
@@ -2029,7 +2045,7 @@ function PolicyControlPanel({
               disabled={!canActivate || isWorking}
               icon={CircleDollarSign}
               label={text.activate}
-              onClick={runAction}
+              onClick={() => setPendingConfirmation("activatePayout")}
               workingAction={workingAction}
             />
             <PolicyActionButton
@@ -2045,7 +2061,7 @@ function PolicyControlPanel({
               disabled={!canClaimAll || isWorking}
               icon={WalletCards}
               label={text.claimAll}
-              onClick={runAction}
+              onClick={() => setPendingConfirmation("claimAll")}
               workingAction={workingAction}
             />
             <PolicyActionButton
@@ -2065,6 +2081,36 @@ function PolicyControlPanel({
               workingAction={workingAction}
             />
           </div>
+          {pendingConfirmation && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#05070b]/80 p-4 backdrop-blur-sm" role="dialog" aria-modal="true">
+              <div className="w-full max-w-md rounded-[22px] border border-[#334052] bg-[#10151d] p-5 shadow-2xl">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#20295b] text-[#aeb8ff]">
+                  {pendingConfirmation === "activatePayout" ? <CircleDollarSign className="h-5 w-5" /> : <WalletCards className="h-5 w-5" />}
+                </div>
+                <h2 className="mt-4 text-xl font-semibold text-[#f5f7fb]">{pendingConfirmation === "activatePayout" ? "¿Activar pagos mensuales?" : "¿Cobrar todo el saldo?"}</h2>
+                <p className="mt-2 text-sm leading-6 text-[#9baac0]">
+                  {pendingConfirmation === "activatePayout"
+                    ? "El saldo de la póliza pasará al plan de pagos mensuales. El primer cobro quedará disponible ahora y los siguientes se programarán cada 30 días."
+                    : "Esta acción libera el saldo disponible de USDC a tu wallet y aplica la comisión del protocolo sobre el mínimo restante. La póliza deja de tener saldo para pagos mensuales."}
+                </p>
+                <div className="mt-5 grid grid-cols-2 gap-2">
+                  <button className="min-h-11 rounded-lg border border-[#334052] bg-[#151d28] px-3 text-sm font-semibold text-[#e6edf8] transition hover:border-[#718299]" disabled={isWorking} onClick={() => setPendingConfirmation(null)} type="button">{text.cancel}</button>
+                  <button
+                    className="min-h-11 rounded-lg bg-[#5868ea] px-3 text-sm font-semibold text-white transition hover:bg-[#4f63e8] disabled:cursor-not-allowed disabled:bg-[#303a49]"
+                    disabled={isWorking}
+                    onClick={() => {
+                      const action = pendingConfirmation;
+                      setPendingConfirmation(null);
+                      void runAction(action);
+                    }}
+                    type="button"
+                  >
+                    {pendingConfirmation === "activatePayout" ? "Confirmar activación" : "Confirmar cobro"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </>
       )}
 
