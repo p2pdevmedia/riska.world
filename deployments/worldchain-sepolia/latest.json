@@ -41,6 +41,10 @@
     "userVaultFactory": {
       "address": "0x4F8e6DAb00eAC50d784C135062E23b030C62866f",
       "transactionHash": "0x12683a3652c85c1a9d19a3b07d3946ddf3a1fb58529bad8b041910f5e6d335f7"
+    },
+    "testnetTokenFaucet": {
+      "address": "0x3DeB13e48b1f253De5079A33d053F24c2111ce01",
+      "transactionHash": "0x6967c792be093cf5d015834f53597c750c4ec591a4b0686bfe94b3823625e7d0"
     }
   },
   "setupTransactions": {
@@ -104,5 +108,21 @@
         "symbol": "mSOL"
       }
     }
+  },
+  "testnetTokenFaucet": {
+    "amounts": {
+      "usdc": "15000",
+      "btc": "2",
+      "eth": "5",
+      "sol": "50"
+    },
+    "ownershipTransactions": {
+      "usdc": "0x787f4bcc0dfcb65f54a9b66f5cf542ec4158f995f21aad035ddb50626234868b",
+      "btc": "0x204fcb9e0f0c089c8f5ba55979f99a3eac3cd1fce589da11fa6ce1cf17602c61",
+      "eth": "0x66536ad192b8624eaa1370e34d5830375f75aaa0ae919a597a45140bb0f13fb2",
+      "sol": "0xa6e4b2dc37184cfe84336bb58fb3abf4d4528b310a60734308af32ceda3e4ea4"
+    },
+    "deployedAt": "2026-07-17T21:02:12.633Z",
+    "testnetOnly": true
   }
 }

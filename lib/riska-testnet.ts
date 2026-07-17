@@ -3,7 +3,8 @@ export type RiskaTestnetContractName =
   | "beneficiaryRegistry"
   | "premiumVault"
   | "policyManager"
-  | "yieldStrategyManager";
+  | "yieldStrategyManager"
+  | "testnetTokenFaucet";
 
 export type RiskaTestnetContractRecord = {
   address: `0x${string}`;

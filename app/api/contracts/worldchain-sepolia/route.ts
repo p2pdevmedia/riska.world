@@ -23,7 +23,8 @@ const contractNames: RiskaTestnetContractName[] = [
   "beneficiaryRegistry",
   "premiumVault",
   "policyManager",
-  "yieldStrategyManager"
+  "yieldStrategyManager",
+  "testnetTokenFaucet"
 ];
 
 export async function GET() {
@@ -74,7 +75,8 @@ function readDeploymentEnv(): RiskaTestnetDeployment | null {
     beneficiaryRegistry: { address: process.env.RISKA_WORLDCHAIN_SEPOLIA_BENEFICIARY_REGISTRY },
     premiumVault: { address: process.env.RISKA_WORLDCHAIN_SEPOLIA_PREMIUM_VAULT },
     policyManager: { address: process.env.RISKA_WORLDCHAIN_SEPOLIA_POLICY_MANAGER },
-    yieldStrategyManager: { address: process.env.RISKA_WORLDCHAIN_SEPOLIA_YIELD_STRATEGY_MANAGER }
+    yieldStrategyManager: { address: process.env.RISKA_WORLDCHAIN_SEPOLIA_YIELD_STRATEGY_MANAGER },
+    testnetTokenFaucet: { address: process.env.RISKA_WORLDCHAIN_SEPOLIA_TESTNET_TOKEN_FAUCET }
   });
 
   if (!hasRequiredContracts(contracts)) {
