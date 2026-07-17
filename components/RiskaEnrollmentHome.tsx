@@ -1523,9 +1523,25 @@ function PolicyControlPanel({
     setAssetOperation(operation);
   }
 
-  const selectedAssetBalance = selectedAuxiliaryToken
-    ? formatTokenAmount(selectedAuxiliaryToken.balance, selectedAuxiliaryToken.decimals)
-    : "0";
+  const withdrawableBalance = tokenAddress
+    ? selectedAuxiliaryToken?.balance ?? 0n
+    : policy?.remainingExtraPrincipal ?? 0n;
+  const withdrawableBalanceLabel = tokenAddress && selectedAuxiliaryToken
+    ? formatTokenAmount(withdrawableBalance, selectedAuxiliaryToken.decimals)
+    : formatUsdcAmount(withdrawableBalance);
+
+  function setWithdrawalPercentage(percentage: number) {
+    const amount = (withdrawableBalance * BigInt(percentage)) / 100n;
+    const formattedAmount = tokenAddress && selectedAuxiliaryToken
+      ? formatTokenAmount(amount, selectedAuxiliaryToken.decimals)
+      : formatUsdcAmount(amount);
+
+    if (tokenAddress) {
+      setTokenAmount(formattedAmount);
+    } else {
+      setExtraWithdrawAmount(formattedAmount);
+    }
+  }
 
   return (
     <div className="mt-4 overflow-hidden rounded-[28px] border border-[#202936] bg-[#080b10] p-4 text-[#f5f7fb] shadow-[0_22px_60px_rgba(8,11,16,0.25)] md:p-6">
@@ -1659,6 +1675,7 @@ function PolicyControlPanel({
                     aria-label={assetOperation === "deposit" ? text.depositAmount : text.withdrawExtraAmount}
                     autoFocus
                     className="mt-2 min-h-12 w-full rounded-lg border border-[#334052] bg-[#0b1018] px-3 text-base font-semibold text-[#f5f7fb] outline-none focus:border-[#c8ff75]"
+                    max={assetOperation === "withdraw" ? withdrawableBalanceLabel : undefined}
                     min="0"
                     onChange={(event) => tokenAddress ? setTokenAmount(event.target.value) : (assetOperation === "deposit" ? setDepositAmount(event.target.value) : setExtraWithdrawAmount(event.target.value))}
                     step="any"
@@ -1666,7 +1683,25 @@ function PolicyControlPanel({
                     value={tokenAddress ? tokenAmount : (assetOperation === "deposit" ? depositAmount : extraWithdrawAmount)}
                   />
                 </label>
-                {tokenAddress && assetOperation === "withdraw" && <p className="mt-2 text-sm text-[#8d9bb0]">{selectedAssetBalance} {selectedAuxiliaryToken?.symbol ?? ""}</p>}
+                {assetOperation === "withdraw" && (
+                  <>
+                    <div className="mt-3 grid grid-cols-4 gap-2">
+                      {[25, 50, 75, 100].map((percentage) => (
+                        <button
+                          className="h-9 rounded-lg border border-[#334052] bg-[#151d28] text-xs font-semibold text-[#d8e0ee] transition hover:border-[#c8ff75] hover:text-[#c8ff75]"
+                          key={percentage}
+                          onClick={() => setWithdrawalPercentage(percentage)}
+                          type="button"
+                        >
+                          {percentage}%
+                        </button>
+                      ))}
+                    </div>
+                    <p className="mt-2 text-sm text-[#8d9bb0]">
+                      {text.usdcAvailable}: {withdrawableBalanceLabel} {tokenAddress ? selectedAuxiliaryToken?.symbol ?? "" : "USDC"}
+                    </p>
+                  </>
+                )}
                 <div className="mt-5 grid grid-cols-2 gap-2">
                   <button className="min-h-11 rounded-lg border border-[#334052] bg-[#151d28] px-3 text-sm font-semibold text-[#e6edf8] transition hover:border-[#718299]" onClick={() => setAssetOperation("dashboard")} type="button">
                     {text.cancel}
