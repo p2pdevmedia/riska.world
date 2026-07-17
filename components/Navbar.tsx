@@ -1,32 +1,51 @@
 "use client";
 
 import Link from "next/link";
+import { BookOpen, FileText, Home, ShieldCheck } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useLanguage } from "@/components/LanguageProvider";
 
 export function Navbar() {
   const { t } = useLanguage();
-  const links = t.navbar.links;
+  const pathname = usePathname();
+  const rules = t.navbar.links.find((link) => link.href === "/rules");
+  const contracts = t.navbar.links.find((link) => link.href === "/docs");
+  const items = [
+    { href: "/", icon: Home, label: t.navbar.brand },
+    { href: "/rules", icon: ShieldCheck, label: rules?.label ?? "Rules" },
+    { href: "/docs", icon: BookOpen, label: contracts?.label ?? "Docs" },
+    { href: "/apply", icon: FileText, label: t.navbar.cta }
+  ];
 
   return (
-    <header className="sticky top-0 z-40 bg-[#f4f4f8]/90 px-3 pt-3 backdrop-blur md:px-6">
-      <nav className="mx-auto flex max-w-6xl items-center justify-between rounded-full border border-[#e2e2e8] bg-white/90 px-4 py-3 shadow-[0_8px_30px_rgba(30,30,45,0.05)] md:px-5">
-        <Link href="/" className="text-base font-bold tracking-[-0.04em] text-[#202027]">
-          {t.navbar.brand}
-        </Link>
-        <div className="hidden items-center gap-6 text-sm text-[#696975] md:flex">
-          {links.map((link) => (
-            <Link key={link.href} href={link.href} className="text-[#696975] hover:text-[#202027]">
-              {link.label}
+    <header className="fixed inset-x-0 bottom-0 z-40 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <nav className="mx-auto flex max-w-md items-center justify-between rounded-[24px] border border-white/80 bg-white/90 px-2 py-2 shadow-[0_12px_40px_rgba(25,25,38,0.18)] backdrop-blur-xl">
+        {items.map((item) => {
+          const Icon = item.icon;
+          const selected = pathname === item.href;
+
+          return (
+            <Link
+              aria-current={selected ? "page" : undefined}
+              className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[10px] font-medium transition ${
+                item.href === "/apply"
+                  ? "bg-[#202027] text-white hover:bg-[#5868ea]"
+                  : selected
+                    ? "bg-[#eef0ff] text-[#5868ea]"
+                    : "text-[#777782] hover:bg-[#f5f5f8] hover:text-[#202027]"
+              }`}
+              href={item.href}
+              key={item.href}
+            >
+              <Icon className="h-4 w-4" strokeWidth={2.2} />
+              <span className="truncate">{item.label}</span>
             </Link>
-          ))}
-        </div>
-        <div className="flex items-center gap-3">
+          );
+        })}
+        <div className="ml-1 border-l border-[#e7e7ec] pl-1">
           <LanguageToggle variant="light" />
-          <Link href="/apply" className="rounded-full bg-[#202027] px-4 py-2 text-xs font-semibold text-white hover:bg-[#4f63e8] hover:text-white">
-            {t.navbar.cta}
-          </Link>
         </div>
       </nav>
     </header>

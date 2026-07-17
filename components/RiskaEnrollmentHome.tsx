@@ -799,11 +799,11 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#f4f4f8] text-[#202027]">
       <Navbar />
-      <main>
+      <main className="pb-28">
         {view === "home" && <WelcomeScreen content={content} onStartApplication={startApplication} />}
 
-        {view === "apply" && <section id="enroll" className="mx-auto max-w-6xl px-5 py-10 md:px-8 lg:py-14">
-          <div className="space-y-6">
+        {view === "apply" && <section id="enroll" className="mx-auto max-w-3xl px-5 py-10 md:px-8 lg:py-14">
+          <div className="space-y-4">
             {!state.issuedPolicyId && (
               <StepRail
                 activeStepId={activeStepId}
@@ -813,26 +813,7 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
               />
             )}
 
-            <div className="grid gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-start">
-              <aside className="space-y-7 px-1 pt-3 lg:sticky lg:top-24">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5868ea]">{content.hero.badge}</p>
-                  <h1 className="mt-4 max-w-2xl text-4xl font-semibold leading-[1.04] tracking-[-0.055em] md:text-6xl">
-                    {content.hero.title}
-                  </h1>
-                  <p className="mt-5 max-w-xl text-base leading-7 text-[#696975]">{content.hero.body}</p>
-                </div>
-
-                <div className="grid grid-cols-3 gap-3">
-                  {content.hero.metrics.map(([label, value]) => (
-                    <div key={label} className="rounded-xl border border-[#e2e2e8] bg-white/80 px-3 py-3">
-                      <p className="text-xs text-[#777782]">{label}</p>
-                      <p className="mt-1 text-lg font-semibold tracking-[-0.035em]">{value}</p>
-                    </div>
-                  ))}
-                </div>
-              </aside>
-
+            <div>
               <EnrollmentWizard
                 activeStepIndex={activeStepIndex}
                 beneficiaryTotal={beneficiaryTotal}
@@ -860,13 +841,22 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
         </section>}
 
         {view === "rules" && <section id="rules" className="mx-3 my-8 rounded-[28px] border border-[#e2e2e8] bg-white md:mx-6 md:my-10">
-          <div className="mx-auto grid max-w-6xl gap-8 px-5 py-10 md:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:py-14">
+          <div className="mx-auto max-w-4xl space-y-10 px-5 py-10 md:px-8 lg:py-14">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5868ea]">{content.rules.eyebrow}</p>
               <h2 className="mt-3 text-3xl font-semibold leading-tight tracking-[-0.045em] md:text-4xl">
                 {content.rules.title}
               </h2>
               <p className="mt-4 text-base leading-7 text-[#696975]">{content.rules.body}</p>
+              <p className="mt-4 text-sm leading-6 text-[#777782]">{content.welcome.body}</p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {content.welcome.facts.map(([label, value]) => (
+                <div className="rounded-2xl border border-[#e8e8ed] bg-[#fafafd] p-4" key={label}>
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#777782]">{label}</p>
+                  <p className="mt-1 text-lg font-semibold tracking-[-0.03em]">{value}</p>
+                </div>
+              ))}
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               {content.rules.items.map((item) => (
@@ -877,6 +867,23 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
                   <p className="text-sm leading-6 text-[#54545f]">{item}</p>
                 </div>
               ))}
+            </div>
+            <div className="grid gap-3">
+              {content.welcome.cards.map((card) => {
+                const Icon = card.icon;
+
+                return (
+                  <article className="flex gap-4 rounded-2xl border border-[#e8e8ed] bg-[#fafafd] p-4" key={card.title}>
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e6e9ff] text-[#5868ea]">
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <div>
+                      <h3 className="font-semibold">{card.title}</h3>
+                      <p className="mt-1 text-sm leading-6 text-[#696975]">{card.body}</p>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           </div>
         </section>}
@@ -896,51 +903,13 @@ function WelcomeScreen({
   const welcome = content.welcome;
 
   return (
-    <section className="px-3 pt-8 md:px-6 md:pt-10">
-      <div className="mx-auto grid max-w-6xl gap-10 rounded-[28px] border border-[#e2e2e8] bg-white px-6 py-10 shadow-[0_18px_60px_rgba(30,30,45,0.05)] md:px-10 lg:grid-cols-[1.05fr_0.95fr] lg:py-16">
-        <div className="max-w-3xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5868ea]">{welcome.badge}</p>
-          <h1 className="mt-4 text-4xl font-semibold leading-[1.03] tracking-[-0.06em] md:text-6xl">
-            {welcome.title}
-          </h1>
-          <p className="mt-5 max-w-2xl text-lg leading-8 text-[#696975]">{welcome.body}</p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <WalletAuth onSessionChange={onStartApplication} variant="start" />
-            <a
-              className="flex h-12 items-center justify-center rounded-full border border-[#dedee5] bg-white px-6 text-sm font-semibold text-[#42424c] transition hover:border-[#aeb8ff] hover:text-[#4f63e8]"
-              href="/rules"
-            >
-              {welcome.secondary}
-            </a>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            {welcome.facts.map(([label, value]) => (
-              <div className="rounded-2xl border border-[#e6e6ec] bg-[#fafafd] p-4" key={label}>
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#777782]">{label}</p>
-                <p className="mt-2 text-xl font-semibold tracking-[-0.04em]">{value}</p>
-              </div>
-            ))}
-          </div>
-          <div className="grid gap-3">
-            {welcome.cards.map((card) => {
-              const Icon = card.icon;
-
-              return (
-                <article className="flex gap-4 rounded-2xl border border-[#e6e6ec] bg-[#fafafd] p-4" key={card.title}>
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#e6e9ff] text-[#5868ea]">
-                    <Icon className="h-5 w-5" />
-                  </span>
-                  <div>
-                    <h2 className="font-semibold">{card.title}</h2>
-                    <p className="mt-1 text-sm leading-6 text-[#696975]">{card.body}</p>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
+    <section className="flex min-h-[calc(100vh-7rem)] items-center justify-center px-5 py-10">
+      <div className="w-full max-w-sm text-center">
+        <p className="text-sm font-bold tracking-[-0.05em] text-[#202027]">RISKA</p>
+        <h1 className="mt-5 text-4xl font-semibold tracking-[-0.06em] text-[#202027]">{welcome.primary}</h1>
+        <p className="mt-3 text-sm leading-6 text-[#777782]">Conectá tu wallet para comenzar.</p>
+        <div className="mt-7 flex justify-center">
+          <WalletAuth onSessionChange={onStartApplication} variant="start" />
         </div>
       </div>
     </section>
@@ -984,7 +953,7 @@ function StepRail({
   return (
     <div className="rounded-2xl border border-[#e2e2e8] bg-white p-2 shadow-[0_8px_24px_rgba(30,30,45,0.03)]">
       <div className="overflow-x-auto">
-        <div className="grid min-w-[680px] grid-cols-4 gap-2">
+        <div className="grid min-w-[520px] grid-cols-4 gap-1">
           {steps.map((step, index) => {
             const Icon = step.icon;
             const selected = step.id === activeStepId;
@@ -994,22 +963,18 @@ function StepRail({
             return (
               <button
                 aria-current={selected ? "step" : undefined}
-                className={`flex min-h-[76px] w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition ${
+                className={`flex min-h-[58px] w-full items-center justify-center gap-2 rounded-xl border px-2 py-2 text-center transition ${
                   selected ? "border-[#cbd2ff] bg-[#f2f3ff]" : "border-transparent hover:border-[#e6e6ec] hover:bg-[#fafafd]"
                 }`}
                 key={step.id}
                 onClick={() => onStepSelect(step.id)}
                 type="button"
               >
-                <span className={`flex h-9 w-9 shrink-0 items-center justify-center ${step.accent}`}>
-                  {complete ? <Check className="h-4 w-4 text-white" /> : <Icon className="h-4 w-4 text-white" />}
+                <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${step.accent}`}>
+                  {complete ? <Check className="h-3 w-3 text-white" /> : <Icon className="h-3 w-3 text-white" />}
                 </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-xs text-[#777782]">{content.wizard.step(index)}</span>
-                  <span className="block truncate text-sm font-semibold">{stepCopy.meta}</span>
-                </span>
-                <span className={`shrink-0 text-xs ${complete ? "text-[#5868ea]" : "text-[#92929d]"}`}>
-                  {complete ? content.wizard.complete : content.wizard.pending}
+                <span className="min-w-0">
+                  <span className="block truncate text-xs font-semibold">{stepCopy.meta}</span>
                 </span>
               </button>
             );
