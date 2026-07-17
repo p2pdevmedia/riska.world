@@ -1277,15 +1277,13 @@ function BeneficiariesScreen({
         </span>
         <span className="font-semibold">{text.add}</span>
       </button>
-      {state.beneficiaries.length === 0 && (
-        <button
-          className="w-full rounded-xl border border-[#334052] bg-[#151d28] px-4 py-3 text-sm font-semibold text-[#d8e0ee] transition hover:border-[#5868ea] hover:text-[#aeb8ff]"
-          onClick={onSkipBeneficiaries}
-          type="button"
-        >
-          Configurar beneficiarios después
-        </button>
-      )}
+      <button
+        className="w-full rounded-xl border border-[#5868ea] bg-[#20295b] px-4 py-3 text-sm font-semibold text-[#c8d0ff] transition hover:bg-[#28346f]"
+        onClick={onSkipBeneficiaries}
+        type="button"
+      >
+        Continuar sin beneficiarios
+      </button>
       <div className="h-2 overflow-hidden rounded-full bg-[#202936]">
         <div className="h-full bg-[#5868ea]" style={{ width: `${Math.min(beneficiaryTotal, 100)}%` }} />
       </div>
