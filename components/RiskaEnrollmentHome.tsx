@@ -1147,12 +1147,12 @@ function EnrollmentSessionControl({ address, label }: { address: string; label: 
 
   return (
     <button
-      className="flex h-10 max-w-[164px] items-center gap-2 rounded-lg border border-[#303a49] bg-[#111722] px-3 text-xs font-semibold text-[#c5d1e5] transition hover:border-[#62738f]"
+      className="flex min-h-11 max-w-[132px] items-center gap-2 rounded-lg border border-[#303a49] bg-[#111722] px-3 py-1.5 text-xs font-semibold text-[#c5d1e5] transition hover:border-[#62738f]"
       onClick={() => void logout()}
       type="button"
     >
       <LogOut className="h-4 w-4 shrink-0" />
-      <span className="truncate">{label} · {shortAddress(address)}</span>
+      <span className="min-w-0 text-left leading-tight"><span className="block truncate">{label}</span><span className="mt-0.5 block truncate font-mono text-[10px] font-medium text-[#8190a6]">{shortAddress(address)}</span></span>
     </button>
   );
 }
@@ -1621,13 +1621,13 @@ function PolicyControlPanel({
           )}
         </div>
         <button
-          className="flex h-10 max-w-[164px] items-center justify-center gap-2 rounded-lg border border-[#303a49] bg-[#111722] px-3 text-xs font-semibold text-[#c5d1e5] transition hover:border-[#62738f] disabled:opacity-50"
+          className="flex min-h-11 max-w-[132px] items-center justify-center gap-2 rounded-lg border border-[#303a49] bg-[#111722] px-3 py-1.5 text-xs font-semibold text-[#c5d1e5] transition hover:border-[#62738f] disabled:opacity-50"
           disabled={isWorking}
           onClick={() => void logout()}
           type="button"
         >
           <LogOut className="h-4 w-4 shrink-0" />
-          <span className="truncate">{text.logout} · {shortAddress(walletAddress)}</span>
+          <span className="min-w-0 text-left leading-tight"><span className="block truncate">{text.logout}</span><span className="mt-0.5 block truncate font-mono text-[10px] font-medium text-[#8190a6]">{shortAddress(walletAddress)}</span></span>
         </button>
       </div>
 
