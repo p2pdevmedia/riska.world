@@ -14,8 +14,8 @@ import {
   Fingerprint,
   HandCoins,
   HeartHandshake,
+  LogOut,
   Percent,
-  RefreshCw,
   ShieldCheck,
   Trash2,
   UserPlus,
@@ -56,6 +56,7 @@ import {
   type TestnetPolicyAction,
   type TestnetPolicyActionStatus
 } from "@/lib/web3/riska-testnet";
+import { disconnectWallet } from "@/lib/web3/metamask";
 
 type StepId = "identity" | "beneficiaries" | "quote" | "confirm";
 
@@ -260,6 +261,7 @@ const copy = {
           customToken: "Custom 0x",
           deathNotice: "Death report",
           lastActivity: "Last activity",
+          logout: "Logout",
           deposit: "Deposit",
           depositAmount: "Deposit amount",
           depositToken: "Deposit token",
@@ -466,6 +468,7 @@ const copy = {
           customToken: "0x custom",
           deathNotice: "Reporte muerte",
           lastActivity: "Última actividad",
+          logout: "Cerrar sesión",
           deposit: "Depositar",
           depositAmount: "Monto a depositar",
           depositToken: "Depositar token",
@@ -1578,6 +1581,16 @@ function PolicyControlPanel({
     }
   }
 
+  async function logout() {
+    try {
+      await disconnectWallet();
+    } finally {
+      window.localStorage.clear();
+      window.sessionStorage.clear();
+      window.location.assign("/");
+    }
+  }
+
   return (
     <div className="overflow-hidden rounded-[28px] border border-[#202936] bg-[#080b10] p-4 text-[#f5f7fb] shadow-[0_22px_60px_rgba(8,11,16,0.25)] md:p-6">
       <div className="flex flex-col gap-3 border-b border-[#202936] pb-4 sm:flex-row sm:items-center sm:justify-between">
@@ -1594,11 +1607,11 @@ function PolicyControlPanel({
         <button
           className="flex h-10 items-center justify-center gap-2 rounded-lg border border-[#303a49] bg-[#111722] px-3 text-xs font-semibold text-[#c5d1e5] transition hover:border-[#62738f] disabled:opacity-50"
           disabled={isWorking}
-          onClick={() => void refreshPolicy()}
+          onClick={() => void logout()}
           type="button"
         >
-          <RefreshCw className="h-4 w-4" />
-          {text.refresh}
+          <LogOut className="h-4 w-4" />
+          {text.logout}
         </button>
       </div>
 
