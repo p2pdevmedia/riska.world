@@ -1339,6 +1339,19 @@ function TestnetIssuePanel({
   const status = getTestnetPanelStatus(content, testnetDeployment, testnetIssue, existingPolicyLookup);
   const explorerUrl = deployment && openPolicyTx ? `${deployment.explorerBaseUrl.replace(/\/address\/$/, "/tx/")}${openPolicyTx}` : null;
 
+  // Once a policy exists, the dashboard is the product surface. Issuance details remain
+  // available only while opening a policy, avoiding duplicate technical status cards.
+  if (policyId && state.walletSession) {
+    return (
+      <PolicyControlPanel
+        content={content}
+        deployment={deployment}
+        policyId={policyId}
+        walletAddress={state.walletSession.address}
+      />
+    );
+  }
+
   return (
     <div className="border border-[#cfe0d2] bg-[#f8faf6] p-4">
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -1374,15 +1387,6 @@ function TestnetIssuePanel({
             </div>
           )}
         </div>
-      )}
-
-      {policyId && state.walletSession && (
-        <PolicyControlPanel
-          content={content}
-          deployment={deployment}
-          policyId={policyId}
-          walletAddress={state.walletSession.address}
-        />
       )}
     </div>
   );
@@ -1531,16 +1535,16 @@ function PolicyControlPanel({
     : "0";
 
   return (
-    <div className={`mt-4 ${assetOperation === "dashboard" ? "overflow-hidden rounded-[28px] border border-[#202936] bg-[#080b10] p-4 text-[#f5f7fb] shadow-[0_22px_60px_rgba(8,11,16,0.25)] md:p-6" : "border border-[#dce4d8] bg-white p-4"}`}>
-      <div className={`flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between ${assetOperation === "dashboard" ? "border-b border-[#202936] pb-4" : ""}`}>
+    <div className="mt-4 overflow-hidden rounded-[28px] border border-[#202936] bg-[#080b10] p-4 text-[#f5f7fb] shadow-[0_22px_60px_rgba(8,11,16,0.25)] md:p-6">
+      <div className="flex flex-col gap-3 border-b border-[#202936] pb-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className={`text-sm font-semibold ${assetOperation === "dashboard" ? "text-[#f5f7fb]" : "text-[#26342d]"}`}>{text.title}</p>
-          <p className={`mt-1 text-xs ${assetOperation === "dashboard" ? "text-[#8d9bb0]" : "text-[#66746e]"}`}>
+          <p className="text-sm font-semibold text-[#f5f7fb]">{text.title}</p>
+          <p className="mt-1 text-xs text-[#8d9bb0]">
             {text.status}: {policy ? getPolicyStatusLabel(policy.status) : content.wizard.pending}
           </p>
         </div>
         <button
-          className={`flex h-10 items-center justify-center gap-2 border px-3 text-xs font-semibold transition disabled:opacity-50 ${assetOperation === "dashboard" ? "border-[#303a49] bg-[#111722] text-[#c5d1e5] hover:border-[#62738f]" : "border-[#cbd7cf] text-[#26342d] hover:border-[#17231e]"}`}
+          className="flex h-10 items-center justify-center gap-2 rounded-lg border border-[#303a49] bg-[#111722] px-3 text-xs font-semibold text-[#c5d1e5] transition hover:border-[#62738f] disabled:opacity-50"
           disabled={isWorking}
           onClick={() => void refreshPolicy()}
           type="button"
@@ -1610,8 +1614,8 @@ function PolicyControlPanel({
                   label="USDC"
                   onReceive={() => { chooseAsset(""); setAssetOperation("deposit"); }}
                   onSend={() => { chooseAsset(""); setAssetOperation("withdraw"); }}
-                  receiveLabel={text.receive}
-                  sendLabel={text.send}
+                  receiveLabel={text.depositFunds}
+                  sendLabel={text.withdrawFunds}
                   share="100% policy base"
                 />
                 {policy.auxiliaryTokens.map((token) => (
@@ -1621,32 +1625,32 @@ function PolicyControlPanel({
                     label={token.symbol}
                     onReceive={() => { chooseAsset(token.address); setAssetOperation("deposit"); }}
                     onSend={() => { chooseAsset(token.address); setAssetOperation("withdraw"); }}
-                    receiveLabel={text.receive}
-                    sendLabel={text.send}
+                    receiveLabel={text.depositFunds}
+                    sendLabel={text.withdrawFunds}
                     share={shortAddress(token.address)}
                   />
                 ))}
               </section>
             </>
           ) : (
-            <div className="mt-4 border border-[#dce4d8] bg-[#f8faf6] p-4">
+            <div className="mx-auto mt-5 max-w-2xl rounded-[22px] border border-[#202936] bg-[#10151d] p-4 md:p-5">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-lg font-semibold text-[#26342d]">{assetOperation === "deposit" ? text.depositTitle : text.withdrawTitle}</p>
-                  <p className="mt-1 text-sm text-[#66746e]">{text.operationHint}</p>
+                  <p className="text-lg font-semibold text-[#f5f7fb]">{assetOperation === "deposit" ? text.depositTitle : text.withdrawTitle}</p>
+                  <p className="mt-1 text-sm text-[#8d9bb0]">{text.operationHint}</p>
                 </div>
                 <button
-                  className="text-sm font-semibold text-[#26342d] underline underline-offset-4"
+                  className="text-sm font-semibold text-[#c8ff75] underline underline-offset-4"
                   onClick={() => setAssetOperation("dashboard")}
                   type="button"
                 >
                   {text.backToDashboard}
                 </button>
               </div>
-              <div className="mt-4 grid gap-2 md:grid-cols-[1fr_1fr_auto]">
+              <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
                 <select
                   aria-label={text.chooseAsset}
-                  className="min-h-11 border border-[#e3e8df] bg-white px-3 text-sm outline-none focus:border-[#17231e]"
+                  className="min-h-11 rounded-lg border border-[#334052] bg-[#0b1018] px-3 text-sm text-[#f5f7fb] outline-none focus:border-[#c8ff75]"
                   onChange={(event) => chooseAsset(event.target.value)}
                   value={tokenAddress}
                 >
@@ -1660,7 +1664,7 @@ function PolicyControlPanel({
                 </select>
                 <input
                   aria-label={assetOperation === "deposit" ? text.depositAmount : text.withdrawExtraAmount}
-                  className="min-h-11 border border-[#e3e8df] bg-white px-3 text-sm outline-none focus:border-[#17231e]"
+                  className="min-h-11 rounded-lg border border-[#334052] bg-[#0b1018] px-3 text-sm text-[#f5f7fb] outline-none focus:border-[#c8ff75]"
                   min="0"
                   onChange={(event) => tokenAddress ? setTokenAmount(event.target.value) : (assetOperation === "deposit" ? setDepositAmount(event.target.value) : setExtraWithdrawAmount(event.target.value))}
                   step="any"
@@ -1676,35 +1680,35 @@ function PolicyControlPanel({
                   workingAction={workingAction}
                 />
               </div>
-              {tokenAddress && assetOperation === "withdraw" && <p className="mt-3 text-sm text-[#66746e]">{selectedAssetBalance} {selectedAuxiliaryToken?.symbol ?? ""}</p>}
+              {tokenAddress && assetOperation === "withdraw" && <p className="mt-3 text-sm text-[#8d9bb0]">{selectedAssetBalance} {selectedAuxiliaryToken?.symbol ?? ""}</p>}
             </div>
           )}
 
-          <div className="mt-3 border border-[#e3e8df] bg-[#f8faf6] p-3">
+          <div className="mt-3 rounded-xl border border-[#202936] bg-[#10151d] p-4">
             <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#66746e]">{text.deathNotice}</p>
-              <p className="text-sm font-semibold text-[#26342d]">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8d9bb0]">{text.deathNotice}</p>
+              <p className="text-sm font-semibold text-[#f5f7fb]">
                 {policy.deathNotice.active ? shortAddress(policy.deathNotice.reporter) : text.noDeathNotice}
               </p>
             </div>
             {policy.deathNotice.active && (
-              <p className="mt-2 text-sm text-[#66746e]">
+              <p className="mt-2 text-sm text-[#8d9bb0]">
                 {text.claimableAt}: {formatUnixDate(policy.deathNotice.claimableAt)}
               </p>
             )}
           </div>
 
-          <div className="mt-3 border border-[#e3e8df] bg-[#fbfcf8] p-3">
+          <div className="mt-3 rounded-xl border border-[#202936] bg-[#10151d] p-4">
             <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#66746e]">{text.yieldVault}</p>
-              <p className="text-sm font-semibold text-[#26342d]">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8d9bb0]">{text.yieldVault}</p>
+              <p className="text-sm font-semibold text-[#f5f7fb]">
                 {policy.yieldPositions.length > 0 ? `${policy.yieldPositions.length}` : text.noYieldPositions}
               </p>
             </div>
-            <p className="mt-2 text-sm leading-6 text-[#66746e]">{text.yieldVaultNote}</p>
-            <div className="mt-3 border border-[#dce4d8] bg-white p-3">
-              <p className="text-sm font-semibold text-[#26342d]">{text.staticUsdc}</p>
-              <p className="mt-1 text-sm text-[#66746e]">
+            <p className="mt-2 text-sm leading-6 text-[#8d9bb0]">{text.yieldVaultNote}</p>
+            <div className="mt-3 rounded-lg border border-[#283443] bg-[#0b1018] p-3">
+              <p className="text-sm font-semibold text-[#f5f7fb]">{text.staticUsdc}</p>
+              <p className="mt-1 text-sm text-[#8d9bb0]">
                 {text.staticUsdcNote(formatUsdcAmount(policy.totalPrincipal - yieldAllocated))}
               </p>
             </div>
@@ -1712,16 +1716,16 @@ function PolicyControlPanel({
             {policy.yieldPositions.length > 0 && (
               <div className="mt-3 grid gap-2 md:grid-cols-2">
                 {policy.yieldPositions.map((position) => (
-                  <div className="border border-[#dce4d8] bg-white p-3" key={position.strategyId}>
+                  <div className="rounded-lg border border-[#283443] bg-[#0b1018] p-3" key={position.strategyId}>
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-sm font-semibold text-[#26342d]">{position.name}</p>
-                        <p className="mt-1 text-xs text-[#66746e]">
+                        <p className="text-sm font-semibold text-[#f5f7fb]">{position.name}</p>
+                        <p className="mt-1 text-xs text-[#8d9bb0]">
                           {text.yieldStrategy} #{position.strategyId}
                         </p>
                       </div>
                       <button
-                        className="flex h-9 shrink-0 items-center justify-center gap-2 border border-[#cbd7cf] px-3 text-xs font-semibold text-[#26342d] transition hover:border-[#17231e] disabled:opacity-50"
+                        className="flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg border border-[#334052] bg-[#151d28] px-3 text-xs font-semibold text-[#e6edf8] transition hover:border-[#718299] disabled:opacity-50"
                         disabled={isWorking || status !== 1}
                         onClick={() =>
                           void runAction("withdrawYield", {
@@ -1747,7 +1751,7 @@ function PolicyControlPanel({
             <div className="mt-3 grid gap-2 lg:grid-cols-[0.7fr_1fr_auto]">
               <select
                 aria-label={text.yieldStrategy}
-                className="min-h-11 border border-[#e3e8df] bg-white px-3 text-sm outline-none focus:border-[#17231e]"
+                className="min-h-11 rounded-lg border border-[#334052] bg-[#0b1018] px-3 text-sm text-[#f5f7fb] outline-none focus:border-[#c8ff75]"
                 onChange={(event) => setYieldStrategyId(event.target.value)}
                 value={yieldStrategyId}
               >
@@ -1760,7 +1764,7 @@ function PolicyControlPanel({
               </select>
               <input
                 aria-label={text.yieldAmount}
-                className="min-h-11 border border-[#e3e8df] bg-white px-3 text-sm outline-none focus:border-[#17231e]"
+                className="min-h-11 rounded-lg border border-[#334052] bg-[#0b1018] px-3 text-sm text-[#f5f7fb] outline-none focus:border-[#c8ff75]"
                 min="0"
                 onChange={(event) => setYieldAmount(event.target.value)}
                 step="0.000001"
@@ -1778,16 +1782,16 @@ function PolicyControlPanel({
             </div>
           </div>
 
-          <div className="mt-3 border border-[#e3e8df] bg-[#fbfcf8] p-3">
+          <div className="mt-3 rounded-xl border border-[#202936] bg-[#10151d] p-4">
             <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#66746e]">{text.tokenVault}</p>
-              <p className="text-sm font-semibold text-[#26342d]">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8d9bb0]">{text.tokenVault}</p>
+              <p className="text-sm font-semibold text-[#f5f7fb]">
                 {policy.auxiliaryTokens.length > 0 ? `${policy.auxiliaryTokens.length}` : text.noAuxiliaryTokens}
               </p>
             </div>
-            <p className="mt-2 text-sm leading-6 text-[#66746e]">{text.tokenVaultNote}</p>
+            <p className="mt-2 text-sm leading-6 text-[#8d9bb0]">{text.tokenVaultNote}</p>
             {tokenVaultMessage && (
-              <p className="mt-2 border border-amber-200 bg-amber-50 px-3 py-2 text-sm leading-6 text-amber-900">
+              <p className="mt-2 rounded-lg border border-amber-800/60 bg-amber-950/30 px-3 py-2 text-sm leading-6 text-amber-200">
                 {tokenVaultMessage}
               </p>
             )}
@@ -1806,7 +1810,7 @@ function PolicyControlPanel({
 
             {auxiliaryTokenOptions.length > 0 && (
               <div className="mt-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#66746e]">{text.commonTokens}</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8d9bb0]">{text.commonTokens}</p>
                 <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {auxiliaryTokenOptions.map((token) => {
                     const selected = selectedPresetToken?.address === token.address;
@@ -1816,20 +1820,20 @@ function PolicyControlPanel({
                         aria-pressed={selected}
                         className={`flex min-h-14 flex-col justify-center border px-3 py-2 text-left transition ${
                           selected
-                            ? "border-emerald-500 bg-emerald-50 text-emerald-900"
-                            : "border-[#dce4d8] bg-white text-[#26342d] hover:border-[#17231e]"
+                            ? "border-[#c8ff75] bg-[#1d2b25] text-[#c8ff75]"
+                            : "border-[#334052] bg-[#0b1018] text-[#e6edf8] hover:border-[#718299]"
                         }`}
                         key={token.address}
                         onClick={() => setTokenAddress(token.address)}
                         type="button"
                       >
                         <span className="text-sm font-semibold">{token.symbol}</span>
-                        <span className="mt-1 font-mono text-[11px] leading-none text-[#66746e]">{shortAddress(token.address)}</span>
+                        <span className="mt-1 font-mono text-[11px] leading-none text-[#8d9bb0]">{shortAddress(token.address)}</span>
                       </button>
                     );
                   })}
                   <button
-                    className="flex min-h-14 flex-col justify-center border border-[#dce4d8] bg-white px-3 py-2 text-left text-[#26342d] transition hover:border-[#17231e]"
+                    className="flex min-h-14 flex-col justify-center rounded-lg border border-[#334052] bg-[#0b1018] px-3 py-2 text-left text-[#e6edf8] transition hover:border-[#718299]"
                     onClick={() => {
                       tokenAddressInputRef.current?.focus();
                       tokenAddressInputRef.current?.select();
@@ -1837,14 +1841,14 @@ function PolicyControlPanel({
                     type="button"
                   >
                     <span className="text-sm font-semibold">{text.customToken}</span>
-                    <span className="mt-1 font-mono text-[11px] leading-none text-[#66746e]">0x...</span>
+                    <span className="mt-1 font-mono text-[11px] leading-none text-[#8d9bb0]">0x...</span>
                   </button>
                 </div>
               </div>
             )}
 
             {selectedPresetToken && (
-              <p className="mt-3 text-xs font-semibold text-emerald-800">
+              <p className="mt-3 text-xs font-semibold text-[#c8ff75]">
                 {text.selectedToken}: {selectedPresetToken.name} ({selectedPresetToken.symbol})
               </p>
             )}
@@ -1852,7 +1856,7 @@ function PolicyControlPanel({
             <div className="mt-3 grid gap-2 lg:grid-cols-[1.4fr_0.8fr_auto_auto]">
               <input
                 aria-label={text.tokenAddress}
-                className="min-h-11 border border-[#e3e8df] bg-white px-3 text-sm outline-none focus:border-[#17231e]"
+                className="min-h-11 rounded-lg border border-[#334052] bg-[#0b1018] px-3 text-sm text-[#f5f7fb] outline-none focus:border-[#c8ff75]"
                 onChange={(event) => setTokenAddress(event.target.value)}
                 placeholder="0x..."
                 ref={tokenAddressInputRef}
@@ -1861,7 +1865,7 @@ function PolicyControlPanel({
               />
               <input
                 aria-label={text.tokenAmount}
-                className="min-h-11 border border-[#e3e8df] bg-white px-3 text-sm outline-none focus:border-[#17231e]"
+                className="min-h-11 rounded-lg border border-[#334052] bg-[#0b1018] px-3 text-sm text-[#f5f7fb] outline-none focus:border-[#c8ff75]"
                 min="0"
                 onChange={(event) => setTokenAmount(event.target.value)}
                 step="any"
@@ -1888,7 +1892,7 @@ function PolicyControlPanel({
             {tokenAddressInvalid && <p className="mt-2 text-sm text-red-700">{text.tokenAddressInvalid}</p>}
           </div>
 
-          <p className="mt-3 border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900">
+          <p className="mt-3 rounded-lg border border-amber-800/60 bg-amber-950/30 px-3 py-2 text-xs leading-5 text-amber-200">
             {text.claimAllFeeNote}
           </p>
 
@@ -1984,7 +1988,7 @@ function PolicyActionButton({
 
   return (
     <button
-      className="flex min-h-11 items-center justify-center gap-2 border border-[#cbd7cf] bg-[#fbfcf8] px-3 text-sm font-semibold text-[#26342d] transition hover:border-[#17231e] hover:bg-white disabled:cursor-not-allowed disabled:opacity-45"
+      className="flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[#334052] bg-[#151d28] px-3 text-sm font-semibold text-[#e6edf8] transition hover:border-[#718299] hover:bg-[#1b2634] disabled:cursor-not-allowed disabled:opacity-45"
       disabled={disabled}
       onClick={() => onClick(action)}
       type="button"
