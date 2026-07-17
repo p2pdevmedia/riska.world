@@ -2,6 +2,8 @@
 
 import {
   Activity,
+  ArrowDownToLine,
+  ArrowUpFromLine,
   BadgeCheck,
   BellRing,
   Check,
@@ -107,6 +109,7 @@ type ExistingPolicyLookupState =
   | { message: string; status: "error" };
 
 type TestnetAuxiliaryTokenOption = NonNullable<RiskaTestnetDeployment["testAuxiliaryTokens"]>[string];
+type AssetOperation = "dashboard" | "deposit" | "withdraw";
 
 const storageKey = "riska.enrollment.v2";
 const pendingWalletStorageKey = "riska.pending-wallet-session";
@@ -285,7 +288,19 @@ const copy = {
           reportDeath: "Report death",
           selectedToken: "Selected token",
           status: "Status",
-          title: "Your policy",
+          title: "Dashboard",
+          assets: "Your assets",
+          balance: "Total balance",
+          depositFunds: "Deposit",
+          withdrawFunds: "Withdraw",
+          send: "Send",
+          receive: "Receive",
+          backToDashboard: "Back to dashboard",
+          chooseAsset: "Choose asset",
+          depositTitle: "Deposit funds",
+          withdrawTitle: "Withdraw funds",
+          operationHint: "Choose a token and amount to continue.",
+          usdcAvailable: "Available extra USDC",
           tokenAddress: "ERC20 token address",
           tokenAddressInvalid: "Enter a valid ERC20 token address.",
           tokenAmount: "Token amount",
@@ -465,7 +480,19 @@ const copy = {
           reportDeath: "Reportar muerte",
           selectedToken: "Token seleccionado",
           status: "Estado",
-          title: "Tu póliza",
+          title: "Dashboard",
+          assets: "Tus activos",
+          balance: "Balance total",
+          depositFunds: "Depositar",
+          withdrawFunds: "Retirar",
+          send: "Enviar",
+          receive: "Recibir",
+          backToDashboard: "Volver al dashboard",
+          chooseAsset: "Elegí un activo",
+          depositTitle: "Depositar fondos",
+          withdrawTitle: "Retirar fondos",
+          operationHint: "Elegí un token y monto para continuar.",
+          usdcAvailable: "USDC extra disponible",
           tokenAddress: "Dirección del token ERC20",
           tokenAddressInvalid: "Ingresá una dirección ERC20 válida.",
           tokenAmount: "Monto del token",
@@ -990,6 +1017,7 @@ function EnrollmentWizard(props: EnrollmentWizardProps) {
   const Icon = step.icon;
   const stepCopy = content.wizard.steps[step.id];
   const primaryLabel = getPrimaryLabel(props);
+  const screenTitle = step.id === "confirm" && state.issuedPolicyId ? content.wizard.confirm.policy.title : stepCopy.title;
 
   return (
     <article className="rounded-[24px] border border-[#e2e2e8] bg-white shadow-[0_20px_60px_rgba(30,30,45,0.09)]">
@@ -1000,7 +1028,7 @@ function EnrollmentWizard(props: EnrollmentWizardProps) {
           </div>
           <div>
             <p className="text-xs text-[#777782]">{content.wizard.step(activeStepIndex)}</p>
-            <h2 className="text-2xl font-semibold leading-tight tracking-[-0.04em]">{stepCopy.title}</h2>
+            <h2 className="text-2xl font-semibold leading-tight tracking-[-0.04em]">{screenTitle}</h2>
           </div>
         </div>
         <StatusPill
@@ -1359,6 +1387,7 @@ function PolicyControlPanel({
   const [yieldStrategyId, setYieldStrategyId] = useState("");
   const [tokenAddress, setTokenAddress] = useState("");
   const [tokenAmount, setTokenAmount] = useState("1");
+  const [assetOperation, setAssetOperation] = useState<AssetOperation>("dashboard");
   const [workingAction, setWorkingAction] = useState<TestnetPolicyAction | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusTone, setStatusTone] = useState("text-[#66746e]");
@@ -1473,6 +1502,14 @@ function PolicyControlPanel({
     ? policy.isViewerBeneficiary && policy.deathNotice.active && (status === 1 || status === 2)
     : false;
 
+  function chooseAsset(address: string) {
+    setTokenAddress(address);
+  }
+
+  const selectedAssetBalance = selectedAuxiliaryToken
+    ? formatTokenAmount(selectedAuxiliaryToken.balance, selectedAuxiliaryToken.decimals)
+    : "0";
+
   return (
     <div className="mt-4 border border-[#dce4d8] bg-white p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -1495,15 +1532,122 @@ function PolicyControlPanel({
 
       {policy && (
         <>
-          <div className="mt-4 grid gap-2 md:grid-cols-2">
-            <SummaryFact
-              label={text.minimumFunded}
-              value={`${formatUsdcAmount(policy.remainingMinimumPrincipal)} USDC (${minimumPercent.toFixed(2)}%)`}
-            />
-            <SummaryFact label={text.extraPrincipal} value={`${formatUsdcAmount(policy.remainingExtraPrincipal)} USDC`} />
-            <SummaryFact label={text.monthlyEstimate} value={`${formatUsdcAmount(policy.monthlyPayoutEstimate)} USDC`} />
-            <SummaryFact label={text.payoutProgress} value={`${policy.payoutsMade} / 120`} />
-          </div>
+          {assetOperation === "dashboard" ? (
+            <>
+              <div className="mt-4 rounded-xl border border-[#dce4d8] bg-[#f8faf6] p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#66746e]">{text.balance}</p>
+                <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-[#26342d]">
+                  {formatUsdcAmount(policy.totalPrincipal)} USDC
+                </p>
+                <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                  <button
+                    className="flex min-h-12 items-center justify-center gap-2 bg-[#26342d] px-4 text-sm font-semibold text-white transition hover:bg-[#17231e]"
+                    onClick={() => setAssetOperation("deposit")}
+                    type="button"
+                  >
+                    <ArrowDownToLine className="h-4 w-4" />
+                    {text.depositFunds}
+                  </button>
+                  <button
+                    className="flex min-h-12 items-center justify-center gap-2 border border-[#cbd7cf] bg-white px-4 text-sm font-semibold text-[#26342d] transition hover:border-[#17231e]"
+                    onClick={() => setAssetOperation("withdraw")}
+                    type="button"
+                  >
+                    <ArrowUpFromLine className="h-4 w-4" />
+                    {text.withdrawFunds}
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-3 grid gap-2 md:grid-cols-2">
+                <SummaryFact
+                  label={text.minimumFunded}
+                  value={`${formatUsdcAmount(policy.remainingMinimumPrincipal)} USDC (${minimumPercent.toFixed(2)}%)`}
+                />
+                <SummaryFact label={text.usdcAvailable} value={`${formatUsdcAmount(policy.remainingExtraPrincipal)} USDC`} />
+                <SummaryFact label={text.monthlyEstimate} value={`${formatUsdcAmount(policy.monthlyPayoutEstimate)} USDC`} />
+                <SummaryFact label={text.payoutProgress} value={`${policy.payoutsMade} / 120`} />
+              </div>
+
+              <div className="mt-3 border border-[#e3e8df] bg-[#fbfcf8] p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#66746e]">{text.assets}</p>
+                  <p className="text-sm font-semibold text-[#26342d]">{policy.auxiliaryTokens.length + 1}</p>
+                </div>
+                <div className="mt-3 grid gap-2 md:grid-cols-2">
+                  <AssetCard
+                    balance={`${formatUsdcAmount(policy.totalPrincipal)} USDC`}
+                    label="USDC"
+                    onReceive={() => { chooseAsset(""); setAssetOperation("deposit"); }}
+                    onSend={() => { chooseAsset(""); setAssetOperation("withdraw"); }}
+                    receiveLabel={text.receive}
+                    sendLabel={text.send}
+                  />
+                  {policy.auxiliaryTokens.map((token) => (
+                    <AssetCard
+                      balance={formatTokenAmount(token.balance, token.decimals)}
+                      key={token.address}
+                      label={token.symbol}
+                      onReceive={() => { chooseAsset(token.address); setAssetOperation("deposit"); }}
+                      onSend={() => { chooseAsset(token.address); setAssetOperation("withdraw"); }}
+                      receiveLabel={text.receive}
+                      sendLabel={text.send}
+                    />
+                  ))}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="mt-4 border border-[#dce4d8] bg-[#f8faf6] p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-lg font-semibold text-[#26342d]">{assetOperation === "deposit" ? text.depositTitle : text.withdrawTitle}</p>
+                  <p className="mt-1 text-sm text-[#66746e]">{text.operationHint}</p>
+                </div>
+                <button
+                  className="text-sm font-semibold text-[#26342d] underline underline-offset-4"
+                  onClick={() => setAssetOperation("dashboard")}
+                  type="button"
+                >
+                  {text.backToDashboard}
+                </button>
+              </div>
+              <div className="mt-4 grid gap-2 md:grid-cols-[1fr_1fr_auto]">
+                <select
+                  aria-label={text.chooseAsset}
+                  className="min-h-11 border border-[#e3e8df] bg-white px-3 text-sm outline-none focus:border-[#17231e]"
+                  onChange={(event) => chooseAsset(event.target.value)}
+                  value={tokenAddress}
+                >
+                  <option value="">USDC</option>
+                  {auxiliaryTokenOptions.map((token) => (
+                    <option key={token.address} value={token.address}>{token.symbol}</option>
+                  ))}
+                  {policy.auxiliaryTokens.filter((token) => !auxiliaryTokenOptions.some((option) => option.address.toLowerCase() === token.address.toLowerCase())).map((token) => (
+                    <option key={token.address} value={token.address}>{token.symbol}</option>
+                  ))}
+                </select>
+                <input
+                  aria-label={assetOperation === "deposit" ? text.depositAmount : text.withdrawExtraAmount}
+                  className="min-h-11 border border-[#e3e8df] bg-white px-3 text-sm outline-none focus:border-[#17231e]"
+                  min="0"
+                  onChange={(event) => tokenAddress ? setTokenAmount(event.target.value) : (assetOperation === "deposit" ? setDepositAmount(event.target.value) : setExtraWithdrawAmount(event.target.value))}
+                  step="any"
+                  type="number"
+                  value={tokenAddress ? tokenAmount : (assetOperation === "deposit" ? depositAmount : extraWithdrawAmount)}
+                />
+                <PolicyActionButton
+                  action={assetOperation === "deposit" ? (tokenAddress ? "depositToken" : "deposit") : (tokenAddress ? "withdrawToken" : "withdrawExtra")}
+                  disabled={isWorking || (assetOperation === "deposit" ? (tokenAddress ? !canUseTokenVault : !canDeposit) : (tokenAddress ? !canWithdrawToken : !canWithdrawExtra))}
+                  icon={assetOperation === "deposit" ? ArrowDownToLine : ArrowUpFromLine}
+                  label={assetOperation === "deposit" ? text.depositFunds : text.withdrawFunds}
+                  onClick={runAction}
+                  workingAction={workingAction}
+                />
+              </div>
+              {tokenAddress && assetOperation === "withdraw" && <p className="mt-3 text-sm text-[#66746e]">{selectedAssetBalance} {selectedAuxiliaryToken?.symbol ?? ""}</p>}
+            </div>
+          )}
 
           <div className="mt-3 border border-[#e3e8df] bg-[#f8faf6] p-3">
             <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
@@ -1517,47 +1661,6 @@ function PolicyControlPanel({
                 {text.claimableAt}: {formatUnixDate(policy.deathNotice.claimableAt)}
               </p>
             )}
-          </div>
-
-          <div className="mt-4 grid gap-2 md:grid-cols-[1fr_auto]">
-            <input
-              aria-label={text.depositAmount}
-              className="min-h-11 border border-[#e3e8df] bg-[#fbfcf8] px-3 text-sm outline-none focus:border-[#17231e]"
-              min="0"
-              onChange={(event) => setDepositAmount(event.target.value)}
-              step="0.000001"
-              type="number"
-              value={depositAmount}
-            />
-            <PolicyActionButton
-              action="deposit"
-              disabled={!canDeposit || isWorking}
-              icon={Send}
-              label={text.deposit}
-              onClick={runAction}
-              workingAction={workingAction}
-            />
-          </div>
-
-          <div className="mt-2 grid gap-2 md:grid-cols-[1fr_auto]">
-            <input
-              aria-label={text.withdrawExtraAmount}
-              className="min-h-11 border border-[#e3e8df] bg-[#fbfcf8] px-3 text-sm outline-none focus:border-[#17231e]"
-              min="0"
-              max={policy ? formatUsdcAmount(policy.remainingExtraPrincipal) : undefined}
-              onChange={(event) => setExtraWithdrawAmount(event.target.value)}
-              step="0.000001"
-              type="number"
-              value={extraWithdrawAmount}
-            />
-            <PolicyActionButton
-              action="withdrawExtra"
-              disabled={!canWithdrawExtra || isWorking}
-              icon={HandCoins}
-              label={text.withdrawExtra}
-              onClick={runAction}
-              workingAction={workingAction}
-            />
           </div>
 
           <div className="mt-3 border border-[#e3e8df] bg-[#fbfcf8] p-3">
@@ -1858,6 +1961,51 @@ function PolicyActionButton({
       <Icon className={`h-4 w-4 ${working ? "animate-pulse" : ""}`} />
       {label}
     </button>
+  );
+}
+
+function AssetCard({
+  balance,
+  label,
+  onReceive,
+  onSend,
+  receiveLabel,
+  sendLabel
+}: {
+  balance: string;
+  label: string;
+  onReceive: () => void;
+  onSend: () => void;
+  receiveLabel: string;
+  sendLabel: string;
+}) {
+  return (
+    <div className="border border-[#dce4d8] bg-white p-3">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold text-[#26342d]">{label}</p>
+          <p className="mt-1 text-lg font-semibold tracking-[-0.03em] text-[#26342d]">{balance}</p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            className="flex h-9 items-center gap-1 border border-[#cbd7cf] px-2 text-xs font-semibold text-[#26342d] transition hover:border-[#17231e]"
+            onClick={onSend}
+            type="button"
+          >
+            <ArrowUpFromLine className="h-3.5 w-3.5" />
+            {sendLabel}
+          </button>
+          <button
+            className="flex h-9 items-center gap-1 bg-[#26342d] px-2 text-xs font-semibold text-white transition hover:bg-[#17231e]"
+            onClick={onReceive}
+            type="button"
+          >
+            <ArrowDownToLine className="h-3.5 w-3.5" />
+            {receiveLabel}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
