@@ -289,6 +289,16 @@ const copy = {
           selectedToken: "Selected token",
           status: "Status",
           title: "Dashboard",
+          netWorth: "Policy value",
+          fundingProgress: "Funding progress",
+          holdings: "Holdings",
+          policyHistory: "Policy history",
+          policyActive: "Policy active",
+          assetsTab: "Assets",
+          activityTab: "Activity",
+          asset: "Asset",
+          allocation: "Allocation",
+          actions: "Actions",
           assets: "Your assets",
           balance: "Total balance",
           depositFunds: "Deposit",
@@ -481,6 +491,16 @@ const copy = {
           selectedToken: "Token seleccionado",
           status: "Estado",
           title: "Dashboard",
+          netWorth: "Valor de la póliza",
+          fundingProgress: "Progreso de fondeo",
+          holdings: "Activos",
+          policyHistory: "Historial de la póliza",
+          policyActive: "Póliza activa",
+          assetsTab: "Activos",
+          activityTab: "Actividad",
+          asset: "Activo",
+          allocation: "Asignación",
+          actions: "Acciones",
           assets: "Tus activos",
           balance: "Balance total",
           depositFunds: "Depositar",
@@ -1511,16 +1531,16 @@ function PolicyControlPanel({
     : "0";
 
   return (
-    <div className="mt-4 border border-[#dce4d8] bg-white p-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className={`mt-4 ${assetOperation === "dashboard" ? "overflow-hidden rounded-[28px] border border-[#202936] bg-[#080b10] p-4 text-[#f5f7fb] shadow-[0_22px_60px_rgba(8,11,16,0.25)] md:p-6" : "border border-[#dce4d8] bg-white p-4"}`}>
+      <div className={`flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between ${assetOperation === "dashboard" ? "border-b border-[#202936] pb-4" : ""}`}>
         <div>
-          <p className="text-sm font-semibold text-[#26342d]">{text.title}</p>
-          <p className="mt-1 text-xs text-[#66746e]">
+          <p className={`text-sm font-semibold ${assetOperation === "dashboard" ? "text-[#f5f7fb]" : "text-[#26342d]"}`}>{text.title}</p>
+          <p className={`mt-1 text-xs ${assetOperation === "dashboard" ? "text-[#8d9bb0]" : "text-[#66746e]"}`}>
             {text.status}: {policy ? getPolicyStatusLabel(policy.status) : content.wizard.pending}
           </p>
         </div>
         <button
-          className="flex h-10 items-center justify-center gap-2 border border-[#cbd7cf] px-3 text-xs font-semibold text-[#26342d] transition hover:border-[#17231e] disabled:opacity-50"
+          className={`flex h-10 items-center justify-center gap-2 border px-3 text-xs font-semibold transition disabled:opacity-50 ${assetOperation === "dashboard" ? "border-[#303a49] bg-[#111722] text-[#c5d1e5] hover:border-[#62738f]" : "border-[#cbd7cf] text-[#26342d] hover:border-[#17231e]"}`}
           disabled={isWorking}
           onClick={() => void refreshPolicy()}
           type="button"
@@ -1534,68 +1554,79 @@ function PolicyControlPanel({
         <>
           {assetOperation === "dashboard" ? (
             <>
-              <div className="mt-4 rounded-xl border border-[#dce4d8] bg-[#f8faf6] p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#66746e]">{text.balance}</p>
-                <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-[#26342d]">
-                  {formatUsdcAmount(policy.totalPrincipal)} USDC
-                </p>
-                <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                  <button
-                    className="flex min-h-12 items-center justify-center gap-2 bg-[#26342d] px-4 text-sm font-semibold text-white transition hover:bg-[#17231e]"
-                    onClick={() => setAssetOperation("deposit")}
-                    type="button"
-                  >
-                    <ArrowDownToLine className="h-4 w-4" />
-                    {text.depositFunds}
-                  </button>
-                  <button
-                    className="flex min-h-12 items-center justify-center gap-2 border border-[#cbd7cf] bg-white px-4 text-sm font-semibold text-[#26342d] transition hover:border-[#17231e]"
-                    onClick={() => setAssetOperation("withdraw")}
-                    type="button"
-                  >
-                    <ArrowUpFromLine className="h-4 w-4" />
-                    {text.withdrawFunds}
-                  </button>
-                </div>
+              <div className="mt-5 grid gap-4 xl:grid-cols-[1.55fr_0.85fr]">
+                <section className="min-h-[286px] rounded-[22px] border border-[#202936] bg-[radial-gradient(circle_at_85%_110%,rgba(36,195,135,0.28),transparent_42%),linear-gradient(135deg,#101722,#080b10_70%)] p-5 md:p-7">
+                  <p className="text-sm font-medium text-[#9baac0]">{text.netWorth}</p>
+                  <p className="mt-3 text-4xl font-semibold tracking-[-0.06em] text-[#f8faff] md:text-6xl">${formatUsdcAmount(policy.totalPrincipal)}</p>
+                  <p className="mt-2 text-sm text-[#9baac0]">{formatUsdcAmount(policy.totalPrincipal)} USDC</p>
+                  <div className="mt-10 flex flex-wrap gap-x-10 gap-y-4">
+                    <DashboardMetric label={text.minimumFunded} value={`${minimumPercent.toFixed(2)}%`} />
+                    <DashboardMetric label={text.usdcAvailable} value={`${formatUsdcAmount(policy.remainingExtraPrincipal)} USDC`} accent />
+                    <DashboardMetric label={text.payoutProgress} value={`${policy.payoutsMade} / 120`} />
+                  </div>
+                  <div className="mt-6 flex flex-wrap gap-2">
+                    <button className="flex h-11 items-center gap-2 rounded-xl bg-[#c8ff75] px-4 text-sm font-semibold text-[#10170f] transition hover:bg-[#d8ff9b]" onClick={() => setAssetOperation("deposit")} type="button">
+                      <ArrowDownToLine className="h-4 w-4" />
+                      {text.depositFunds}
+                    </button>
+                    <button className="flex h-11 items-center gap-2 rounded-xl border border-[#3a4656] bg-[#151d28] px-4 text-sm font-semibold text-[#e6edf8] transition hover:border-[#718299]" onClick={() => setAssetOperation("withdraw")} type="button">
+                      <ArrowUpFromLine className="h-4 w-4" />
+                      {text.withdrawFunds}
+                    </button>
+                  </div>
+                </section>
+
+                <section className="relative overflow-hidden rounded-[22px] border border-[#202936] bg-[#101722] p-5">
+                  <div className="absolute inset-x-0 bottom-0 h-32 bg-[linear-gradient(160deg,transparent_8%,rgba(67,182,130,0.18)_9%,transparent_11%,transparent_28%,rgba(67,182,130,0.12)_29%,transparent_31%)] opacity-80" />
+                  <p className="text-sm font-medium text-[#9baac0]">{text.policyHistory}</p>
+                  <div className="mt-5 flex h-24 items-end gap-1.5 border-b border-[#2b3543] pb-2">
+                    {[28, 36, 32, 52, 65, 61, 78, 69, 84, 72, 64, 76].map((height, index) => (
+                      <span className="flex-1 rounded-t-sm bg-gradient-to-t from-[#214a42] to-[#9be669]" key={index} style={{ height: `${height}%` }} />
+                    ))}
+                  </div>
+                  <div className="relative mt-5 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xl font-semibold text-[#f6f8fc]">{text.policyActive}</p>
+                      <p className="mt-1 text-sm text-[#9baac0]">{text.monthlyEstimate}: {formatUsdcAmount(policy.monthlyPayoutEstimate)} USDC</p>
+                    </div>
+                    <span className="rounded-full border border-[#4d6d45] bg-[#1d2b25] px-3 py-1 text-xs font-semibold text-[#c8ff75]">World Chain</span>
+                  </div>
+                </section>
               </div>
 
-              <div className="mt-3 grid gap-2 md:grid-cols-2">
-                <SummaryFact
-                  label={text.minimumFunded}
-                  value={`${formatUsdcAmount(policy.remainingMinimumPrincipal)} USDC (${minimumPercent.toFixed(2)}%)`}
+              <section className="mt-5 overflow-hidden rounded-[22px] border border-[#202936] bg-[#10151d]">
+                <div className="flex items-center justify-between border-b border-[#202936] px-5 py-4">
+                  <div className="flex items-center gap-5 text-sm font-semibold">
+                    <span className="border-b-2 border-[#c8ff75] pb-4 -mb-4 text-[#f5f7fb]">{text.assetsTab}</span>
+                    <span className="text-[#8190a6]">{text.activityTab}</span>
+                  </div>
+                  <span className="text-sm text-[#8190a6]">{policy.auxiliaryTokens.length + 1} {text.holdings.toLowerCase()}</span>
+                </div>
+                <div className="hidden grid-cols-[1.2fr_1fr_0.7fr_auto] gap-4 border-b border-[#202936] px-5 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-[#8190a6] md:grid">
+                  <span>{text.asset}</span><span>{text.balance}</span><span>{text.allocation}</span><span>{text.actions}</span>
+                </div>
+                <AssetTableRow
+                  balance={`${formatUsdcAmount(policy.totalPrincipal)} USDC`}
+                  label="USDC"
+                  onReceive={() => { chooseAsset(""); setAssetOperation("deposit"); }}
+                  onSend={() => { chooseAsset(""); setAssetOperation("withdraw"); }}
+                  receiveLabel={text.receive}
+                  sendLabel={text.send}
+                  share="100% policy base"
                 />
-                <SummaryFact label={text.usdcAvailable} value={`${formatUsdcAmount(policy.remainingExtraPrincipal)} USDC`} />
-                <SummaryFact label={text.monthlyEstimate} value={`${formatUsdcAmount(policy.monthlyPayoutEstimate)} USDC`} />
-                <SummaryFact label={text.payoutProgress} value={`${policy.payoutsMade} / 120`} />
-              </div>
-
-              <div className="mt-3 border border-[#e3e8df] bg-[#fbfcf8] p-3">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#66746e]">{text.assets}</p>
-                  <p className="text-sm font-semibold text-[#26342d]">{policy.auxiliaryTokens.length + 1}</p>
-                </div>
-                <div className="mt-3 grid gap-2 md:grid-cols-2">
-                  <AssetCard
-                    balance={`${formatUsdcAmount(policy.totalPrincipal)} USDC`}
-                    label="USDC"
-                    onReceive={() => { chooseAsset(""); setAssetOperation("deposit"); }}
-                    onSend={() => { chooseAsset(""); setAssetOperation("withdraw"); }}
+                {policy.auxiliaryTokens.map((token) => (
+                  <AssetTableRow
+                    balance={formatTokenAmount(token.balance, token.decimals)}
+                    key={token.address}
+                    label={token.symbol}
+                    onReceive={() => { chooseAsset(token.address); setAssetOperation("deposit"); }}
+                    onSend={() => { chooseAsset(token.address); setAssetOperation("withdraw"); }}
                     receiveLabel={text.receive}
                     sendLabel={text.send}
+                    share={shortAddress(token.address)}
                   />
-                  {policy.auxiliaryTokens.map((token) => (
-                    <AssetCard
-                      balance={formatTokenAmount(token.balance, token.decimals)}
-                      key={token.address}
-                      label={token.symbol}
-                      onReceive={() => { chooseAsset(token.address); setAssetOperation("deposit"); }}
-                      onSend={() => { chooseAsset(token.address); setAssetOperation("withdraw"); }}
-                      receiveLabel={text.receive}
-                      sendLabel={text.send}
-                    />
-                  ))}
-                </div>
-              </div>
+                ))}
+              </section>
             </>
           ) : (
             <div className="mt-4 border border-[#dce4d8] bg-[#f8faf6] p-4">
@@ -1964,13 +1995,23 @@ function PolicyActionButton({
   );
 }
 
-function AssetCard({
+function DashboardMetric({ accent = false, label, value }: { accent?: boolean; label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs font-medium text-[#8d9bb0]">{label}</p>
+      <p className={`mt-1 text-lg font-semibold ${accent ? "text-[#c8ff75]" : "text-[#f5f7fb]"}`}>{value}</p>
+    </div>
+  );
+}
+
+function AssetTableRow({
   balance,
   label,
   onReceive,
   onSend,
   receiveLabel,
-  sendLabel
+  sendLabel,
+  share
 }: {
   balance: string;
   label: string;
@@ -1978,32 +2019,25 @@ function AssetCard({
   onSend: () => void;
   receiveLabel: string;
   sendLabel: string;
+  share: string;
 }) {
   return (
-    <div className="border border-[#dce4d8] bg-white p-3">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm font-semibold text-[#26342d]">{label}</p>
-          <p className="mt-1 text-lg font-semibold tracking-[-0.03em] text-[#26342d]">{balance}</p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            className="flex h-9 items-center gap-1 border border-[#cbd7cf] px-2 text-xs font-semibold text-[#26342d] transition hover:border-[#17231e]"
-            onClick={onSend}
-            type="button"
-          >
-            <ArrowUpFromLine className="h-3.5 w-3.5" />
-            {sendLabel}
-          </button>
-          <button
-            className="flex h-9 items-center gap-1 bg-[#26342d] px-2 text-xs font-semibold text-white transition hover:bg-[#17231e]"
-            onClick={onReceive}
-            type="button"
-          >
-            <ArrowDownToLine className="h-3.5 w-3.5" />
-            {receiveLabel}
-          </button>
-        </div>
+    <div className="grid gap-3 border-b border-[#202936] px-5 py-4 last:border-b-0 md:grid-cols-[1.2fr_1fr_0.7fr_auto] md:items-center md:gap-4">
+      <div className="flex items-center gap-3">
+        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1b2830] text-sm font-bold text-[#c8ff75]">{label.slice(0, 1)}</span>
+        <span className="font-semibold text-[#f5f7fb]">{label}</span>
+      </div>
+      <p className="font-semibold text-[#f5f7fb]">{balance}</p>
+      <p className="text-sm text-[#8d9bb0]">{share}</p>
+      <div className="flex gap-2 md:justify-end">
+        <button className="flex h-9 items-center gap-1.5 rounded-lg border border-[#334052] px-3 text-xs font-semibold text-[#d8e0ee] transition hover:border-[#74869f]" onClick={onSend} type="button">
+          <ArrowUpFromLine className="h-3.5 w-3.5" />
+          {sendLabel}
+        </button>
+        <button className="flex h-9 items-center gap-1.5 rounded-lg bg-[#c8ff75] px-3 text-xs font-semibold text-[#10170f] transition hover:bg-[#d8ff9b]" onClick={onReceive} type="button">
+          <ArrowDownToLine className="h-3.5 w-3.5" />
+          {receiveLabel}
+        </button>
       </div>
     </div>
   );
