@@ -127,24 +127,24 @@ const copy = {
       badge: "Riska 30",
       title: "Flexible life protection for verified humans.",
       body:
-        "Riska is a World Chain USDC policy account. Any verified human can fund the 10,800 USDC minimum over time, add or withdraw extra principal, store other ERC20 tokens after the minimum, and pass those tokens 100% to beneficiaries on death settlement.",
+        "Riska is a flexible USDC policy on World Chain. You fund a 10,800 USDC minimum at your own pace, add or withdraw extra principal whenever you want, and once the minimum is covered you can also hold other ERC20 tokens. If a claim is settled, those tokens pass in full to your beneficiaries.",
       primary: "Start application",
       secondary: "Read policy rules",
       cards: [
         {
           icon: HeartHandshake,
           title: "Family protection",
-          body: "Beneficiaries can claim only after a death report plus 12 months without holder interaction, including 100% of stored non-USDC tokens."
+          body: "Beneficiaries are paid only after a death report followed by 12 straight months with no activity from you. They receive 100% of any non-USDC tokens you stored."
         },
         {
           icon: CircleDollarSign,
           title: "Flexible income",
-          body: "Once the minimum is funded, the holder can start 120 monthly payments, withdraw extra in parts, or claim the remaining balance."
+          body: "Once the minimum is funded, you choose: start 120 monthly payments, withdraw extra principal in parts, or take out the full balance."
         },
         {
           icon: Fingerprint,
           title: "One human, one policy",
-          body: "World ID and wallet authentication reserve one policy slot for each verified human."
+          body: "World ID and Wallet Auth work together so each verified person can hold exactly one policy."
         }
       ],
       facts: [
@@ -166,16 +166,32 @@ const copy = {
       ]
     },
     rules: {
-      eyebrow: "Riska 30 rules",
-      title: "The promise is visible before the user signs.",
+      eyebrow: "Riska 30 policy terms",
+      title: "Every term is disclosed before you sign.",
       body:
-        "Any verified human can open a policy. Deposits fill the 10,800 USDC minimum first, extra USDC increases future monthly payout, auxiliary tokens stay fee-free, and beneficiaries receive those stored tokens 100% after the death notice window.",
-      items: [
-        "World ID verification is completed before policy issuance",
-        "Beneficiaries must total 100%",
-        "Extra deposits can be withdrawn without fee",
-        "Stored ERC20 tokens pass fully to beneficiaries on death settlement",
-        "Holder heartbeat cancels pending death reports"
+        "Riska is a flexible USDC life-protection policy on World Chain. These terms explain, in plain language, who can enroll, how the policy is funded, how you get paid, and how your beneficiaries are settled. Every amount, fee, and waiting period below is enforced by the policy contract — not by a person.",
+      stepsTitle: "How the process works",
+      steps: [
+        {
+          title: "Verify your identity",
+          body: "Each verified person can hold one policy. Before it is issued, you complete World ID and connect your wallet with Wallet Auth. Together they reserve a single policy for one real human. Riska never stores your biometric data."
+        },
+        {
+          title: "Fund the minimum",
+          body: "The minimum policy is 10,800 USDC, funded in units of 30 USDC. Pay it little by little or in one deposit — your choice. Every deposit goes first toward this minimum principal, the capital required before payments can start."
+        },
+        {
+          title: "Add extra principal or other tokens",
+          body: "Anything you deposit above the minimum becomes extra principal: it raises your future monthly payment and you can withdraw it in parts at any time, with no fee. Once the minimum is covered, you can also hold other ERC20 tokens for free — they stay separate and never change your payout."
+        },
+        {
+          title: "Get paid as the holder",
+          body: "With the minimum funded, you can start 120 monthly payments, withdraw extra principal in parts, or take out the full balance. Only a full withdrawal (claim-all) keeps a 20% fee, and only on the remaining minimum principal — extra principal always comes back in full. Any interaction, or heartbeat, records that you are alive."
+        },
+        {
+          title: "Protect your beneficiaries",
+          body: "Your beneficiary shares must add up to 100%. A beneficiary can file a death report, but settlement unlocks only after 12 straight months with no activity from you. They then receive your extra principal, 100% of any stored tokens, and 80% of the remaining minimum principal. A single interaction from you cancels the report."
+        }
       ]
     },
     wizard: {
@@ -337,24 +353,24 @@ const copy = {
       badge: "Riska 30",
       title: "Protección flexible para humanos verificados.",
       body:
-        "Riska es una cuenta de póliza USDC en World Chain. Cualquier humano verificado puede fondear el mínimo de 10,800 USDC con el tiempo, sumar o retirar principal extra, guardar otros ERC20 después del mínimo y hacer que esos tokens pasen 100% a beneficiarios en liquidación por muerte.",
+        "Riska es una póliza en USDC, flexible, sobre World Chain. Fondeas un mínimo de 10,800 USDC a tu propio ritmo, agregas o retiras principal extra cuando quieras y, una vez cubierto el mínimo, también puedes guardar otros tokens ERC20. Si se liquida la póliza, esos tokens pasan completos a tus beneficiarios.",
       primary: "Empezar solicitud",
       secondary: "Ver reglas",
       cards: [
         {
           icon: HeartHandshake,
           title: "Protección familiar",
-          body: "Los beneficiarios pueden cobrar solo después de reportar fallecimiento y esperar 12 meses sin interacción del titular, incluyendo 100% de los tokens no-USDC guardados."
+          body: "Tus beneficiarios cobran solo tras un reporte de fallecimiento y 12 meses seguidos sin actividad tuya. Reciben el 100% de los tokens no-USDC que hayas guardado."
         },
         {
           icon: CircleDollarSign,
           title: "Renta flexible",
-          body: "Cuando el mínimo está fondeado, el titular puede activar 120 pagos mensuales, retirar extra en partes o retirar el saldo restante."
+          body: "Con el mínimo fondeado, tú decides: activar 120 pagos mensuales, retirar el principal extra en partes o retirar el saldo completo."
         },
         {
           icon: Fingerprint,
           title: "Un humano, una póliza",
-          body: "World ID y la wallet reservan un cupo de póliza para cada humano verificado."
+          body: "World ID y Wallet Auth trabajan juntos para que cada persona verificada tenga exactamente una póliza."
         }
       ],
       facts: [
@@ -372,20 +388,36 @@ const copy = {
       metrics: [
         ["Póliza mínima", "10,800 USDC"],
         ["Calendario", "120 meses"],
-        ["Aviso muerte", "12 meses"]
+        ["Aviso fallecimiento", "12 meses"]
       ]
     },
     rules: {
-      eyebrow: "Reglas Riska 30",
-      title: "La promesa queda visible antes de firmar.",
+      eyebrow: "Términos de la póliza Riska 30",
+      title: "Cada término se informa antes de firmar.",
       body:
-        "Cualquier humano verificado puede abrir una póliza. Los depósitos llenan primero el mínimo de 10,800 USDC, el extra aumenta el pago mensual futuro, los tokens auxiliares no pagan fee y los beneficiarios reciben esos tokens 100% después de la ventana de muerte.",
-      items: [
-        "La verificación World ID se completa antes de emitir",
-        "Los beneficiarios deben sumar 100%",
-        "El extra se puede retirar sin fee",
-        "Los ERC20 guardados pasan completos a beneficiarios en liquidación por muerte",
-        "El heartbeat del titular cancela reportes pendientes"
+        "Riska es una póliza de protección de vida en USDC, flexible, sobre World Chain. Estos términos explican, en lenguaje claro, quién puede inscribirse, cómo se fondea la póliza, cómo cobras y cómo se liquida a tus beneficiarios. Cada monto, comisión y plazo de espera de abajo lo hace cumplir el contrato de la póliza, no una persona.",
+      stepsTitle: "Cómo funciona el proceso",
+      steps: [
+        {
+          title: "Verifica tu identidad",
+          body: "Cada persona verificada puede tener una sola póliza. Antes de emitirla completas World ID y conectas tu wallet con Wallet Auth. En conjunto reservan una única póliza para un humano real. Riska nunca almacena tus datos biométricos."
+        },
+        {
+          title: "Fondea el mínimo",
+          body: "La póliza mínima es de 10,800 USDC y se fondea en unidades de 30 USDC. Puedes completarla de a poco o en un solo depósito, como prefieras. Cada aporte cubre primero este principal mínimo: es el capital necesario para que empiecen los pagos."
+        },
+        {
+          title: "Agrega principal extra u otros tokens",
+          body: "Todo lo que deposites por encima del mínimo se vuelve principal extra: aumenta tu pago mensual futuro y puedes retirarlo en partes cuando quieras, sin comisión. Una vez cubierto el mínimo, también puedes guardar otros tokens ERC20 sin costo; quedan separados y no cambian el cálculo de tus pagos."
+        },
+        {
+          title: "Cobra como titular",
+          body: "Con el mínimo fondeado, puedes activar 120 pagos mensuales, retirar el principal extra en partes o retirar el saldo completo. Solo el retiro total (claim-all) retiene una comisión del 20%, y únicamente sobre el principal mínimo restante; el principal extra siempre se devuelve completo. Cualquier interacción con la póliza registra tu prueba de vida (heartbeat)."
+        },
+        {
+          title: "Protege a tus beneficiarios",
+          body: "Los porcentajes de tus beneficiarios deben sumar 100%. Un beneficiario puede presentar un reporte de fallecimiento, pero la liquidación se habilita solo tras 12 meses seguidos sin ninguna actividad tuya. Reciben entonces tu principal extra, el 100% de los tokens que hayas guardado y el 80% del principal mínimo restante. Una sola interacción tuya cancela el reporte."
+        }
       ]
     },
     wizard: {
@@ -434,7 +466,7 @@ const copy = {
           ["Primero mínimo", "10,800 USDC"],
           ["Depósitos extra", "100% principal"],
           ["Pago titular", "120 meses"],
-          ["Fee claim-all/muerte", "20% solo mínimo"]
+          ["Comisión retiro/fallecimiento", "20% solo mínimo"]
         ]
       },
       confirm: {
@@ -463,12 +495,12 @@ const copy = {
           activate: "Activar pagos",
           claimAll: "Cobrar todo",
           claimAllFeeNote: "Cobrar todo retiene 20% del mínimo restante. El extra USDC se paga 100%.",
-          claimDeath: "Cobrar muerte",
+          claimDeath: "Cobrar fallecimiento",
           claimMonthly: "Cobrar mes",
           claimableAt: "Cobrable desde",
           commonTokens: "Tokens de prueba comunes",
           customToken: "0x custom",
-          deathNotice: "Reporte muerte",
+          deathNotice: "Reporte de fallecimiento",
           lastActivity: "Última actividad",
           logout: "Cerrar sesión",
           deposit: "Depositar",
@@ -482,7 +514,7 @@ const copy = {
           yieldDeposit: "Activar yield",
           yieldEstimated: "Activos estimados",
           yieldStrategy: "Estrategia",
-          chooseYieldStrategy: "Elegí una estrategia Morpho",
+          chooseYieldStrategy: "Elige una estrategia de Morpho",
           yieldProtocolHint: "Morpho es el único protocolo de yield configurado. Actualmente acepta USDC.",
           yieldUnavailable: "Todavía no hay un protocolo de yield configurado para este token.",
           staticUsdc: "Mantener USDC estático",
@@ -498,7 +530,7 @@ const copy = {
           noDeathNotice: "Sin reporte",
           payoutProgress: "Pagos",
           refresh: "Actualizar",
-          reportDeath: "Reportar muerte",
+          reportDeath: "Reportar fallecimiento",
           selectedToken: "Token seleccionado",
           status: "Estado",
           title: "Dashboard",
@@ -522,16 +554,16 @@ const copy = {
           receive: "Recibir",
           backToDashboard: "Volver al dashboard",
           cancel: "Cancelar",
-          chooseAsset: "Elegí un activo",
+          chooseAsset: "Elige un activo",
           depositTitle: "Depositar fondos",
           withdrawTitle: "Retirar fondos",
-          operationHint: "Elegí un token y monto para continuar.",
+          operationHint: "Elige un token y un monto para continuar.",
           usdcAvailable: "USDC extra disponible",
           tokenAddress: "Dirección del token ERC20",
-          tokenAddressInvalid: "Ingresá una dirección ERC20 válida.",
+          tokenAddressInvalid: "Ingresa una dirección ERC20 válida.",
           tokenAmount: "Monto del token",
           tokenVaultNote:
-            "Estos tokens quedan separados del cálculo de pago en USDC. El titular puede retirarlos en partes sin fee y, si hay liquidación por muerte, pasan 100% a beneficiarios.",
+            "Estos tokens quedan separados del cálculo de pago en USDC. El titular puede retirarlos en partes sin comisión y, si hay liquidación por fallecimiento, pasan 100% a los beneficiarios.",
           tokenVaultClosed: "Esta póliza no está activa para acciones de bóveda.",
           tokenVaultLocked: (amount: string) => `Para desbloquear la bóveda faltan ${amount} USDC del mínimo.`,
           tokenVault: "Bóveda de tokens extra",
@@ -925,15 +957,21 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
                 </div>
               ))}
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {content.rules.items.map((item) => (
-                <div key={item} className="flex gap-3 rounded-xl border border-[#e8e8ed] bg-[#fafafd] p-4">
-                  <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#e6e9ff] text-[#5868ea]">
-                    <Check className="h-4 w-4" />
-                  </span>
-                  <p className="text-sm leading-6 text-[#54545f]">{item}</p>
-                </div>
-              ))}
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold tracking-[-0.03em]">{content.rules.stepsTitle}</h3>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {content.rules.steps.map((step, index) => (
+                  <div key={step.title} className="flex gap-3 rounded-xl border border-[#e8e8ed] bg-[#fafafd] p-4">
+                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#e6e9ff] text-sm font-semibold text-[#5868ea]">
+                      {index + 1}
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold leading-6 text-[#202027]">{step.title}</p>
+                      <p className="mt-1 text-sm leading-6 text-[#54545f]">{step.body}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
             <div className="grid gap-3">
               {content.welcome.cards.map((card) => {
@@ -974,7 +1012,7 @@ function WelcomeScreen({
       <div className="w-full max-w-sm text-center">
         <p className="text-sm font-bold tracking-[-0.05em] text-[#202027]">RISKA</p>
         <h1 className="mt-5 text-4xl font-semibold tracking-[-0.06em] text-[#202027]">{welcome.primary}</h1>
-        <p className="mt-3 text-sm leading-6 text-[#777782]">Conectá tu wallet para comenzar.</p>
+        <p className="mt-3 text-sm leading-6 text-[#777782]">Conecta tu wallet para comenzar.</p>
         <div className="mt-7 flex justify-center">
           <WalletAuth onSessionChange={onStartApplication} variant="start" />
         </div>

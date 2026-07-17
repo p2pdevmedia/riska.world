@@ -28,30 +28,30 @@ const worldIdErrorsEn = {
 };
 
 const worldIdErrorsEs = {
-  cancelled: "Cancelaste la verificacion. No se reservo ninguna poliza.",
-  connection_failed: "La conexion con World App se interrumpio. Revisa tu conexion e intentalo de nuevo.",
+  cancelled: "Cancelaste la verificación. No se reservó ninguna póliza.",
+  connection_failed: "La conexión con World App se interrumpió. Revisa tu conexión e inténtalo de nuevo.",
   credential_unavailable:
-    "Esta cuenta de World App todavia no esta verificada como humana. Completa la verificacion de World ID en World App y vuelve a intentarlo en Riska.",
-  failed_by_host_app: "Riska no pudo aceptar la prueba. Vuelve a conectar tu sesion de wallet e intentalo otra vez.",
-  generic_error: "No pudimos completar la verificacion de World ID. Intentalo de nuevo.",
-  identity_attributes_not_matched: "Este World ID no cumple los requisitos de prueba para una poliza Riska.",
-  inclusion_proof_failed: "World App no pudo preparar la prueba para esta cuenta. Espera un momento e intentalo de nuevo.",
-  inclusion_proof_pending: "Tu prueba de World ID todavia se esta preparando. Espera un momento e intentalo de nuevo.",
-  invalid_network: "World ID devolvio una prueba para la red incorrecta. Intentalo de nuevo desde World App.",
-  invalid_rp_signature: "La configuracion de World ID de Riska necesita una correccion antes de continuar.",
-  malformed_request: "La solicitud de World ID no se pudo leer. Refresca Riska e intentalo de nuevo.",
-  max_verifications_reached: "Este World ID ya fue usado para esta verificacion de Riska.",
-  nullifier_replayed: "Este World ID ya esta reservado para esta verificacion de Riska.",
-  timeout: "World App tardo demasiado en responder. Intentalo de nuevo.",
-  unexpected_response: "World App devolvio una respuesta inesperada. Actualiza World App e intentalo de nuevo.",
-  user_rejected: "Cancelaste la verificacion. No se reservo ninguna poliza.",
-  verification_rejected: "World App rechazo la verificacion. Asegurate de que tu cuenta este verificada e intentalo de nuevo.",
+    "Esta cuenta de World App todavía no está verificada como humana. Completa la verificación de World ID en World App y vuelve a intentarlo en Riska.",
+  failed_by_host_app: "Riska no pudo aceptar la prueba. Vuelve a conectar tu sesión de wallet e inténtalo otra vez.",
+  generic_error: "No pudimos completar la verificación de World ID. Inténtalo de nuevo.",
+  identity_attributes_not_matched: "Este World ID no cumple los requisitos de prueba para una póliza Riska.",
+  inclusion_proof_failed: "World App no pudo preparar la prueba para esta cuenta. Espera un momento e inténtalo de nuevo.",
+  inclusion_proof_pending: "Tu prueba de World ID todavía se está preparando. Espera un momento e inténtalo de nuevo.",
+  invalid_network: "World ID devolvió una prueba para la red incorrecta. Inténtalo de nuevo desde World App.",
+  invalid_rp_signature: "La configuración de World ID de Riska necesita una corrección antes de continuar.",
+  malformed_request: "La solicitud de World ID no se pudo leer. Refresca Riska e inténtalo de nuevo.",
+  max_verifications_reached: "Este World ID ya fue usado para esta verificación de Riska.",
+  nullifier_replayed: "Este World ID ya está reservado para esta verificación de Riska.",
+  timeout: "World App tardó demasiado en responder. Inténtalo de nuevo.",
+  unexpected_response: "World App devolvió una respuesta inesperada. Actualiza World App e inténtalo de nuevo.",
+  user_rejected: "Cancelaste la verificación. No se reservó ninguna póliza.",
+  verification_rejected: "World App rechazó la verificación. Asegúrate de que tu cuenta esté verificada e inténtalo de nuevo.",
   wallet_session_required:
-    "Vuelve a conectar tu wallet antes de verificar World ID. En World App eso crea la sesion segura de Wallet Auth que Riska necesita.",
+    "Vuelve a conectar tu wallet antes de verificar World ID. En World App eso crea la sesión segura de Wallet Auth que Riska necesita.",
   world_id_3_not_available:
-    "Esta cuenta de World App todavia no puede crear la prueba requerida. Completa la verificacion e intentalo de nuevo.",
+    "Esta cuenta de World App todavía no puede crear la prueba requerida. Completa la verificación e inténtalo de nuevo.",
   world_id_4_not_available:
-    "Esta cuenta de World App todavia no puede crear la prueba requerida. Actualiza World App o completa la verificacion, y vuelve a intentarlo."
+    "Esta cuenta de World App todavía no puede crear la prueba requerida. Actualiza World App o completa la verificación, y vuelve a intentarlo."
 };
 
 const contractDocsEn = {
@@ -150,91 +150,91 @@ const contractDocsEs = {
   policyManager: {
     title: "RiskaPolicyManager",
     summary:
-      "Manager flexible activo para abrir polizas, depositar, retirar extra en partes, custodiar tokens auxiliares, activar pagos, cobrar, enviar heartbeat, reportar muerte y liquidar beneficiarios.",
+      "Manager flexible activo para abrir pólizas, depositar, retirar extra en partes, custodiar tokens auxiliares, activar pagos, cobrar, enviar heartbeat, reportar fallecimiento y liquidar beneficiarios.",
     status: "Desplegado en World Chain Sepolia para pruebas. No auditado para fondos productivos.",
     responsibilities: [
-      "Abrir una poliza por holder despues de la verificacion World ID en la app.",
-      "Asignar depositos primero al minimo de 10,800 USDC y luego a principal extra.",
-      "Permitir retiros parciales del principal extra sin fee.",
-      "Permitir custodia de tokens ERC20 no-USDC cuando el minimo USDC esta cubierto.",
-      "Activar 120 pagos mensuales cuando el minimo esta fondeado.",
-      "Reiniciar una poliza vaciada por un titular vivo para que pueda volver a usarse.",
-      "Cancelar reportes de muerte pendientes cada vez que el titular interactua.",
-      "Permitir que beneficiarios configurados cobren despues de reporte y 12 meses sin interaccion del titular."
+      "Abrir una póliza por titular después de la verificación World ID en la app.",
+      "Asignar depósitos primero al mínimo de 10,800 USDC y luego a principal extra.",
+      "Permitir retiros parciales del principal extra sin comisión.",
+      "Permitir custodia de tokens ERC20 no-USDC cuando el mínimo USDC está cubierto.",
+      "Activar 120 pagos mensuales cuando el mínimo está fondeado.",
+      "Reiniciar una póliza vaciada por un titular vivo para que pueda volver a usarse.",
+      "Cancelar reportes de fallecimiento pendientes cada vez que el titular interactúa.",
+      "Permitir que los beneficiarios configurados cobren tras un reporte y 12 meses sin interacción del titular."
     ],
     interfaceItems: [
-      { name: "openPolicy", description: "Crea la poliza, guarda beneficiarios y cobra la primera unidad de 30 USDC." },
-      { name: "deposit", description: "Agrega USDC antes de activar pagos, llenando primero el minimo." },
-      { name: "activatePayout", description: "Fija el pago mensual sobre 120 meses cuando el minimo esta fondeado." },
-      { name: "claimMonthly", description: "Paga el siguiente mes al titular sin fee." },
-      { name: "withdrawExtra", description: "Retira parte del principal extra sin fee y reprograma pagos si hace falta." },
-      { name: "depositToken", description: "Guarda un token ERC20 no-USDC despues de cubrir el minimo USDC; queda fuera del calculo mensual y pasa 100% a beneficiarios en liquidacion por muerte." },
-      { name: "withdrawToken", description: "Retira parte de un token ERC20 guardado sin fee." },
-      { name: "claimAll", description: "Retira todo el principal restante, reteniendo 20% solo del minimo restante, y deja la poliza reutilizable." },
-      { name: "heartbeat", description: "Registra interaccion de vida sin retirar dinero." },
+      { name: "openPolicy", description: "Crea la póliza, guarda beneficiarios y cobra la primera unidad de 30 USDC." },
+      { name: "deposit", description: "Agrega USDC antes de activar pagos, cubriendo primero el mínimo." },
+      { name: "activatePayout", description: "Fija el pago mensual sobre 120 meses cuando el mínimo está fondeado." },
+      { name: "claimMonthly", description: "Paga el siguiente mes al titular sin comisión." },
+      { name: "withdrawExtra", description: "Retira parte del principal extra sin comisión y reprograma pagos si hace falta." },
+      { name: "depositToken", description: "Guarda un token ERC20 no-USDC tras cubrir el mínimo USDC; queda fuera del cálculo mensual y pasa 100% a beneficiarios en la liquidación por fallecimiento." },
+      { name: "withdrawToken", description: "Retira parte de un token ERC20 guardado sin comisión." },
+      { name: "claimAll", description: "Retira todo el principal restante, reteniendo 20% solo del mínimo restante, y deja la póliza reutilizable." },
+      { name: "heartbeat", description: "Registra prueba de vida sin retirar dinero." },
       { name: "reportDeath", description: "Permite que un beneficiario configurado inicie la ventana de 12 meses." },
-      { name: "claimDeath", description: "Paga beneficiarios despues de la ventana sin interaccion." }
+      { name: "claimDeath", description: "Paga a los beneficiarios tras la ventana sin interacción." }
     ],
     safeguards: [
-      "Los depositos nuevos cierran despues de activar pagos; los retiros de extra siguen permitidos.",
-      "Claim-all y liquidacion por muerte retienen 20% solo del minimo restante.",
-      "El principal extra nunca paga fee.",
-      "Los tokens auxiliares no cuentan para el fee sobre minimo ni para pago mensual.",
-      "Los tokens auxiliares guardados se pagan 100% a beneficiarios en liquidacion por muerte.",
+      "Los depósitos nuevos se cierran tras activar pagos; los retiros de extra siguen permitidos.",
+      "El retiro total y la liquidación por fallecimiento retienen 20% solo del mínimo restante.",
+      "El principal extra nunca paga comisión.",
+      "Los tokens auxiliares no cuentan para la comisión sobre el mínimo ni para el pago mensual.",
+      "Los tokens auxiliares guardados se pagan 100% a beneficiarios en la liquidación por fallecimiento.",
       "Los reportes de beneficiarios no pueden cobrarse si el titular sigue interactuando."
     ],
-    sourceNote: "El codigo local de abajo es el manager actual usado en Sepolia."
+    sourceNote: "El código local de abajo es el manager actual usado en Sepolia."
   },
   beneficiaryRegistry: {
     title: "RiskaBeneficiaryRegistry",
-    summary: "Guarda wallets de beneficiarios y porcentajes para cada poliza.",
+    summary: "Guarda las wallets de los beneficiarios y sus porcentajes para cada póliza.",
     status: "Desplegado en World Chain Sepolia y escribible solo por el policy manager.",
     responsibilities: [
       "Guardar cuentas y asignaciones en basis points.",
-      "Rechazar conjuntos vacios, duplicados, con direccion cero o demasiado grandes.",
+      "Rechazar conjuntos vacíos, duplicados, con dirección cero o demasiado grandes.",
       "Exigir que los porcentajes sumen 100%."
     ],
     interfaceItems: [
-      { name: "setPolicyManager", description: "Define el unico contrato autorizado a escribir." },
+      { name: "setPolicyManager", description: "Define el único contrato autorizado a escribir." },
       { name: "setBeneficiaries", description: "Guarda cuentas y porcentajes." },
-      { name: "beneficiaryCount", description: "Devuelve cantidad de beneficiarios." },
-      { name: "beneficiaryAt", description: "Devuelve wallet y porcentaje por indice." }
+      { name: "beneficiaryCount", description: "Devuelve la cantidad de beneficiarios." },
+      { name: "beneficiaryAt", description: "Devuelve la wallet y el porcentaje por índice." }
     ],
     safeguards: [
       "Solo escribe el manager configurado.",
-      "Maximo ocho beneficiarios por poliza.",
+      "Máximo ocho beneficiarios por póliza.",
       "Las asignaciones deben sumar exactamente 10,000 basis points."
     ],
-    sourceNote: "El codigo local de abajo se usa en el despliegue actual de Sepolia."
+    sourceNote: "El código local de abajo se usa en el despliegue actual de Sepolia."
   },
   premiumVault: {
     title: "RiskaPremiumVault",
-    summary: "Custodia USDC y tokens ERC20 auxiliares para depositos, pagos al titular, pagos a beneficiarios y reserva del protocolo.",
+    summary: "Custodia USDC y tokens ERC20 auxiliares para depósitos, pagos al titular, pagos a beneficiarios y reserva del protocolo.",
     status: "Desplegado en World Chain Sepolia y llamable solo por el policy manager.",
     responsibilities: [
-      "Cobrar depositos USDC desde holders.",
-      "Rastrear pasivo total de principal.",
-      "Rastrear pasivo de tokens auxiliares por direccion de token.",
-      "Pagar cobros mensuales, retiros parciales de extra, retiros de tokens auxiliares y claim-all al titular.",
-      "Pagar beneficiarios segun porcentajes del registry.",
-      "Registrar fees retenidos de claim-all y muerte como reserva."
+      "Cobrar depósitos USDC de los titulares.",
+      "Rastrear el pasivo total de principal.",
+      "Rastrear el pasivo de tokens auxiliares por dirección de token.",
+      "Pagar cobros mensuales, retiros parciales de extra, retiros de tokens auxiliares y retiro total al titular.",
+      "Pagar a los beneficiarios según los porcentajes del registry.",
+      "Registrar como reserva las comisiones retenidas de retiro total y fallecimiento."
     ],
     interfaceItems: [
       { name: "collectPremium", description: "Cobra USDC y aumenta el pasivo de principal." },
-      { name: "payHolder", description: "Libera principal sin fee por cobros mensuales y retiros parciales al titular." },
-      { name: "settleHolderClaimAll", description: "Libera claim-all y contabiliza el 20% retenido sobre el minimo restante." },
-      { name: "settleBeneficiaryPayout", description: "Libera pago a beneficiarios y contabiliza reserva retenida." },
-      { name: "collectAuxiliaryToken", description: "Cobra un token ERC20 no-USDC para custodia de poliza fuera del calculo de pago y fee." },
+      { name: "payHolder", description: "Libera principal sin comisión por cobros mensuales y retiros parciales al titular." },
+      { name: "settleHolderClaimAll", description: "Libera el retiro total y contabiliza el 20% retenido sobre el mínimo restante." },
+      { name: "settleBeneficiaryPayout", description: "Libera el pago a beneficiarios y contabiliza la reserva retenida." },
+      { name: "collectAuxiliaryToken", description: "Cobra un token ERC20 no-USDC para custodia de la póliza, fuera del cálculo de pago y comisión." },
       { name: "payAuxiliaryTokenHolder", description: "Libera un token auxiliar guardado de vuelta al titular." },
-      { name: "settleAuxiliaryTokenBeneficiaries", description: "Paga tokens auxiliares guardados a beneficiarios sin fee." }
+      { name: "settleAuxiliaryTokenBeneficiaries", description: "Paga los tokens auxiliares guardados a los beneficiarios sin comisión." }
     ],
     safeguards: [
       "Solo el policy manager puede mover fondos.",
       "Los pagos no pueden superar el pasivo registrado.",
       "Los pagos de tokens auxiliares no pueden superar el pasivo registrado por token.",
-      "La reserva del protocolo esta contabilizada pero no es retirable en esta version."
+      "La reserva del protocolo está contabilizada pero no es retirable en esta versión."
     ],
-    sourceNote: "El codigo local de abajo se usa en el despliegue actual de Sepolia."
+    sourceNote: "El código local de abajo se usa en el despliegue actual de Sepolia."
   }
 };
 
@@ -665,14 +665,14 @@ export const dictionaries = {
   },
   es: {
     metadata: {
-      title: "Riska.world - Proteccion flexible para humanos verificados",
+      title: "Riska.world - Protección flexible para humanos verificados",
       description:
-        "Riska permite que humanos verificados abran una poliza USDC flexible, fondeen un minimo de 10,800 USDC, retiren extra en partes, custodien otros ERC20 y usen heartbeat para proteger beneficiarios."
+        "Riska permite que humanos verificados abran una póliza USDC flexible, fondeen un mínimo de 10,800 USDC, retiren el extra en partes, guarden otros tokens ERC20 y protejan a sus beneficiarios con un mecanismo de prueba de vida."
     },
     navbar: {
       brand: "RISKA",
       links: [
-        { href: "/apply", label: "Inscripcion" },
+        { href: "/apply", label: "Inscripción" },
         { href: "/rules", label: "Reglas" },
         { href: "/whitepaper", label: "White paper" },
         { href: "/docs", label: "Contratos" }
@@ -681,170 +681,170 @@ export const dictionaries = {
       languageToggle: { label: "EN", ariaLabel: "Switch to English" }
     },
     hero: {
-      badge: "Riska 30 · Poliza USDC flexible",
-      title: "Cualquier humano verificado puede abrir una poliza.",
+      badge: "Riska 30 · Póliza USDC flexible",
+      title: "Cualquier humano verificado puede abrir una póliza.",
       description:
-        "Fondea el minimo de 10,800 USDC con el tiempo o por adelantado. Los depositos extra aumentan el pago mensual futuro y se pueden retirar en partes. Cuando el minimo USDC esta cubierto, otros ERC20 se pueden guardar sin fee de Riska y pasan completos a beneficiarios en liquidacion por muerte.",
+        "Fondea el mínimo de 10,800 USDC poco a poco o de una sola vez. Los depósitos extra aumentan tu pago mensual futuro y puedes retirarlos en partes. Una vez cubierto el mínimo, puedes guardar otros tokens ERC20 sin comisión de Riska; si se liquida la póliza, pasan completos a tus beneficiarios.",
       chips: [
-        "Minimo 10,800 USDC",
+        "Mínimo 10,800 USDC",
         "Unidad base 30 USDC",
         "120 pagos mensuales",
-        "Heartbeat contra reportes falsos"
+        "Prueba de vida contra reportes falsos"
       ]
     },
     impactMetrics: {
       title: "Reglas del producto",
-      subtitle: "Una cuenta de poliza, saldos visibles y resultados claros.",
+      subtitle: "Una sola cuenta de póliza, saldos a la vista y resultados claros.",
       body:
-        "Los depositos llenan primero el minimo, el retiro parcial de extra y tokens auxiliares no tiene fee, y claim-all o muerte tocan solo el minimo restante. Los tokens auxiliares guardados pasan 100% a beneficiarios.",
+        "Los depósitos cubren primero el mínimo. Retirar el extra o tus tokens auxiliares no tiene comisión, y solo el retiro total o la liquidación por fallecimiento tocan el mínimo restante. Los tokens auxiliares guardados pasan 100% a tus beneficiarios.",
       metrics: [
-        { label: "Poliza minima", value: "10,800 USDC" },
+        { label: "Póliza mínima", value: "10,800 USDC" },
         { label: "Unidad base", value: "30 USDC" },
-        { label: "Duracion pagos", value: "120 meses" },
-        { label: "Aviso muerte", value: "12 meses" },
-        { label: "Extra principal", value: "Sin fee" },
+        { label: "Duración de pagos", value: "120 meses" },
+        { label: "Aviso de fallecimiento", value: "12 meses" },
+        { label: "Principal extra", value: "Sin comisión" },
         { label: "Identidad", value: "Humano verificado" }
       ]
     },
     aboutSections: {
       sections: [
         {
-          title: "Cuenta de poliza flexible",
-          description: "Un holder verificado abre una poliza y fondea el minimo a su ritmo.",
+          title: "Cuenta de póliza flexible",
+          description: "Un titular verificado abre una póliza y fondea el mínimo a su ritmo.",
           points: [
-            "Cualquier humano verificado puede abrir",
-            "El hash de terminos queda vinculado",
-            "Minimo y extra se muestran separados"
+            "Cualquier humano verificado puede abrirla",
+            "El hash de los términos queda vinculado a la póliza",
+            "El mínimo y el extra se muestran por separado"
           ]
         },
         {
-          title: "Pago controlado por titular",
-          description: "Cuando el minimo esta fondeado, el titular decide si cobra o espera.",
+          title: "Pagos que controla el titular",
+          description: "Con el mínimo fondeado, el titular decide si cobra o espera.",
           points: [
             "Activar 120 pagos mensuales",
-            "Retirar extra en partes sin fee",
-            "Guardar otros ERC20 despues del minimo USDC",
-            "Retirar todo con fee solo sobre minimo",
-            "Usar heartbeat para probar vida sin cobrar ese mes"
+            "Retirar el extra en partes sin comisión",
+            "Guardar otros tokens ERC20 una vez cubierto el mínimo",
+            "Retirar todo con comisión solo sobre el mínimo",
+            "Usar la prueba de vida sin cobrar ese mes"
           ]
         },
         {
           title: "Aviso de beneficiarios",
-          description: "Los beneficiarios usan reporte y espera en lugar de una compuerta oculta.",
+          description: "Los beneficiarios usan un flujo de reporte y espera, sin compuertas ocultas.",
           points: [
-            "Solo beneficiarios configurados reportan",
-            "El cobro espera 12 meses despues del reporte",
-            "Los ERC20 guardados pasan completos a beneficiarios",
-            "Cualquier interaccion del titular cancela el reporte"
+            "Solo los beneficiarios configurados pueden reportar",
+            "El cobro espera 12 meses tras el reporte",
+            "Los tokens ERC20 guardados pasan completos a los beneficiarios",
+            "Cualquier interacción del titular cancela el reporte"
           ]
         }
       ]
     },
     valueGrid: {
       title: "Componentes del contrato",
-      subtitle: "El protocolo separa identidad, beneficiarios, contabilidad de principal y reglas de pago.",
+      subtitle: "El protocolo separa identidad, beneficiarios, contabilidad del principal y reglas de pago.",
       values: [
         {
-          title: "Terminos electronicos",
-          description: "El documento firmado define depositos, beneficiarios, heartbeat, derechos de cobro y ventana de aviso."
+          title: "Términos electrónicos",
+          description: "El documento firmado define los depósitos, beneficiarios, prueba de vida, derechos de cobro y la ventana de aviso."
         },
         {
-          title: "Minimo y extra",
-          description: "Los primeros 10,800 USDC fondean el minimo. Lo que supere ese monto es principal extra, y otros ERC20 pueden guardarse aparte cuando el minimo esta cubierto."
+          title: "Mínimo y extra",
+          description: "Los primeros 10,800 USDC fondean el mínimo. Todo lo que lo supere es principal extra, y otros tokens ERC20 pueden guardarse aparte una vez cubierto el mínimo."
         },
         {
-          title: "Pago titular",
-          description: "Despues de fondear el minimo, el titular puede activar 120 pagos mensuales, retirar extra en partes o retirar todo con fee solo sobre minimo."
+          title: "Pago al titular",
+          description: "Con el mínimo fondeado, el titular puede activar 120 pagos mensuales, retirar el extra en partes o retirar todo con comisión solo sobre el mínimo."
         },
         {
-          title: "Pago beneficiarios",
-          description: "Los beneficiarios reciben principal extra, 100% de los tokens auxiliares guardados y 80% del minimo restante despues de la ventana sin interaccion."
+          title: "Pago a beneficiarios",
+          description: "Los beneficiarios reciben el principal extra, el 100% de los tokens auxiliares guardados y el 80% del mínimo restante tras la ventana sin interacción."
         },
         {
           title: "Acceso verificado",
-          description: "World ID reduce abuso por polizas duplicadas sin guardar biometria en Riska."
+          description: "World ID reduce el abuso de pólizas duplicadas sin que Riska guarde datos biométricos."
         }
       ]
     },
     retirementProduct: {
       badge: "Contrato Riska 30",
-      title: "Una cuenta de poliza que puede convertirse en renta programada.",
+      title: "Una cuenta de póliza que puede convertirse en renta programada.",
       subtitle:
-        "La poliza minima es 10,800 USDC. Cuando esta fondeada, el titular puede activar 120 pagos, guardar otros ERC20, retirar extra en partes, cobrar todo con fee solo sobre minimo o seguir usando heartbeat. Los ERC20 guardados pasan 100% a beneficiarios en liquidacion por muerte.",
+        "La póliza mínima es de 10,800 USDC. Una vez fondeada, el titular puede activar 120 pagos, guardar otros tokens ERC20, retirar el extra en partes, retirar todo con comisión solo sobre el mínimo o seguir enviando prueba de vida. Los tokens ERC20 guardados pasan 100% a los beneficiarios en la liquidación por fallecimiento.",
       timelineTitle: "Ciclo de vida",
       timeline: [
-        { label: "Abrir", description: "Verificar humanidad, configurar beneficiarios, aceptar terminos y pagar la primera unidad de 30 USDC." },
-        { label: "Fondear", description: "Depositar cualquier monto antes de activar pagos; primero se llena el minimo y luego el extra." },
-        { label: "Elegir cobro", description: "Activar pagos mensuales, custodiar otros tokens, retirar extra en partes o retirar todo el principal con fee solo sobre minimo cuando el minimo esta fondeado. Los tokens custodiados pasan 100% a beneficiarios en liquidacion por muerte." },
-        { label: "Aviso beneficiario", description: "Reporte de beneficiario mas 12 meses sin interaccion puede habilitar liquidacion." }
+        { label: "Abrir", description: "Verificar tu identidad, configurar beneficiarios, aceptar los términos y pagar la primera unidad de 30 USDC." },
+        { label: "Fondear", description: "Depositar cualquier monto antes de activar los pagos; primero se cubre el mínimo y luego el extra." },
+        { label: "Elegir cómo cobrar", description: "Con el mínimo fondeado, activar pagos mensuales, guardar otros tokens, retirar el extra en partes o retirar todo el principal con comisión solo sobre el mínimo. Los tokens guardados pasan 100% a los beneficiarios en la liquidación por fallecimiento." },
+        { label: "Aviso de beneficiario", description: "Un reporte de beneficiario más 12 meses sin interacción puede habilitar la liquidación." }
       ],
-      economicsTitle: "Economia de la poliza",
+      economicsTitle: "Economía de la póliza",
       economics: [
-        { label: "Principal minimo", value: "10,800 USDC", description: "Base requerida antes de activar pago al titular." },
-        { label: "Principal extra", value: "Sin fee", description: "Aumenta el pago mensual, se puede retirar en partes y pasa completo a beneficiarios si hay liquidacion." },
-        { label: "Tokens auxiliares", value: "100% beneficiarios", description: "Los ERC20 no-USDC quedan fuera del calculo mensual, no tienen fee y pasan completos a beneficiarios en liquidacion por muerte." },
-        { label: "Fee claim-all/muerte", value: "20% del minimo", description: "Se cobra solo sobre el minimo restante durante claim-all o liquidacion por muerte." }
+        { label: "Principal mínimo", value: "10,800 USDC", description: "Base requerida antes de activar el pago al titular." },
+        { label: "Principal extra", value: "Sin comisión", description: "Aumenta el pago mensual, puede retirarse en partes y pasa completo a los beneficiarios si hay liquidación." },
+        { label: "Tokens auxiliares", value: "100% a beneficiarios", description: "Los tokens ERC20 no-USDC quedan fuera del cálculo mensual, no pagan comisión y pasan completos a los beneficiarios en la liquidación por fallecimiento." },
+        { label: "Comisión de retiro total/fallecimiento", value: "20% del mínimo", description: "Se cobra solo sobre el mínimo restante durante el retiro total o la liquidación por fallecimiento." }
       ],
       contractNote:
-        "Los contratos testnet actuales implementan el flujo flexible. Produccion requiere legal, auditoria externa, multisig/timelock y monitoreo."
+        "Los contratos de testnet actuales implementan el flujo flexible. La producción requiere aval legal, auditoría externa, multisig/timelock y monitoreo."
     },
     contracts: {
       title: "Contratos del protocolo",
-      subtitle: "Los modulos actuales de Riska estan desplegados en World Chain Sepolia para pruebas.",
-      addressLabel: "Direccion del contrato",
+      subtitle: "Los módulos actuales de Riska están desplegados en World Chain Sepolia para pruebas.",
+      addressLabel: "Dirección del contrato",
       pendingLabel: "Despliegue pendiente",
-      explorerLabel: "Ver en explorador",
-      docsLabel: "Documentacion",
+      explorerLabel: "Ver en el explorador",
+      docsLabel: "Documentación",
       items: [
-        { id: "policyManager", name: "PolicyManager", description: "Manager activo de ciclo flexible y pagos." },
-        { id: "beneficiaryRegistry", name: "BeneficiaryRegistry", description: "Guarda wallets y porcentajes de beneficiarios." },
-        { id: "premiumVault", name: "PremiumVault", description: "Custodia USDC y tokens ERC20 auxiliares, y libera pagos a titular o beneficiarios." }
+        { id: "policyManager", name: "PolicyManager", description: "Manager activo del ciclo flexible y de los pagos." },
+        { id: "beneficiaryRegistry", name: "BeneficiaryRegistry", description: "Guarda las wallets y los porcentajes de los beneficiarios." },
+        { id: "premiumVault", name: "PremiumVault", description: "Custodia USDC y tokens ERC20 auxiliares, y libera los pagos al titular o a los beneficiarios." }
       ]
     },
     contractDetail: {
       backLabel: "Volver a contratos",
-      eyebrow: "Documentacion del contrato",
-      addressLabel: "Direccion del contrato",
+      eyebrow: "Documentación del contrato",
+      addressLabel: "Dirección del contrato",
       pendingAddressLabel: "Despliegue pendiente",
       networkLabel: "Red",
       statusLabel: "Estado",
-      explorerLabel: "Ver en explorador",
+      explorerLabel: "Ver en el explorador",
       responsibilitiesTitle: "Responsabilidades",
       interfaceTitle: "Mapa de interfaz",
       safeguardsTitle: "Controles de riesgo",
-      sourceTitle: "Codigo del contrato",
-      sourceIncludedLabel: "Codigo incluido en este sitio",
-      sourcePendingLabel: "Importacion de codigo pendiente"
+      sourceTitle: "Código del contrato",
+      sourceIncludedLabel: "Código incluido en este sitio",
+      sourcePendingLabel: "Importación de código pendiente"
     },
     contractDocs: contractDocsEs,
     docsPage: {
       metadata: {
-        title: "Documentacion del protocolo Riska",
-        description: "Consulta direcciones de contratos, documentacion interna y puntos de integracion de Riska."
+        title: "Documentación del protocolo Riska",
+        description: "Consulta las direcciones de los contratos, la documentación interna y los puntos de integración de Riska."
       },
       hero: {
-        badge: "Documentacion",
+        badge: "Documentación",
         title: "Construye con el protocolo Riska",
-        description: "Explora direcciones de contratos, recursos de integracion y referencias para World Chain.",
+        description: "Explora las direcciones de los contratos, los recursos de integración y las referencias para World Chain.",
         primaryCta: "Ver contratos",
         secondaryCta: "Abrir white paper"
       }
     },
     techStack: {
       title: "Salvaguardas operativas",
-      subtitle: "Practicas de seguridad para minimizar confianza, limitar datos y auditar decisiones.",
+      subtitle: "Prácticas de seguridad para minimizar la confianza, limitar los datos y auditar cada decisión.",
       stack: [
-        { title: "Minimizar confianza", description: "Los contratos mantienen acciones privilegiadas pequenas y explicitas." },
-        { title: "Minimizar datos", description: "Solo referencias necesarias viven on-chain; evidencia sensible queda off-chain." },
-        { title: "Auditabilidad", description: "Depositos, heartbeats, avisos, reclamos y pagos emiten eventos." },
-        { title: "Gobernanza", description: "Produccion debe usar multisig, timelock, monitoreo y roles claros." }
+        { title: "Minimizar la confianza", description: "Los contratos mantienen las acciones privilegiadas pequeñas y explícitas." },
+        { title: "Minimizar los datos", description: "Solo las referencias necesarias viven on-chain; la evidencia sensible queda off-chain." },
+        { title: "Auditabilidad", description: "Depósitos, pruebas de vida, avisos, cobros y pagos emiten eventos verificables." },
+        { title: "Gobernanza", description: "La producción debe usar multisig, timelock, monitoreo y roles claros." }
       ]
     },
     callToAction: {
       title: "Descarga el white paper de Riska 30",
-      subtitle: "Preparado para grants: tesis, World Chain, ciclo de vida, roadmap y riesgos.",
+      subtitle: "Preparado para grants: tesis del producto, alineación con World Chain, ciclo de vida, roadmap y límites de riesgo.",
       primary: "Abrir white paper",
-      secondary: "Contactar a Fundacion Riska"
+      secondary: "Contactar a la Fundación Riska"
     },
     footer: {
       note: "© {year} riska.world · Protección flexible para humanos verificados.",
@@ -854,7 +854,7 @@ export const dictionaries = {
     walletAuth: {
       heading: "Consola Riska 30",
       description:
-        "Inicia sesión desde World App para revisar estado de póliza, beneficiarios, mínimo fondeado, extra principal, heartbeat y pagos.",
+        "Inicia sesión desde World App para revisar el estado de tu póliza, los beneficiarios, el mínimo fondeado, el principal extra, la prueba de vida y los pagos.",
       miniApp: {
         label: "Mini App",
         checking: "Detectando contexto de World App...",
@@ -863,7 +863,7 @@ export const dictionaries = {
       },
       statusLabel: "Estado",
       status: {
-        connected: (address: string) => `Sesion conectada: ${address}`,
+        connected: (address: string) => `Sesión conectada: ${address}`,
         connecting: "Conectando...",
         disconnected: "No conectado"
       },
@@ -887,20 +887,20 @@ export const dictionaries = {
     worldIdGate: {
       heading: "Un humano, una póliza",
       description:
-        "Verificá tu identidad con World ID antes de activar una póliza. Riska registra tu verificación para que el mismo humano no pueda reservar una segunda póliza.",
+        "Verifica tu identidad con World ID antes de activar una póliza. Riska registra tu verificación para que el mismo humano no pueda reservar una segunda póliza.",
       statusLabel: "World ID",
       statuses: {
-        locked: "Primero conecta una wallet para atar la prueba a esa dirección.",
-        ready: "Listo para pedir una prueba World ID para esta wallet.",
-        loading: "Preparando una solicitud World ID firmada...",
-        verified: "Humano único verificado. Esta wallet puede seguir a beneficiarios.",
-        error: "La verificación World ID necesita atención.",
-        notConfigured: "World ID no está configurado. Contactá soporte."
+        locked: "Primero conecta una wallet para vincular la prueba a esa dirección.",
+        ready: "Listo para pedir una prueba de World ID para esta wallet.",
+        loading: "Preparando una solicitud de World ID firmada...",
+        verified: "Humano único verificado. Esta wallet puede continuar a beneficiarios.",
+        error: "La verificación de World ID necesita atención.",
+        notConfigured: "World ID no está configurado. Contacta a soporte."
       },
       action: "Verificar que soy humano",
       actionLoading: "Preparando prueba...",
-      walletRequired: "Conectá tu wallet antes de verificar con World ID.",
-      configMissing: "World ID no está configurado. Contactá soporte.",
+      walletRequired: "Conecta tu wallet antes de verificar con World ID.",
+      configMissing: "World ID no está configurado. Contacta a soporte.",
       signatureError: "No se pudo crear la solicitud de verificación.",
       verifyError: "No se pudo verificar la prueba de World ID.",
       duplicateError: "Este humano verificado ya está reservado para una póliza Riska.",
@@ -911,13 +911,13 @@ export const dictionaries = {
     },
     whitepaper: {
       metadata: {
-        title: "Whitepaper Riska - Proteccion flexible y renta programada",
+        title: "Whitepaper Riska - Protección flexible y renta programada",
         description:
-          "Explora como Riska combina World ID, depositos USDC flexibles, heartbeat, aviso de beneficiarios y pagos programados."
+          "Explora cómo Riska combina World ID, depósitos USDC flexibles, prueba de vida, aviso de beneficiarios y pagos programados."
       },
       header: {
-        badge: "Fundacion Riska",
-        title: "Riska: Proteccion flexible y renta programada",
+        badge: "Fundación Riska",
+        title: "Riska: Protección flexible y renta programada",
         date: "Mayo 2026"
       },
       download: {
@@ -927,138 +927,138 @@ export const dictionaries = {
       abstract: {
         title: "Resumen",
         paragraphs: [
-          "Riska 30 es una cuenta de poliza USDC flexible para humanos verificados por World ID. El titular fondea un minimo de 10,800 USDC con el tiempo o por adelantado, y el principal extra aumenta el pago mensual futuro mientras sigue retirable en partes.",
-          "Cuando el minimo USDC esta cubierto, el titular puede guardar tokens ERC20 no-USDC en la poliza. Esos tokens auxiliares no cambian el pago mensual, nunca pagan fee de Riska y pasan 100% a beneficiarios si hay liquidacion por muerte.",
-          "Los beneficiarios solo pueden cobrar despues de un reporte y 12 meses sin interaccion del titular. Heartbeat, deposito, accion de token auxiliar, cambio de beneficiarios, cobro mensual o claim-all cancelan el reporte pendiente."
+          "Riska 30 es una cuenta de póliza USDC flexible para humanos verificados por World ID. El titular fondea un mínimo de 10,800 USDC poco a poco o por adelantado, y el principal extra aumenta el pago mensual futuro sin dejar de ser retirable en partes.",
+          "Una vez cubierto el mínimo USDC, el titular puede guardar tokens ERC20 no-USDC en la póliza. Esos tokens auxiliares no cambian el pago mensual, nunca pagan comisión de Riska y pasan 100% a los beneficiarios si hay liquidación por fallecimiento.",
+          "Los beneficiarios solo pueden cobrar tras un reporte y 12 meses sin interacción del titular. Una prueba de vida, un depósito, una operación con tokens auxiliares, un cambio de beneficiarios, un cobro mensual o un retiro total cancelan el reporte pendiente."
         ]
       },
       introduction: {
-        title: "1. Introduccion",
+        title: "1. Introducción",
         paragraphs: [
-          "Riska hace inspeccionable el estado de poliza, asignacion de depositos, derechos de beneficiarios, heartbeat y reglas de pago.",
-          "El modelo inicial queda acotado: sin paso oculto de elegibilidad, sin compuerta opaca de muerte, sin fee para cobros mensuales o retiros parciales, y con fee publicado solo sobre minimo para claim-all."
+          "Riska hace inspeccionables el estado de la póliza, la asignación de depósitos, los derechos de los beneficiarios, la prueba de vida y las reglas de pago.",
+          "El modelo inicial es acotado a propósito: sin pasos ocultos de elegibilidad, sin compuertas opacas de fallecimiento, sin comisión en los cobros mensuales ni en los retiros parciales, y con una comisión publicada solo sobre el mínimo para el retiro total."
         ],
-        goalsTitle: "Objetivos de diseno",
+        goalsTitle: "Objetivos de diseño",
         goals: [
-          "Permitir que cualquier humano verificado abra una poliza.",
-          "Separar principal minimo de principal extra.",
-          "Dar al titular pagos mensuales sin fee, retiro parcial de extra, custodia de tokens auxiliares, claim-all con fee sobre minimo y heartbeat.",
-          "Dar a beneficiarios una ruta transparente de reporte y espera.",
-          "Versionar terminos legales mediante hashes."
+          "Permitir que cualquier humano verificado abra una póliza.",
+          "Separar el principal mínimo del principal extra.",
+          "Dar al titular pagos mensuales sin comisión, retiro parcial del extra, custodia de tokens auxiliares, retiro total con comisión solo sobre el mínimo y prueba de vida.",
+          "Dar a los beneficiarios una ruta transparente de reporte y espera.",
+          "Versionar los términos legales mediante hashes."
         ]
       },
       systemOverview: {
-        title: "2. Vision general",
+        title: "2. Visión general",
         paragraphs: [
-          "El policy manager guarda titular, hash de terminos, cantidad de pagos, timestamps, minimo, extra y estado.",
-          "El vault mantiene USDC y tokens ERC20 auxiliares, pasivo total de principal y fees retenidos de claim-all o muerte como reserva.",
-          "El beneficiary registry guarda wallets receptoras y porcentajes en basis points."
+          "El policy manager guarda el titular, el hash de los términos, la cantidad de pagos, las marcas de tiempo, el mínimo, el extra y el estado.",
+          "El vault mantiene el USDC y los tokens ERC20 auxiliares, el pasivo total de principal y, como reserva, las comisiones retenidas del retiro total o del fallecimiento.",
+          "El beneficiary registry guarda las wallets receptoras y sus porcentajes en basis points."
         ],
         everydayIntuition: {
-          title: "Intuicion cotidiana",
-          body: "El titular puede seguir fondeando, empezar renta cuando el minimo esta listo, guardar otros ERC20, retirar extra en partes, retirar todo o enviar heartbeat para decir que esta vivo. Si hay liquidacion por muerte, los tokens auxiliares guardados pasan 100% a beneficiarios."
+          title: "Intuición cotidiana",
+          body: "El titular puede seguir fondeando, empezar a cobrar renta cuando el mínimo está listo, guardar otros tokens ERC20, retirar el extra en partes, retirar todo o enviar una prueba de vida para indicar que sigue con vida. Si hay liquidación por fallecimiento, los tokens auxiliares guardados pasan 100% a los beneficiarios."
         }
       },
       userLifecycle: {
-        title: "3. Como funciona",
+        title: "3. Cómo funciona",
         steps: [
-          { label: "Verifica identidad.", description: "Autenticate con Wallet Auth y World ID antes de continuar." },
-          { label: "Define beneficiarios.", description: "Elige wallets y porcentajes que suman 100%." },
-          { label: "Abre poliza.", description: "Acepta terminos y paga la primera unidad testnet de 30 USDC." },
-          { label: "Fondea o retira.", description: "Deposita antes de activar pagos, guarda tokens auxiliares despues del minimo USDC; luego activa pagos, retira extra en partes o cobra todo con fee solo sobre minimo. Los tokens auxiliares pasan 100% a beneficiarios en liquidacion por muerte." },
-          { label: "Heartbeat.", description: "Interactua sin retirar para cancelar un aviso de muerte pendiente." }
+          { label: "Verifica tu identidad.", description: "Autentícate con Wallet Auth y World ID antes de continuar." },
+          { label: "Define tus beneficiarios.", description: "Elige wallets y porcentajes que sumen 100%." },
+          { label: "Abre la póliza.", description: "Acepta los términos y paga la primera unidad de testnet de 30 USDC." },
+          { label: "Fondea o retira.", description: "Deposita antes de activar los pagos y guarda tokens auxiliares una vez cubierto el mínimo USDC; luego activa los pagos, retira el extra en partes o retira todo con comisión solo sobre el mínimo. Los tokens auxiliares pasan 100% a los beneficiarios en la liquidación por fallecimiento." },
+          { label: "Prueba de vida.", description: "Interactúa sin retirar para cancelar un aviso de fallecimiento pendiente." }
         ],
         examples: {
           title: "Ejemplos concretos",
           items: [
-            { label: "Minimo fondeado:", description: "Un titular con 10,800 USDC puede activar 120 pagos base." },
+            { label: "Mínimo fondeado:", description: "Un titular con 10,800 USDC puede activar 120 pagos base." },
             { label: "Principal extra:", description: "Un titular con 12,000 USDC obtiene un estimado mensual mayor y puede retirar parte del extra." },
-            { label: "Tokens auxiliares:", description: "Un titular puede guardar otro ERC20 despues del minimo USDC, sin cambiar el pago mensual ni sumar fee." },
-            { label: "Cobro muerte:", description: "Beneficiarios reciben extra, 100% de tokens auxiliares y 80% del minimo restante." },
-            { label: "Reporte falso:", description: "Un heartbeat del titular cancela el reporte al instante." }
+            { label: "Tokens auxiliares:", description: "Un titular puede guardar otro token ERC20 una vez cubierto el mínimo USDC, sin cambiar el pago mensual ni sumar comisión." },
+            { label: "Cobro por fallecimiento:", description: "Los beneficiarios reciben el extra, el 100% de los tokens auxiliares y el 80% del mínimo restante." },
+            { label: "Reporte falso:", description: "Una prueba de vida del titular cancela el reporte al instante." }
           ]
         }
       },
       capital: {
-        title: "4. Principal, fees y solvencia",
+        title: "4. Principal, comisiones y solvencia",
         paragraphs: [
-          "El minimo y el extra son pasivos de poliza hasta que se pagan al titular o beneficiarios.",
-          "Claim-all y la liquidacion por muerte retienen 20% solo del minimo restante. El principal extra y los tokens auxiliares no pagan fee, por eso los tokens auxiliares guardados pasan completos a beneficiarios."
+          "El mínimo y el extra son pasivos de la póliza hasta que se pagan al titular o a los beneficiarios.",
+          "El retiro total y la liquidación por fallecimiento retienen el 20% solo del mínimo restante. El principal extra y los tokens auxiliares no pagan comisión, por eso los tokens auxiliares guardados pasan completos a los beneficiarios."
         ],
         example: {
           title: "Ejemplo base",
-          body: "Una poliza con 10,800 USDC de minimo y 1,000 USDC extra paga 9,640 USDC a beneficiarios y retiene 2,160 USDC como reserva."
+          body: "Una póliza con 10,800 USDC de mínimo y 1,000 USDC de extra paga 9,640 USDC a los beneficiarios y retiene 2,160 USDC como reserva."
         }
       },
       eventVerification: {
         title: "5. Aviso de beneficiarios",
         paragraphs: [
-          "Un beneficiario configurado puede reportar muerte solo despues de que la poliza tenga 12 meses. El reporte inicia otra ventana de 12 meses. Si el titular interactua, el reporte se cancela."
+          "Un beneficiario configurado puede reportar el fallecimiento solo después de que la póliza cumpla 12 meses. El reporte inicia otra ventana de 12 meses. Si el titular interactúa, el reporte se cancela."
         ],
         plainLanguage: {
           title: "Vista simple",
-          body: "Un reporte no paga al instante. El titular tiene una ventana larga y simple para probar vida interactuando."
+          body: "Un reporte no paga al instante. El titular tiene una ventana amplia y sencilla para probar que sigue con vida con solo interactuar."
         }
       },
       claims: {
-        title: "6. Cobros del titular y beneficiarios",
+        title: "6. Cobros del titular y de los beneficiarios",
         paragraphs: [
-          "Los cobros mensuales, retiros parciales de extra y retiros de tokens auxiliares no tienen fee. Claim-all retiene 20% solo del minimo restante.",
-          "Los cobros de beneficiarios se pagan segun porcentajes despues de la ventana sin interaccion. Los saldos ERC20 no-USDC guardados se distribuyen 100% a beneficiarios sin fee de protocolo."
+          "Los cobros mensuales, los retiros parciales del extra y los retiros de tokens auxiliares no tienen comisión. El retiro total retiene el 20% solo del mínimo restante.",
+          "Los cobros de los beneficiarios se pagan según sus porcentajes tras la ventana sin interacción. Los saldos ERC20 no-USDC guardados se distribuyen 100% a los beneficiarios, sin comisión de protocolo."
         ]
       },
       incentives: {
         title: "7. Incentivos y flujo de capital",
-        intro: "RISKA debe apoyar confiabilidad, gobernanza y distribucion sin distraer de la promesa de principal.",
+        intro: "RISKA debe apoyar la confiabilidad, la gobernanza y la distribución sin distraer de la promesa del principal.",
         points: [
-          { label: "Fundacion Riska:", description: "Gestiona parametros, upgrades y partners al inicio." },
-          { label: "Titulares:", description: "Fondean la poliza y controlan cobro o heartbeat." },
-          { label: "Beneficiarios:", description: "Pueden reportar y cobrar solo bajo la demora publicada." }
+          { label: "Fundación Riska:", description: "Gestiona parámetros, actualizaciones y partners al inicio." },
+          { label: "Titulares:", description: "Fondean la póliza y controlan el cobro o la prueba de vida." },
+          { label: "Beneficiarios:", description: "Pueden reportar y cobrar solo respetando la demora publicada." }
         ],
         feeParagraph:
-          "La economia del protocolo debe ser explicita. En el flujo actual de muerte, la base de fee es solo el minimo restante.",
+          "La economía del protocolo debe ser explícita. En el flujo actual de fallecimiento, la base de la comisión es solo el mínimo restante.",
         example: {
           title: "Postura de gobernanza",
-          body: "Produccion debe usar multisig, timelock, eventos publicos y un camino claro de descentralizacion."
+          body: "La producción debe usar multisig, timelock, eventos públicos y un camino claro hacia la descentralización."
         }
       },
       governance: {
         title: "8. Riesgo de yield y gobernanza",
         paragraphs: [
-          "Las estrategias de yield son trabajo futuro y deben separarse de pasivos de principal.",
-          "Gobernanza productiva debe controlar allowlists, limites, upgrades, ruteo de fees y emergencia."
+          "Las estrategias de yield son trabajo futuro y deben separarse de los pasivos de principal.",
+          "La gobernanza en producción debe controlar allowlists, límites, actualizaciones, ruteo de comisiones y acciones de emergencia."
         ]
       },
       security: {
         title: "9. Modelo de seguridad",
         points: [
-          { label: "Acceso:", description: "Solo el policy manager puede mover fondos del vault." },
-          { label: "Datos minimos:", description: "La evidencia sensible queda off-chain." },
-          { label: "Humano verificado:", description: "World ID aplica una persona por poliza en el flujo de app." },
-          { label: "Auditabilidad:", description: "Depositos, avisos, heartbeats y pagos emiten eventos publicos." }
+          { label: "Acceso:", description: "Solo el policy manager puede mover los fondos del vault." },
+          { label: "Datos mínimos:", description: "La evidencia sensible queda off-chain." },
+          { label: "Humano verificado:", description: "World ID exige una persona por póliza en el flujo de la app." },
+          { label: "Auditabilidad:", description: "Depósitos, avisos, pruebas de vida y pagos emiten eventos públicos." }
         ]
       },
       applications: {
         title: "10. Aplicaciones",
         paragraphs: [
-          "Riska 30 sirve a personas que quieren proteccion familiar transparente y renta programada opcional.",
-          "Comunidades y empleadores pueden patrocinar depositos para miembros verificados con estado auditable."
+          "Riska 30 sirve a personas que quieren protección familiar transparente y renta programada opcional.",
+          "Comunidades y empleadores pueden patrocinar depósitos para miembros verificados manteniendo el estado auditable."
         ]
       },
       faq: {
         title: "11. Preguntas frecuentes",
         items: [
-          { question: "Quien puede abrir una poliza?", answer: "Cualquier humano verificado por World ID en el flujo soportado." },
-          { question: "Cuando puede cobrar el titular?", answer: "Cuando el minimo de 10,800 USDC esta completamente fondeado." },
-          { question: "El extra u otros tokens pagan fee?", answer: "No. El principal extra y los tokens ERC20 auxiliares no pagan fee, el titular puede retirarlos en partes y pasan 100% a beneficiarios en liquidacion por muerte." },
-          { question: "Quien puede reportar muerte?", answer: "Solo un beneficiario configurado." },
-          { question: "Esto es un lanzamiento publico de seguro?", answer: "No. Produccion con dinero real requiere legal y auditoria externa." }
+          { question: "¿Quién puede abrir una póliza?", answer: "Cualquier humano verificado por World ID en el flujo soportado." },
+          { question: "¿Cuándo puede cobrar el titular?", answer: "Cuando el mínimo de 10,800 USDC está completamente fondeado." },
+          { question: "¿El extra u otros tokens pagan comisión?", answer: "No. El principal extra y los tokens ERC20 auxiliares no pagan comisión, el titular puede retirarlos en partes y pasan 100% a los beneficiarios en la liquidación por fallecimiento." },
+          { question: "¿Quién puede reportar un fallecimiento?", answer: "Solo un beneficiario configurado." },
+          { question: "¿Esto es un lanzamiento público de seguro?", answer: "No. La producción con dinero real requiere aval legal y auditoría externa." }
         ]
       },
       conclusion: {
-        title: "12. Conclusion",
+        title: "12. Conclusión",
         paragraphs: [
-          "Riska reemplaza promesas vagas por saldos explicitos, controles reutilizables del titular, aviso de beneficiarios y liquidacion auditable."
+          "Riska reemplaza las promesas vagas por saldos explícitos, controles reutilizables del titular, aviso de beneficiarios y liquidación auditable."
         ]
       },
       references: {
