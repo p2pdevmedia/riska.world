@@ -1098,7 +1098,7 @@ function StepRail({
   return (
     <div className="rounded-2xl border border-[#202936] bg-[#10151d] p-2 shadow-[0_16px_38px_rgba(8,11,16,0.2)]">
       <div className="overflow-x-auto">
-        <div className="grid min-w-[520px] grid-cols-4 gap-1">
+        <div className="grid min-w-[420px] grid-cols-3 gap-1">
           {steps.map((step, index) => {
             const Icon = step.icon;
             const selected = step.id === activeStepId;
