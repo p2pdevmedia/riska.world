@@ -257,6 +257,7 @@ const copy = {
           commonTokens: "Common test tokens",
           customToken: "Custom 0x",
           deathNotice: "Death report",
+          lastActivity: "Last activity",
           deposit: "Deposit",
           depositAmount: "Deposit amount",
           depositToken: "Deposit token",
@@ -460,6 +461,7 @@ const copy = {
           commonTokens: "Tokens de prueba comunes",
           customToken: "0x custom",
           deathNotice: "Reporte muerte",
+          lastActivity: "Última actividad",
           deposit: "Depositar",
           depositAmount: "Monto a depositar",
           depositToken: "Depositar token",
@@ -847,7 +849,7 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
       <main className="pb-28">
         {view === "home" && <WelcomeScreen content={content} onStartApplication={startApplication} />}
 
-        {view === "apply" && <section id="enroll" className="mx-auto max-w-3xl px-5 py-10 md:px-8 lg:py-14">
+        {view === "apply" && <section id="enroll" className={`mx-auto px-5 py-10 md:px-8 lg:py-14 ${state.issuedPolicyId ? "max-w-6xl" : "max-w-3xl"}`}>
           <div className="space-y-4">
             {!state.issuedPolicyId && (
               <StepRail
@@ -1036,10 +1038,11 @@ function EnrollmentWizard(props: EnrollmentWizardProps) {
   const stepCopy = content.wizard.steps[step.id];
   const primaryLabel = getPrimaryLabel(props);
   const screenTitle = step.id === "confirm" && state.issuedPolicyId ? content.wizard.confirm.policy.title : stepCopy.title;
+  const isDashboard = Boolean(state.issuedPolicyId);
 
   return (
-    <article className="rounded-[24px] border border-[#e2e2e8] bg-white shadow-[0_20px_60px_rgba(30,30,45,0.09)]">
-      <header className="flex flex-col gap-4 border-b border-[#eeeeF2] px-5 py-5 md:flex-row md:items-center md:justify-between md:px-7">
+    <article className={isDashboard ? "" : "rounded-[24px] border border-[#e2e2e8] bg-white shadow-[0_20px_60px_rgba(30,30,45,0.09)]"}>
+      {!isDashboard && <header className="flex flex-col gap-4 border-b border-[#eeeeF2] px-5 py-5 md:flex-row md:items-center md:justify-between md:px-7">
         <div className="flex items-center gap-3">
           <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${step.accent}`}>
             <Icon className="h-6 w-6 text-white" />
@@ -1053,13 +1056,13 @@ function EnrollmentWizard(props: EnrollmentWizardProps) {
           complete={step.id === "confirm" ? props.readyToSubmit || state.submitted : props.completion[step.id]}
           label={step.id === "confirm" && state.submitted ? content.wizard.submitted : stepCopy.meta}
         />
-      </header>
+      </header>}
 
-      <div className="h-1 bg-[#eeeeF2]">
+      {!isDashboard && <div className="h-1 bg-[#eeeeF2]">
         <div className={`h-full ${step.accent}`} style={{ width: `${((activeStepIndex + 1) / steps.length) * 100}%` }} />
-      </div>
+      </div>}
 
-      <div className="px-5 py-6 md:px-7">
+      <div className={isDashboard ? "" : "px-5 py-6 md:px-7"}>
         {renderScreen(props)}
 
         {state.submitted && !state.issuedPolicyId && (
@@ -1544,13 +1547,17 @@ function PolicyControlPanel({
   }
 
   return (
-    <div className="mt-4 overflow-hidden rounded-[28px] border border-[#202936] bg-[#080b10] p-4 text-[#f5f7fb] shadow-[0_22px_60px_rgba(8,11,16,0.25)] md:p-6">
+    <div className="overflow-hidden rounded-[28px] border border-[#202936] bg-[#080b10] p-4 text-[#f5f7fb] shadow-[0_22px_60px_rgba(8,11,16,0.25)] md:p-6">
       <div className="flex flex-col gap-3 border-b border-[#202936] pb-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-semibold text-[#f5f7fb]">{text.title}</p>
-          <p className="mt-1 text-xs text-[#8d9bb0]">
-            {text.status}: {policy ? getPolicyStatusLabel(policy.status) : content.wizard.pending}
-          </p>
+          {policy && (
+            <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs">
+              <span className="text-[#8d9bb0]">{text.status}: <strong className="font-semibold text-[#c8ff75]">{getPolicyStatusLabel(policy.status)}</strong></span>
+              <span className="text-[#8d9bb0]">{text.deathNotice}: <strong className="font-semibold text-[#f5f7fb]">{policy.deathNotice.active ? formatUnixDate(policy.deathNotice.reportedAt) : text.noDeathNotice}</strong></span>
+              <span className="text-[#8d9bb0]">{text.lastActivity}: <strong className="font-semibold text-[#f5f7fb]">{formatUnixDate(policy.lastHolderInteractionAt)}</strong></span>
+            </div>
+          )}
         </div>
         <button
           className="flex h-10 items-center justify-center gap-2 rounded-lg border border-[#303a49] bg-[#111722] px-3 text-xs font-semibold text-[#c5d1e5] transition hover:border-[#62738f] disabled:opacity-50"
@@ -1718,20 +1725,6 @@ function PolicyControlPanel({
               </div>
             </div>
           )}
-
-          <div className="mt-3 rounded-xl border border-[#202936] bg-[#10151d] p-4">
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8d9bb0]">{text.deathNotice}</p>
-              <p className="text-sm font-semibold text-[#f5f7fb]">
-                {policy.deathNotice.active ? shortAddress(policy.deathNotice.reporter) : text.noDeathNotice}
-              </p>
-            </div>
-            {policy.deathNotice.active && (
-              <p className="mt-2 text-sm text-[#8d9bb0]">
-                {text.claimableAt}: {formatUnixDate(policy.deathNotice.claimableAt)}
-              </p>
-            )}
-          </div>
 
           <div className="mt-3 rounded-xl border border-[#202936] bg-[#10151d] p-4">
             <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
