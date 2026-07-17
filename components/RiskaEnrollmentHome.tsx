@@ -1410,6 +1410,7 @@ function PolicyControlPanel({
   const [tokenAddress, setTokenAddress] = useState("");
   const [tokenAmount, setTokenAmount] = useState("1");
   const [assetOperation, setAssetOperation] = useState<AssetOperation>("dashboard");
+  const [canChooseAsset, setCanChooseAsset] = useState(false);
   const [workingAction, setWorkingAction] = useState<TestnetPolicyAction | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusTone, setStatusTone] = useState("text-[#66746e]");
@@ -1516,6 +1517,12 @@ function PolicyControlPanel({
     setTokenAddress(address);
   }
 
+  function openAssetOperation(operation: Exclude<AssetOperation, "dashboard">, address = "", allowSelection = false) {
+    chooseAsset(address);
+    setCanChooseAsset(allowSelection);
+    setAssetOperation(operation);
+  }
+
   const selectedAssetBalance = selectedAuxiliaryToken
     ? formatTokenAmount(selectedAuxiliaryToken.balance, selectedAuxiliaryToken.decimals)
     : "0";
@@ -1555,11 +1562,11 @@ function PolicyControlPanel({
                     <DashboardMetric label={text.payoutProgress} value={`${policy.payoutsMade} / 120`} />
                   </div>
                   <div className="mt-6 flex flex-wrap gap-2">
-                    <button className="flex h-11 items-center gap-2 rounded-xl bg-[#c8ff75] px-4 text-sm font-semibold text-[#10170f] transition hover:bg-[#d8ff9b]" onClick={() => { chooseAsset(""); setAssetOperation("deposit"); }} type="button">
+                    <button className="flex h-11 items-center gap-2 rounded-xl bg-[#c8ff75] px-4 text-sm font-semibold text-[#10170f] transition hover:bg-[#d8ff9b]" onClick={() => openAssetOperation("deposit", "", true)} type="button">
                       <ArrowDownToLine className="h-4 w-4" />
                       {text.depositFunds}
                     </button>
-                    <button className="flex h-11 items-center gap-2 rounded-xl border border-[#3a4656] bg-[#151d28] px-4 text-sm font-semibold text-[#e6edf8] transition hover:border-[#718299]" onClick={() => { chooseAsset(""); setAssetOperation("withdraw"); }} type="button">
+                    <button className="flex h-11 items-center gap-2 rounded-xl border border-[#3a4656] bg-[#151d28] px-4 text-sm font-semibold text-[#e6edf8] transition hover:border-[#718299]" onClick={() => openAssetOperation("withdraw", "", true)} type="button">
                       <ArrowUpFromLine className="h-4 w-4" />
                       {text.withdrawFunds}
                     </button>
@@ -1598,8 +1605,8 @@ function PolicyControlPanel({
                 <AssetTableRow
                   balance={`${formatUsdcAmount(policy.totalPrincipal)} USDC`}
                   label="USDC"
-                  onReceive={() => { chooseAsset(""); setAssetOperation("deposit"); }}
-                  onSend={() => { chooseAsset(""); setAssetOperation("withdraw"); }}
+                  onReceive={() => openAssetOperation("deposit")}
+                  onSend={() => openAssetOperation("withdraw")}
                   receiveLabel={text.depositFunds}
                   sendLabel={text.withdrawFunds}
                   share="100% policy base"
@@ -1609,8 +1616,8 @@ function PolicyControlPanel({
                     balance={formatTokenAmount(token.balance, token.decimals)}
                     key={token.address}
                     label={token.symbol}
-                    onReceive={() => { chooseAsset(token.address); setAssetOperation("deposit"); }}
-                    onSend={() => { chooseAsset(token.address); setAssetOperation("withdraw"); }}
+                    onReceive={() => openAssetOperation("deposit", token.address)}
+                    onSend={() => openAssetOperation("withdraw", token.address)}
                     receiveLabel={text.depositFunds}
                     sendLabel={text.withdrawFunds}
                     share={shortAddress(token.address)}
@@ -1628,9 +1635,23 @@ function PolicyControlPanel({
                     <p className="text-lg font-semibold text-[#f5f7fb]">{assetOperation === "deposit" ? text.depositTitle : text.withdrawTitle}</p>
                     <p className="mt-1 text-sm text-[#8d9bb0]">{assetOperation === "deposit" ? text.operationHint : text.withdrawExtraAmount}</p>
                   </div>
-                  <span className="rounded-full border border-[#3a4656] bg-[#0b1018] px-3 py-1 text-sm font-semibold text-[#c8ff75]">
-                    {tokenAddress ? selectedAuxiliaryToken?.symbol ?? "ERC20" : "USDC"}
-                  </span>
+                  {canChooseAsset ? (
+                    <select
+                      aria-label={text.chooseAsset}
+                      className="h-9 rounded-full border border-[#3a4656] bg-[#0b1018] px-3 text-sm font-semibold text-[#c8ff75] outline-none focus:border-[#c8ff75]"
+                      onChange={(event) => chooseAsset(event.target.value)}
+                      value={tokenAddress}
+                    >
+                      <option value="">USDC</option>
+                      {policy.auxiliaryTokens.map((token) => (
+                        <option key={token.address} value={token.address}>{token.symbol}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <span className="rounded-full border border-[#3a4656] bg-[#0b1018] px-3 py-1 text-sm font-semibold text-[#c8ff75]">
+                      {tokenAddress ? selectedAuxiliaryToken?.symbol ?? "ERC20" : "USDC"}
+                    </span>
+                  )}
                 </div>
                 <label className="mt-5 block text-xs font-semibold uppercase tracking-[0.14em] text-[#8d9bb0]">
                   {assetOperation === "deposit" ? text.depositAmount : text.withdrawExtraAmount}
