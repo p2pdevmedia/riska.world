@@ -1797,12 +1797,20 @@ function PolicyControlPanel({
             )}
 
             {policy.auxiliaryTokens.length > 0 && (
-              <div className="mt-3 grid gap-2 md:grid-cols-2">
+              <div className="mt-3 overflow-hidden rounded-xl border border-[#202936] bg-[#0b1018]">
+                <div className="hidden grid-cols-[1.2fr_1fr_0.7fr_auto] gap-4 border-b border-[#202936] px-5 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-[#8190a6] md:grid">
+                  <span>{text.asset}</span><span>{text.balance}</span><span>{text.allocation}</span><span>{text.actions}</span>
+                </div>
                 {policy.auxiliaryTokens.map((token) => (
-                  <SummaryFact
+                  <AssetTableRow
+                    balance={formatTokenAmount(token.balance, token.decimals)}
                     key={token.address}
-                    label={`${token.symbol} · ${shortAddress(token.address)}`}
-                    value={formatTokenAmount(token.balance, token.decimals)}
+                    label={token.symbol}
+                    onReceive={() => { chooseAsset(token.address); setAssetOperation("deposit"); }}
+                    onSend={() => { chooseAsset(token.address); setAssetOperation("withdraw"); }}
+                    receiveLabel={text.depositFunds}
+                    sendLabel={text.withdrawFunds}
+                    share={shortAddress(token.address)}
                   />
                 ))}
               </div>
