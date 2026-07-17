@@ -32,6 +32,8 @@ type Eip6963ProviderDetail = {
 
 const METAMASK_RDNS = "io.metamask";
 const WALLET_REQUEST_TIMEOUT_MS = 45_000;
+const PROVIDER_INITIALIZATION_TIMEOUT_MS = 1_200;
+const MOBILE_METAMASK_DEEPLINK_ERROR = "METAMASK_MOBILE_DEEPLINK_REQUIRED";
 
 let cachedMetaMaskProvider: MetaMaskEthereum | undefined;
 
@@ -88,13 +90,64 @@ async function getMetaMaskProvider(): Promise<MetaMaskEthereum | undefined> {
   }
 
   cachedMetaMaskProvider = (await getEip6963MetaMask()) ?? getInjectedMetaMask();
+
+  // MetaMask Mobile injects the provider asynchronously after its in-app browser
+  // has loaded the page. Waiting for its initialization event avoids presenting a
+  // false "not available" error while the app is still preparing the dapp.
+  if (!cachedMetaMaskProvider) {
+    cachedMetaMaskProvider = await waitForInjectedMetaMask();
+  }
+
   return cachedMetaMaskProvider;
+}
+
+function waitForInjectedMetaMask(): Promise<MetaMaskEthereum | undefined> {
+  if (typeof window === "undefined") {
+    return Promise.resolve(undefined);
+  }
+
+  return new Promise((resolve) => {
+    const finish = () => {
+      window.removeEventListener("ethereum#initialized", handleInitialized);
+      resolve(getInjectedMetaMask());
+    };
+
+    const handleInitialized = () => finish();
+
+    window.addEventListener("ethereum#initialized", handleInitialized, { once: true });
+    window.setTimeout(finish, PROVIDER_INITIALIZATION_TIMEOUT_MS);
+  });
+}
+
+export function isMobileMetaMaskDeeplinkRequired(error: unknown): boolean {
+  return error instanceof Error && error.message === MOBILE_METAMASK_DEEPLINK_ERROR;
+}
+
+export function openMetaMaskMobile(): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const dappUrl = window.location.href.replace(/^https?:\/\//, "");
+  window.location.assign(`https://metamask.app.link/dapp/${dappUrl}`);
+}
+
+function isMobileDevice(): boolean {
+  if (typeof navigator === "undefined") {
+    return false;
+  }
+
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
 export async function getBrowserEthereumProvider(): Promise<MetaMaskEthereum> {
   const ethereum = await getMetaMaskProvider();
 
   if (!ethereum) {
+    if (isMobileDevice()) {
+      throw new Error(MOBILE_METAMASK_DEEPLINK_ERROR);
+    }
+
     throw new Error("MetaMask no está disponible en este navegador.");
   }
 

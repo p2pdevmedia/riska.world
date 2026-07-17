@@ -8,7 +8,13 @@ import { getAddress } from "viem";
 
 import { useLanguage } from "@/components/LanguageProvider";
 import { WorldIdGate } from "@/components/WorldIdGate";
-import { connectWallet, disconnectWallet, onWalletChange } from "@/lib/web3/metamask";
+import {
+  connectWallet,
+  disconnectWallet,
+  isMobileMetaMaskDeeplinkRequired,
+  onWalletChange,
+  openMetaMaskMobile
+} from "@/lib/web3/metamask";
 
 function truncateAddress(address: string) {
   return `${address.slice(0, 6)}…${address.slice(-4)}`;
@@ -112,6 +118,12 @@ export function WalletAuth({
       setMessage({ type: "welcome" });
     } catch (error) {
       console.error(error);
+
+      if (isMobileMetaMaskDeeplinkRequired(error)) {
+        openMetaMaskMobile();
+        return;
+      }
+
       setState({ status: "disconnected" });
       if (error instanceof Error && error.message) {
         setMessage({ type: "custom", text: error.message });
