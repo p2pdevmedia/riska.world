@@ -14,7 +14,6 @@ import {
   Fingerprint,
   HandCoins,
   HeartHandshake,
-  LogOut,
   Percent,
   ShieldCheck,
   Trash2,
@@ -56,7 +55,6 @@ import {
   type TestnetPolicyAction,
   type TestnetPolicyActionStatus
 } from "@/lib/web3/riska-testnet";
-import { disconnectWallet } from "@/lib/web3/metamask";
 
 type StepId = "identity" | "beneficiaries" | "quote" | "confirm";
 
@@ -659,6 +657,7 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
     }
 
     window.localStorage.setItem(storageKey, JSON.stringify(state));
+    window.dispatchEvent(new Event("riska-session-changed"));
   }, [hydrated, state]);
 
   useEffect(() => {
@@ -1115,7 +1114,6 @@ function EnrollmentWizard(props: EnrollmentWizardProps) {
             complete={step.id === "confirm" ? props.readyToSubmit || state.submitted : props.completion[step.id]}
             label={step.id === "confirm" && state.submitted ? content.wizard.submitted : stepCopy.meta}
           />
-          {state.walletSession && <EnrollmentSessionControl address={state.walletSession.address} label={content.wizard.confirm.policy.logout} />}
         </div>
       </header>}
 
@@ -1177,29 +1175,6 @@ function renderScreen(props: EnrollmentWizardProps) {
     case "confirm":
       return <ConfirmScreen {...props} />;
   }
-}
-
-function EnrollmentSessionControl({ address, label }: { address: string; label: string }) {
-  async function logout() {
-    try {
-      await disconnectWallet();
-    } finally {
-      window.localStorage.clear();
-      window.sessionStorage.clear();
-      window.location.assign("/");
-    }
-  }
-
-  return (
-    <button
-      className="flex min-h-11 max-w-[132px] items-center gap-2 rounded-lg border border-[#303a49] bg-[#111722] px-3 py-1.5 text-xs font-semibold text-[#c5d1e5] transition hover:border-[#62738f]"
-      onClick={() => void logout()}
-      type="button"
-    >
-      <LogOut className="h-4 w-4 shrink-0" />
-      <span className="min-w-0 text-left leading-tight"><span className="block truncate">{label}</span><span className="mt-0.5 block truncate font-mono text-[10px] font-medium text-[#8190a6]">{shortAddress(address)}</span></span>
-    </button>
-  );
 }
 
 function IdentityScreen({
@@ -1635,16 +1610,6 @@ function PolicyControlPanel({
     }
   }
 
-  async function logout() {
-    try {
-      await disconnectWallet();
-    } finally {
-      window.localStorage.clear();
-      window.sessionStorage.clear();
-      window.location.assign("/");
-    }
-  }
-
   return (
     <div className="overflow-hidden rounded-[28px] border border-[#202936] bg-[#080b10] p-4 text-[#f5f7fb] shadow-[0_22px_60px_rgba(8,11,16,0.25)] md:p-6">
       <div className="flex flex-col gap-3 border-b border-[#202936] pb-4 sm:flex-row sm:items-center sm:justify-between">
@@ -1658,15 +1623,6 @@ function PolicyControlPanel({
             </div>
           )}
         </div>
-        <button
-          className="flex min-h-11 max-w-[132px] items-center justify-center gap-2 rounded-lg border border-[#303a49] bg-[#111722] px-3 py-1.5 text-xs font-semibold text-[#c5d1e5] transition hover:border-[#62738f] disabled:opacity-50"
-          disabled={isWorking}
-          onClick={() => void logout()}
-          type="button"
-        >
-          <LogOut className="h-4 w-4 shrink-0" />
-          <span className="min-w-0 text-left leading-tight"><span className="block truncate">{text.logout}</span><span className="mt-0.5 block truncate font-mono text-[10px] font-medium text-[#8190a6]">{shortAddress(walletAddress)}</span></span>
-        </button>
       </div>
 
       {policy && (
