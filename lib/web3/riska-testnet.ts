@@ -51,6 +51,11 @@ export type TestnetPolicyAction =
   | "reportDeath"
   | "claimDeath";
 
+export type TestnetPolicyBeneficiary = {
+  percent: number;
+  wallet: `0x${string}`;
+};
+
 export type TestnetPolicyActionStatus =
   | TestnetIssuanceStatus
   | "sending_transaction"
@@ -66,6 +71,7 @@ export type TestnetIssuanceResult = {
 };
 
 export type RiskaTestnetPolicyView = {
+  beneficiaries: TestnetPolicyBeneficiary[];
   deathNotice: {
     active: boolean;
     claimableAt: number;
@@ -237,6 +243,17 @@ const policyManagerAbi = [
     type: "function"
   },
   {
+    inputs: [
+      { name: "policyId", type: "uint256" },
+      { name: "beneficiaries", type: "address[]" },
+      { name: "sharesBps", type: "uint16[]" }
+    ],
+    name: "updateBeneficiaries",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function"
+  },
+  {
     inputs: [{ name: "policyId", type: "uint256" }],
     name: "activatePayout",
     outputs: [],
@@ -374,6 +391,26 @@ const policyManagerAbi = [
     inputs: [{ name: "policyId", type: "uint256" }],
     name: "totalPrincipal",
     outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    inputs: [{ name: "policyId", type: "uint256" }],
+    name: "beneficiaryCount",
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    inputs: [
+      { name: "policyId", type: "uint256" },
+      { name: "index", type: "uint256" }
+    ],
+    name: "beneficiaryAt",
+    outputs: [
+      { name: "account", type: "address" },
+      { name: "shareBps", type: "uint16" }
+    ],
     stateMutability: "view",
     type: "function"
   },
@@ -551,6 +588,7 @@ export async function getTestnetPolicy({
         : Promise.resolve(false)
     ]);
   const auxiliaryTokens = await getPolicyAuxiliaryTokens(policyManager, id);
+  const beneficiaries = await getPolicyBeneficiaries(policyManager, id);
   const yieldPositions = await getPolicyYieldPositions({
     policyId: id,
     policyManager,
@@ -559,6 +597,7 @@ export async function getTestnetPolicy({
   const yieldStrategies = await getYieldStrategies(deployment.contracts.yieldStrategyManager?.address);
 
   return {
+    beneficiaries,
     deathNotice: {
       active: deathNotice[2],
       claimableAt: Number(deathClaimableAt),
@@ -583,6 +622,59 @@ export async function getTestnetPolicy({
     termsHash: policy[1],
     totalPrincipal
   };
+}
+
+export async function updateTestnetPolicyBeneficiaries({
+  beneficiaries,
+  holder,
+  onStatus,
+  policyId
+}: {
+  beneficiaries: TestnetPolicyBeneficiary[];
+  holder: string;
+  onStatus?: (status: TestnetPolicyActionStatus) => void;
+  policyId: string;
+}): Promise<Hash> {
+  if (beneficiaries.length === 0 || beneficiaries.length > 8) {
+    throw new Error("Add between 1 and 8 beneficiaries.");
+  }
+
+  const sharesBps = beneficiaries.map((beneficiary) => Math.round(beneficiary.percent * 100));
+  const addresses = beneficiaries.map((beneficiary) => {
+    if (!isAddress(beneficiary.wallet)) {
+      throw new Error("Each beneficiary needs a valid wallet address.");
+    }
+
+    return getAddress(beneficiary.wallet);
+  });
+
+  if (new Set(addresses.map((address) => address.toLowerCase())).size !== addresses.length) {
+    throw new Error("Each beneficiary wallet must be unique.");
+  }
+
+  if (sharesBps.some((share) => share <= 0) || sharesBps.reduce((total, share) => total + share, 0) !== 10_000) {
+    throw new Error("Beneficiary shares must total 100%.");
+  }
+
+  onStatus?.("loading_contracts");
+  const deployment = await getRiskaTestnetDeployment();
+  const { policyManager } = getRequiredContracts(deployment);
+  const account = await getConnectedAccount(holder, onStatus);
+  const walletClient = await createWorldchainSepoliaWalletClient();
+
+  onStatus?.("sending_transaction");
+  const hash = await walletClient.writeContract({
+    abi: policyManagerAbi,
+    account,
+    address: policyManager,
+    args: [BigInt(policyId), addresses, sharesBps],
+    functionName: "updateBeneficiaries"
+  });
+  onStatus?.("confirming_transaction");
+  await publicClient.waitForTransactionReceipt({ hash });
+  onStatus?.("refreshing_policy");
+
+  return hash;
 }
 
 export async function getTestnetPolicyCashflow(policyId: string): Promise<RiskaTestnetCashflow[]> {
@@ -733,6 +825,31 @@ async function getPolicyAuxiliaryTokens(policyManager: `0x${string}`, policyId: 
         };
       })
   );
+}
+
+async function getPolicyBeneficiaries(policyManager: `0x${string}`, policyId: bigint): Promise<TestnetPolicyBeneficiary[]> {
+  const count = await publicClient.readContract({
+    abi: policyManagerAbi,
+    address: policyManager,
+    args: [policyId],
+    functionName: "beneficiaryCount"
+  });
+
+  const rows = await Promise.all(
+    Array.from({ length: Number(count) }, (_, index) =>
+      publicClient.readContract({
+        abi: policyManagerAbi,
+        address: policyManager,
+        args: [policyId, BigInt(index)],
+        functionName: "beneficiaryAt"
+      })
+    )
+  );
+
+  return rows.map(([wallet, shareBps]) => ({
+    percent: Number(shareBps) / 100,
+    wallet
+  }));
 }
 
 async function getPolicyYieldPositions({

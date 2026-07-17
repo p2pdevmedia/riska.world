@@ -48,8 +48,10 @@ import {
   issueTestnetPolicy,
   MINIMUM_POLICY_PRINCIPAL,
   runTestnetPolicyAction,
+  updateTestnetPolicyBeneficiaries,
   type RiskaTestnetPolicyView,
   type RiskaTestnetCashflow,
+  type TestnetPolicyBeneficiary,
   type TestnetIssuanceResult,
   type TestnetIssuanceStatus,
   type TestnetPolicyAction,
@@ -264,6 +266,21 @@ const copy = {
         policy: {
           actionComplete: "Transaction confirmed",
           actionError: "Action failed",
+          beneficiaries: "Beneficiaries",
+          beneficiariesHint: "Edit wallet addresses and shares. Shares must add up to exactly 100%.",
+          beneficiary: "Beneficiary",
+          beneficiaryWallet: "Beneficiary wallet",
+          beneficiaryShare: "Share",
+          beneficiaryTotal: (total: number) => `Total: ${total}%`,
+          beneficiaryWalletInvalid: "Each beneficiary needs a valid wallet.",
+          beneficiaryTotalInvalid: "Shares must total 100%.",
+          addBeneficiary: "Add beneficiary",
+          removeBeneficiary: "Remove beneficiary",
+          saveBeneficiaries: "Save beneficiaries",
+          savingBeneficiaries: "Saving...",
+          updatingBeneficiaries: "Updating beneficiaries...",
+          beneficiariesUpdated: "Beneficiaries updated.",
+          beneficiariesUpdateError: "Unable to update beneficiaries",
           activate: "Activate payout",
           claimAll: "Claim all",
           claimAllFeeNote: "Claim all retains 20% of the remaining minimum principal. Extra USDC is paid 100%.",
@@ -490,6 +507,21 @@ const copy = {
         policy: {
           actionComplete: "Transacción confirmada",
           actionError: "La acción falló",
+          beneficiaries: "Beneficiarios",
+          beneficiariesHint: "Edita las wallets y porcentajes. Los porcentajes deben sumar exactamente 100%.",
+          beneficiary: "Beneficiario",
+          beneficiaryWallet: "Wallet del beneficiario",
+          beneficiaryShare: "Porcentaje",
+          beneficiaryTotal: (total: number) => `Total: ${total}%`,
+          beneficiaryWalletInvalid: "Cada beneficiario necesita una wallet válida.",
+          beneficiaryTotalInvalid: "Los porcentajes deben sumar 100%.",
+          addBeneficiary: "Agregar beneficiario",
+          removeBeneficiary: "Quitar beneficiario",
+          saveBeneficiaries: "Guardar beneficiarios",
+          savingBeneficiaries: "Guardando...",
+          updatingBeneficiaries: "Actualizando beneficiarios...",
+          beneficiariesUpdated: "Beneficiarios actualizados.",
+          beneficiariesUpdateError: "No se pudieron actualizar los beneficiarios",
           activate: "Activar pagos",
           claimAll: "Cobrar todo",
           claimAllFeeNote: "Cobrar todo retiene 20% del mínimo restante. El extra USDC se paga 100%.",
@@ -1450,6 +1482,9 @@ function PolicyControlPanel({
   const [tokenAmount, setTokenAmount] = useState("1");
   const [assetOperation, setAssetOperation] = useState<AssetOperation>("dashboard");
   const [canChooseAsset, setCanChooseAsset] = useState(false);
+  const [dashboardView, setDashboardView] = useState<"overview" | "beneficiaries">("overview");
+  const [beneficiaryDrafts, setBeneficiaryDrafts] = useState<TestnetPolicyBeneficiary[]>([]);
+  const [savingBeneficiaries, setSavingBeneficiaries] = useState(false);
   const [workingAction, setWorkingAction] = useState<TestnetPolicyAction | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusTone, setStatusTone] = useState("text-[#66746e]");
@@ -1479,6 +1514,12 @@ function PolicyControlPanel({
       mounted = false;
     };
   }, [policyId, walletAddress]);
+
+  useEffect(() => {
+    if (policy) {
+      setBeneficiaryDrafts(policy.beneficiaries);
+    }
+  }, [policy]);
 
   useEffect(() => {
     let mounted = true;
@@ -1610,6 +1651,63 @@ function PolicyControlPanel({
     }
   }
 
+  function updateDashboardBeneficiary(index: number, field: keyof TestnetPolicyBeneficiary, value: string) {
+    setBeneficiaryDrafts((current) =>
+      current.map((beneficiary, currentIndex) =>
+        currentIndex === index
+          ? {
+              ...beneficiary,
+              [field]: field === "percent" ? clampPercent(Number(value)) : value
+            }
+          : beneficiary
+      )
+    );
+  }
+
+  function addDashboardBeneficiary() {
+    setBeneficiaryDrafts((current) =>
+      current.length >= 8
+        ? current
+        : [...current, { percent: 0, wallet: "" as `0x${string}` }]
+    );
+  }
+
+  function removeDashboardBeneficiary(index: number) {
+    setBeneficiaryDrafts((current) => current.length <= 1 ? current : current.filter((_, currentIndex) => currentIndex !== index));
+  }
+
+  const beneficiaryTotal = beneficiaryDrafts.reduce((total, beneficiary) => total + beneficiary.percent, 0);
+  const beneficiaryWalletsValid = beneficiaryDrafts.every((beneficiary) => isWalletAddress(beneficiary.wallet));
+  const canSaveBeneficiaries = beneficiaryDrafts.length > 0 && beneficiaryTotal === 100 && beneficiaryWalletsValid;
+
+  async function saveDashboardBeneficiaries() {
+    if (!canSaveBeneficiaries) {
+      return;
+    }
+
+    setSavingBeneficiaries(true);
+    setStatusTone("text-amber-700");
+    setStatusMessage(text.updatingBeneficiaries);
+
+    try {
+      await updateTestnetPolicyBeneficiaries({
+        beneficiaries: beneficiaryDrafts,
+        holder: walletAddress,
+        onStatus: (actionStatus) => setStatusMessage(getPolicyActionStatusLabel(actionStatus)),
+        policyId
+      });
+      await refreshPolicy();
+      setStatusMessage(text.beneficiariesUpdated);
+      setStatusTone("text-emerald-700");
+      setDashboardView("overview");
+    } catch (error) {
+      setStatusMessage(`${text.beneficiariesUpdateError}: ${formatTestnetContractError(error)}`);
+      setStatusTone("text-red-700");
+    } finally {
+      setSavingBeneficiaries(false);
+    }
+  }
+
   return (
     <div className="overflow-hidden rounded-[28px] border border-[#202936] bg-[#080b10] p-4 text-[#f5f7fb] shadow-[0_22px_60px_rgba(8,11,16,0.25)] md:p-6">
       <div className="flex flex-col gap-3 border-b border-[#202936] pb-4 sm:flex-row sm:items-center sm:justify-between">
@@ -1623,9 +1721,106 @@ function PolicyControlPanel({
             </div>
           )}
         </div>
+        {policy && (
+          <button
+            className="flex h-10 items-center gap-2 rounded-lg border border-[#334052] bg-[#151d28] px-3 text-sm font-semibold text-[#e6edf8] transition hover:border-[#5868ea] hover:text-[#aeb8ff]"
+            onClick={() => setDashboardView((current) => current === "overview" ? "beneficiaries" : "overview")}
+            type="button"
+          >
+            <Users className="h-4 w-4" />
+            {dashboardView === "beneficiaries" ? text.backToDashboard : `${text.beneficiaries} · ${policy.beneficiaries.length}`}
+          </button>
+        )}
       </div>
 
-      {policy && (
+      {policy && dashboardView === "beneficiaries" ? (
+        <section className="mx-auto max-w-2xl py-6">
+          <div className="rounded-[22px] border border-[#202936] bg-[#10151d] p-5 md:p-6">
+            <div className="flex items-start gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#20295b] text-[#aeb8ff]">
+                <Users className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 className="text-xl font-semibold text-[#f5f7fb]">{text.beneficiaries}</h2>
+                <p className="mt-1 text-sm leading-6 text-[#9baac0]">{text.beneficiariesHint}</p>
+              </div>
+            </div>
+
+            <div className="mt-5 space-y-3">
+              {beneficiaryDrafts.map((beneficiary, index) => (
+                <div className="rounded-xl border border-[#303a49] bg-[#0b1018] p-3" key={`${beneficiary.wallet}-${index}`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-[#f5f7fb]">{text.beneficiary} {index + 1}</p>
+                    <button
+                      aria-label={text.removeBeneficiary}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#334052] text-[#9baac0] transition hover:border-red-300 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-40"
+                      disabled={beneficiaryDrafts.length <= 1 || savingBeneficiaries}
+                      onClick={() => removeDashboardBeneficiary(index)}
+                      type="button"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_110px]">
+                    <input
+                      aria-label={`${text.beneficiaryWallet} ${index + 1}`}
+                      className={`min-w-0 rounded-lg border bg-[#10151d] px-3 py-3 font-mono text-xs text-[#f5f7fb] outline-none placeholder:text-[#8190a6] focus:border-[#5868ea] ${isWalletAddress(beneficiary.wallet) ? "border-[#334052]" : "border-red-400"}`}
+                      disabled={savingBeneficiaries}
+                      onChange={(event) => updateDashboardBeneficiary(index, "wallet", event.target.value)}
+                      placeholder="0x..."
+                      value={beneficiary.wallet}
+                    />
+                    <label className="relative">
+                      <span className="sr-only">{text.beneficiaryShare}</span>
+                      <input
+                        aria-label={`${text.beneficiaryShare} ${index + 1}`}
+                        className="w-full rounded-lg border border-[#334052] bg-[#10151d] px-3 py-3 pr-8 text-right text-sm font-semibold text-[#f5f7fb] outline-none focus:border-[#5868ea]"
+                        disabled={savingBeneficiaries}
+                        max={100}
+                        min={0}
+                        onChange={(event) => updateDashboardBeneficiary(index, "percent", event.target.value)}
+                        type="number"
+                        value={beneficiary.percent}
+                      />
+                      <span className="pointer-events-none absolute right-3 top-3 text-sm text-[#8190a6]">%</span>
+                    </label>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button
+              className="mt-3 flex w-full items-center gap-3 rounded-xl border border-dashed border-[#3a4656] bg-[#101722] p-4 text-left text-[#e6edf8] transition hover:border-[#5868ea] hover:bg-[#151d28] disabled:opacity-50"
+              disabled={beneficiaryDrafts.length >= 8 || savingBeneficiaries}
+              onClick={addDashboardBeneficiary}
+              type="button"
+            >
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#20295b]">
+                <UserPlus className="h-5 w-5 text-[#aeb8ff]" />
+              </span>
+              <span className="font-semibold">{text.addBeneficiary}</span>
+            </button>
+
+            <div className="mt-5 h-2 overflow-hidden rounded-full bg-[#202936]">
+              <div className="h-full bg-[#5868ea] transition-all" style={{ width: `${Math.min(beneficiaryTotal, 100)}%` }} />
+            </div>
+            <div className="mt-2 flex flex-col gap-1 text-xs sm:flex-row sm:items-center sm:justify-between">
+              <p className={beneficiaryTotal === 100 ? "text-emerald-300" : "text-red-300"}>{text.beneficiaryTotal(beneficiaryTotal)}</p>
+              {!beneficiaryWalletsValid && <p className="text-red-300">{text.beneficiaryWalletInvalid}</p>}
+              {beneficiaryTotal !== 100 && <p className="text-red-300">{text.beneficiaryTotalInvalid}</p>}
+            </div>
+
+            <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button className="min-h-11 rounded-lg border border-[#334052] bg-[#151d28] px-4 text-sm font-semibold text-[#e6edf8] transition hover:border-[#718299]" disabled={savingBeneficiaries} onClick={() => setDashboardView("overview")} type="button">
+                {text.cancel}
+              </button>
+              <button className="min-h-11 rounded-lg bg-[#5868ea] px-4 text-sm font-semibold text-white transition hover:bg-[#4f63e8] disabled:cursor-not-allowed disabled:bg-[#303a49] disabled:text-[#8190a6]" disabled={!canSaveBeneficiaries || savingBeneficiaries} onClick={saveDashboardBeneficiaries} type="button">
+                {savingBeneficiaries ? text.savingBeneficiaries : text.saveBeneficiaries}
+              </button>
+            </div>
+          </div>
+        </section>
+      ) : policy && (
         <>
           {(
             <>
