@@ -38,6 +38,8 @@ a {
 }
 
 .riska-dark-surface .text-\[\#405047\],
+.riska-dark-surface .text-\[\#42424c\],
+.riska-dark-surface .text-\[\#54545f\],
 .riska-dark-surface .text-\[\#516159\],
 .riska-dark-surface .text-\[\#66746e\],
 .riska-dark-surface .text-\[\#696975\],
@@ -48,6 +50,7 @@ a {
 .riska-dark-surface .bg-white,
 .riska-dark-surface .bg-\[\#f4f4f8\],
 .riska-dark-surface .bg-\[\#f5f7f2\],
+.riska-dark-surface .bg-\[\#fafafd\],
 .riska-dark-surface .bg-\[\#fbfcf8\] {
   background-color: #10151d !important;
 }
@@ -55,6 +58,7 @@ a {
 .riska-dark-surface .border-\[\#cbd7cf\],
 .riska-dark-surface .border-\[\#d9ded5\],
 .riska-dark-surface .border-\[\#e2e2e8\],
+.riska-dark-surface .border-\[\#e8e8ed\],
 .riska-dark-surface .border-\[\#e3e8df\] {
   border-color: #303a49 !important;
 }
