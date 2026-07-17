@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, FileText, Home, ShieldCheck } from "lucide-react";
+import { BookOpen, Home, ShieldCheck } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 import { LanguageToggle } from "@/components/LanguageToggle";
@@ -15,8 +15,7 @@ export function Navbar() {
   const items = [
     { href: "/", icon: Home, label: t.navbar.brand },
     { href: "/rules", icon: ShieldCheck, label: rules?.label ?? "Rules" },
-    { href: "/docs", icon: BookOpen, label: contracts?.label ?? "Docs" },
-    { href: "/apply", icon: FileText, label: t.navbar.cta }
+    { href: "/docs", icon: BookOpen, label: contracts?.label ?? "Docs" }
   ];
 
   return (
@@ -30,9 +29,7 @@ export function Navbar() {
             <Link
               aria-current={selected ? "page" : undefined}
               className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[10px] font-medium transition ${
-                item.href === "/apply"
-                  ? "bg-[#202027] text-white hover:bg-[#5868ea]"
-                  : selected
+                selected
                     ? "bg-[#eef0ff] text-[#5868ea]"
                     : "text-[#777782] hover:bg-[#f5f5f8] hover:text-[#202027]"
               }`}
