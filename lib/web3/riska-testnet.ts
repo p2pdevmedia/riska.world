@@ -591,48 +591,68 @@ export async function getTestnetPolicyCashflow(policyId: string): Promise<RiskaT
   const id = BigInt(policyId);
   const fromBlock = BigInt(deployment.blockNumber ?? 0);
 
-  const [opened, deposits, withdrawals] = await Promise.all([
-    publicClient.getLogs({
-      address: policyManager,
-      args: { policyId: id },
-      event: policyOpenedEvent,
-      fromBlock
-    }),
-    publicClient.getLogs({
-      address: policyManager,
-      args: { policyId: id },
-      event: policyDepositEvent,
-      fromBlock
-    }),
-    publicClient.getLogs({
-      address: policyManager,
-      args: { policyId: id },
-      event: extraWithdrawnEvent,
-      fromBlock
-    })
-  ]);
+  try {
+    const [opened, deposits, withdrawals] = await Promise.all([
+      publicClient.getLogs({
+        address: policyManager,
+        args: { policyId: id },
+        event: policyOpenedEvent,
+        fromBlock
+      }),
+      publicClient.getLogs({
+        address: policyManager,
+        args: { policyId: id },
+        event: policyDepositEvent,
+        fromBlock
+      }),
+      publicClient.getLogs({
+        address: policyManager,
+        args: { policyId: id },
+        event: extraWithdrawnEvent,
+        fromBlock
+      })
+    ]);
 
-  const movements = [
-    ...opened.map((log) => ({ amount: FIRST_PREMIUM, blockNumber: log.blockNumber, kind: "deposit" as const })),
-    ...deposits.map((log) => ({ amount: log.args.amount ?? 0n, blockNumber: log.blockNumber, kind: "deposit" as const })),
-    ...withdrawals.map((log) => ({ amount: log.args.amount ?? 0n, blockNumber: log.blockNumber, kind: "withdraw" as const }))
-  ];
-  const blockTimestamps = new Map<bigint, number>();
+    const movements = [
+      ...opened.map((log) => ({ amount: FIRST_PREMIUM, blockNumber: log.blockNumber, kind: "deposit" as const })),
+      ...deposits.map((log) => ({ amount: log.args.amount ?? 0n, blockNumber: log.blockNumber, kind: "deposit" as const })),
+      ...withdrawals.map((log) => ({ amount: log.args.amount ?? 0n, blockNumber: log.blockNumber, kind: "withdraw" as const }))
+    ];
+    const blockTimestamps = new Map<bigint, number>();
 
-  await Promise.all(
-    [...new Set(movements.map((movement) => movement.blockNumber))].map(async (blockNumber) => {
-      const block = await publicClient.getBlock({ blockNumber });
-      blockTimestamps.set(blockNumber, Number(block.timestamp));
-    })
-  );
+    await Promise.all(
+      [...new Set(movements.map((movement) => movement.blockNumber))].map(async (blockNumber) => {
+        const block = await publicClient.getBlock({ blockNumber });
+        blockTimestamps.set(blockNumber, Number(block.timestamp));
+      })
+    );
 
-  return movements
-    .map((movement) => ({
-      amount: movement.amount,
-      kind: movement.kind,
-      timestamp: blockTimestamps.get(movement.blockNumber) ?? 0
-    }))
-    .sort((left, right) => left.timestamp - right.timestamp);
+    return movements
+      .map((movement) => ({
+        amount: movement.amount,
+        kind: movement.kind,
+        timestamp: blockTimestamps.get(movement.blockNumber) ?? 0
+      }))
+      .sort((left, right) => left.timestamp - right.timestamp);
+  } catch {
+    // The public World Chain RPC limits broad log ranges. Reconstruct a useful
+    // baseline from the current policy state instead of presenting an empty graph.
+    const policy = await getTestnetPolicy({ policyId });
+    const history: RiskaTestnetCashflow[] = [
+      { amount: FIRST_PREMIUM, kind: "deposit", timestamp: policy.openedAt }
+    ];
+    const additionalPrincipal = policy.totalPrincipal - FIRST_PREMIUM;
+
+    if (additionalPrincipal > 0n) {
+      history.push({
+        amount: additionalPrincipal,
+        kind: "deposit",
+        timestamp: policy.lastHolderInteractionAt || policy.openedAt
+      });
+    }
+
+    return history;
+  }
 }
 
 async function getYieldStrategies(yieldStrategyManager?: `0x${string}`) {
