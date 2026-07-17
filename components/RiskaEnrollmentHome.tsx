@@ -192,7 +192,7 @@ const copy = {
       submitted: "Policy issued",
       steps: {
         beneficiaries: { meta: "Beneficiaries", title: "Beneficiary allocation" },
-        confirm: { meta: "World Chain", title: "Review and consent" },
+        confirm: { meta: "Dashboard", title: "Review and consent" },
         identity: { meta: "Wallet + World ID", title: "Verified human" },
         quote: { meta: "30 USDC / month", title: "Policy quote" }
       },
@@ -399,7 +399,7 @@ const copy = {
       submitted: "Póliza emitida",
       steps: {
         beneficiaries: { meta: "Beneficiarios", title: "Asignación de beneficiarios" },
-        confirm: { meta: "World Chain", title: "Revisión y consentimiento" },
+        confirm: { meta: "Dashboard", title: "Revisión y consentimiento" },
         identity: { meta: "Wallet + World ID", title: "Humano verificado" },
         quote: { meta: "30 USDC / mes", title: "Cotización de póliza" }
       },
@@ -857,7 +857,7 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
       : !completion[activeStep.id];
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#f4f4f8] text-[#202027]">
+    <div className={`min-h-screen overflow-x-hidden ${view === "apply" ? "bg-[#080b10] text-[#f5f7fb]" : "bg-[#f4f4f8] text-[#202027]"}`}>
       <Navbar />
       <main className="pb-28">
         {view === "home" && <WelcomeScreen content={content} onStartApplication={startApplication} />}
@@ -1011,7 +1011,7 @@ function StepRail({
   onStepSelect: (stepId: StepId) => void;
 }) {
   return (
-    <div className="rounded-2xl border border-[#e2e2e8] bg-white p-2 shadow-[0_8px_24px_rgba(30,30,45,0.03)]">
+    <div className="rounded-2xl border border-[#202936] bg-[#10151d] p-2 shadow-[0_16px_38px_rgba(8,11,16,0.2)]">
       <div className="overflow-x-auto">
         <div className="grid min-w-[520px] grid-cols-4 gap-1">
           {steps.map((step, index) => {
@@ -1024,7 +1024,7 @@ function StepRail({
               <button
                 aria-current={selected ? "step" : undefined}
                 className={`flex min-h-[58px] w-full items-center justify-center gap-2 rounded-xl border px-2 py-2 text-center transition ${
-                  selected ? "border-[#cbd2ff] bg-[#f2f3ff]" : "border-transparent hover:border-[#e6e6ec] hover:bg-[#fafafd]"
+                  selected ? "border-[#5868ea] bg-[#20295b] text-[#f5f7fb]" : "border-transparent text-[#9baac0] hover:border-[#303a49] hover:bg-[#151d28]"
                 }`}
                 key={step.id}
                 onClick={() => onStepSelect(step.id)}
@@ -1054,29 +1054,31 @@ function EnrollmentWizard(props: EnrollmentWizardProps) {
   const isDashboard = Boolean(state.issuedPolicyId);
 
   return (
-    <article className={isDashboard ? "" : "rounded-[24px] border border-[#e2e2e8] bg-white shadow-[0_20px_60px_rgba(30,30,45,0.09)]"}>
-      {!isDashboard && <header className="flex flex-col gap-4 border-b border-[#eeeeF2] px-5 py-5 md:flex-row md:items-center md:justify-between md:px-7">
+    <article className={isDashboard ? "" : "overflow-hidden rounded-[28px] border border-[#202936] bg-[#080b10] text-[#f5f7fb] shadow-[0_22px_60px_rgba(8,11,16,0.25)]"}>
+      {!isDashboard && <header className="flex flex-col gap-4 border-b border-[#202936] px-5 py-5 md:flex-row md:items-center md:justify-between md:px-7">
         <div className="flex items-center gap-3">
           <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${step.accent}`}>
             <Icon className="h-6 w-6 text-white" />
           </div>
           <div>
-            <p className="text-xs text-[#777782]">{content.wizard.step(activeStepIndex)}</p>
+            <p className="text-xs text-[#8190a6]">{content.wizard.step(activeStepIndex)}</p>
             <h2 className="text-2xl font-semibold leading-tight tracking-[-0.04em]">{screenTitle}</h2>
           </div>
         </div>
-        <StatusPill
-          complete={step.id === "confirm" ? props.readyToSubmit || state.submitted : props.completion[step.id]}
-          label={step.id === "confirm" && state.submitted ? content.wizard.submitted : stepCopy.meta}
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          <StatusPill
+            complete={step.id === "confirm" ? props.readyToSubmit || state.submitted : props.completion[step.id]}
+            label={step.id === "confirm" && state.submitted ? content.wizard.submitted : stepCopy.meta}
+          />
+          {state.walletSession && <EnrollmentSessionControl address={state.walletSession.address} label={content.wizard.confirm.policy.logout} />}
+        </div>
       </header>}
 
-      {!isDashboard && <div className="h-1 bg-[#eeeeF2]">
+      {!isDashboard && <div className="h-1 bg-[#10151d]">
         <div className={`h-full ${step.accent}`} style={{ width: `${((activeStepIndex + 1) / steps.length) * 100}%` }} />
       </div>}
 
       <div className={isDashboard ? "" : "px-5 py-6 md:px-7"}>
-        {state.walletSession && !isDashboard && <EnrollmentSessionBar address={state.walletSession.address} label={content.wizard.confirm.policy.logout} />}
         {renderScreen(props)}
 
         {state.submitted && !state.issuedPolicyId && (
@@ -1087,15 +1089,15 @@ function EnrollmentWizard(props: EnrollmentWizardProps) {
         )}
 
         {!props.completion[step.id] && step.id !== "confirm" && (
-          <p className="mt-5 border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <p className="mt-5 rounded-xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
             {content.wizard.blocked}
           </p>
         )}
 
         {!state.issuedPolicyId && !(step.id === "identity" && state.walletSession) && (
-          <div className="mt-7 flex flex-col-reverse gap-3 border-t border-[#eeeeF2] pt-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-7 flex flex-col-reverse gap-3 border-t border-[#202936] pt-5 sm:flex-row sm:items-center sm:justify-between">
             <button
-              className="flex h-12 items-center justify-center gap-2 rounded-full border border-[#dedee5] bg-white px-5 text-sm font-semibold text-[#42424c] transition hover:border-[#aeb8ff] hover:text-[#4f63e8] disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex h-12 items-center justify-center gap-2 rounded-xl border border-[#334052] bg-[#151d28] px-5 text-sm font-semibold text-[#e6edf8] transition hover:border-[#5868ea] hover:text-[#aeb8ff] disabled:cursor-not-allowed disabled:opacity-40"
               disabled={activeStepIndex === 0}
               onClick={props.onBack}
               type="button"
@@ -1104,7 +1106,7 @@ function EnrollmentWizard(props: EnrollmentWizardProps) {
               {content.wizard.back}
             </button>
             <button
-              className="flex h-12 items-center justify-center gap-2 rounded-full bg-[#202027] px-5 text-sm font-semibold text-white transition hover:bg-[#5868ea] disabled:cursor-not-allowed disabled:bg-[#d9d9e0] disabled:text-[#858590]"
+              className="flex h-12 items-center justify-center gap-2 rounded-xl bg-[#5868ea] px-5 text-sm font-semibold text-white transition hover:bg-[#4f63e8] disabled:cursor-not-allowed disabled:bg-[#303a49] disabled:text-[#8190a6]"
               disabled={primaryDisabled}
               onClick={props.onPrimary}
               type="button"
@@ -1132,7 +1134,7 @@ function renderScreen(props: EnrollmentWizardProps) {
   }
 }
 
-function EnrollmentSessionBar({ address, label }: { address: string; label: string }) {
+function EnrollmentSessionControl({ address, label }: { address: string; label: string }) {
   async function logout() {
     try {
       await disconnectWallet();
@@ -1144,19 +1146,14 @@ function EnrollmentSessionBar({ address, label }: { address: string; label: stri
   }
 
   return (
-    <div className="mb-5 flex items-center justify-between gap-3 rounded-xl border border-[#e2e2e8] bg-[#fafafd] px-4 py-3">
-      <div className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#777782]">Wallet</p>
-        <p className="mt-1 font-mono text-sm font-semibold text-[#202027]">{shortAddress(address)}</p>
-      </div>
-      <button
-        className="shrink-0 rounded-lg border border-[#dedee5] bg-white px-3 py-2 text-xs font-semibold text-[#42424c] transition hover:border-[#5868ea] hover:text-[#5868ea]"
-        onClick={() => void logout()}
-        type="button"
-      >
-        {label}
-      </button>
-    </div>
+    <button
+      className="flex h-10 max-w-[164px] items-center gap-2 rounded-lg border border-[#303a49] bg-[#111722] px-3 text-xs font-semibold text-[#c5d1e5] transition hover:border-[#62738f]"
+      onClick={() => void logout()}
+      type="button"
+    >
+      <LogOut className="h-4 w-4 shrink-0" />
+      <span className="truncate">{label} · {shortAddress(address)}</span>
+    </button>
   );
 }
 
@@ -1177,10 +1174,7 @@ function IdentityScreen({
 
   return (
     <div>
-      <WalletAuth
-        onSessionChange={onWalletSessionChange}
-        variant="light"
-      />
+      <WalletAuth onSessionChange={onWalletSessionChange} variant="dark" />
     </div>
   );
 }
@@ -1211,25 +1205,25 @@ function BeneficiariesScreen({
         ))}
       </div>
       <button
-        className="flex w-full items-center gap-3 border border-dashed border-[#cdd8ce] bg-[#fbfcf8] p-4 text-left transition hover:bg-white disabled:opacity-50"
+        className="flex w-full items-center gap-3 rounded-xl border border-dashed border-[#3a4656] bg-[#10151d] p-4 text-left text-[#e6edf8] transition hover:border-[#5868ea] hover:bg-[#151d28] disabled:opacity-50"
         disabled={state.beneficiaries.length >= 5}
         onClick={onAddBeneficiary}
         type="button"
       >
-        <span className="flex h-9 w-9 items-center justify-center bg-[#eef3ec]">
-          <UserPlus className="h-5 w-5 text-[#526258]" />
+        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#20295b]">
+          <UserPlus className="h-5 w-5 text-[#aeb8ff]" />
         </span>
         <span className="font-semibold">{text.add}</span>
       </button>
-      <div className="h-2 overflow-hidden bg-[#e8ede4]">
-        <div className="h-full bg-[#17231e]" style={{ width: `${Math.min(beneficiaryTotal, 100)}%` }} />
+      <div className="h-2 overflow-hidden rounded-full bg-[#202936]">
+        <div className="h-full bg-[#5868ea]" style={{ width: `${Math.min(beneficiaryTotal, 100)}%` }} />
       </div>
       <div className="flex flex-col gap-1 text-xs sm:flex-row sm:items-center sm:justify-between">
-        <p className={beneficiaryTotal === 100 ? "text-emerald-700" : "text-red-700"}>
+        <p className={beneficiaryTotal === 100 ? "text-emerald-300" : "text-red-300"}>
           {text.total(beneficiaryTotal)}
         </p>
-        {beneficiaryTotal !== 100 && <p className="text-red-700">{text.invalid}</p>}
-        {hasWalletError && <p className="text-red-700">{text.walletInvalid}</p>}
+        {beneficiaryTotal !== 100 && <p className="text-red-300">{text.invalid}</p>}
+        {hasWalletError && <p className="text-red-300">{text.walletInvalid}</p>}
       </div>
     </div>
   );
@@ -1300,9 +1294,9 @@ function ConfirmScreen({
         <SummaryFact label={text.network} value="World Chain Sepolia" />
       </div>
 
-      <div className="border border-[#ddd8ed] bg-[#f5f2ff] p-4">
-        <p className="text-sm text-[#655a80]">{text.termsHash}</p>
-        <p className="mt-2 break-all font-mono text-xs text-[#32284f]">{RISKA_POLICY_TERMS_HASH}</p>
+      <div className="rounded-xl border border-[#303a49] bg-[#10151d] p-4">
+        <p className="text-sm text-[#aeb8ff]">{text.termsHash}</p>
+        <p className="mt-2 break-all font-mono text-xs text-[#c5d1e5]">{RISKA_POLICY_TERMS_HASH}</p>
       </div>
 
       <TestnetIssuePanel
@@ -1385,14 +1379,14 @@ function TestnetIssuePanel({
   }
 
   return (
-    <div className="border border-[#cfe0d2] bg-[#f8faf6] p-4">
+    <div className="rounded-xl border border-[#303a49] bg-[#10151d] p-4 text-[#e6edf8]">
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div>
-          <p className="text-sm font-semibold text-[#26342d]">{text.testnetTitle}</p>
+          <p className="text-sm font-semibold text-[#f5f7fb]">{text.testnetTitle}</p>
           <p className={`mt-1 text-sm ${status.tone}`}>{status.message}</p>
         </div>
         {deployment?.contracts.policyManager?.address && (
-          <p className="break-all font-mono text-xs text-[#66746e]">
+          <p className="break-all font-mono text-xs text-[#8190a6]">
             {shortAddress(deployment.contracts.policyManager.address)}
           </p>
         )}
@@ -1402,8 +1396,8 @@ function TestnetIssuePanel({
         <div className="mt-4 grid gap-2 md:grid-cols-2">
           {policyId && <SummaryFact label={text.testnetPolicy} value={policyId} />}
           {openPolicyTx && (
-            <div className="border border-[#dce4d8] bg-white p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#66746e]">{text.testnetTx}</p>
+            <div className="rounded-xl border border-[#303a49] bg-[#0b1018] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8190a6]">{text.testnetTx}</p>
               {explorerUrl ? (
                 <a
                   className="mt-2 block break-all font-mono text-xs font-semibold text-emerald-700 hover:text-emerald-900"
@@ -1627,13 +1621,13 @@ function PolicyControlPanel({
           )}
         </div>
         <button
-          className="flex h-10 items-center justify-center gap-2 rounded-lg border border-[#303a49] bg-[#111722] px-3 text-xs font-semibold text-[#c5d1e5] transition hover:border-[#62738f] disabled:opacity-50"
+          className="flex h-10 max-w-[164px] items-center justify-center gap-2 rounded-lg border border-[#303a49] bg-[#111722] px-3 text-xs font-semibold text-[#c5d1e5] transition hover:border-[#62738f] disabled:opacity-50"
           disabled={isWorking}
           onClick={() => void logout()}
           type="button"
         >
-          <LogOut className="h-4 w-4" />
-          {text.logout}
+          <LogOut className="h-4 w-4 shrink-0" />
+          <span className="truncate">{text.logout} · {shortAddress(walletAddress)}</span>
         </button>
       </div>
 
@@ -2059,14 +2053,14 @@ function InteractiveInfoBlock({
   title: string;
 }) {
   return (
-    <div className="border border-[#dce4d8] bg-white p-4">
+    <div className="rounded-xl border border-[#303a49] bg-[#10151d] p-4 text-[#e6edf8]">
       <div className="flex gap-3">
-        <div className={`flex h-10 w-10 items-center justify-center ${checked ? "bg-emerald-50 text-emerald-700" : "bg-[#eef3ec] text-[#526258]"}`}>
+        <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${checked ? "bg-emerald-400/15 text-emerald-300" : "bg-[#20295b] text-[#aeb8ff]"}`}>
           {checked ? <Check className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
         </div>
         <div className="min-w-0">
           <p className="font-semibold">{title}</p>
-          <p className="mt-1 break-words text-sm leading-6 text-[#66746e]">{detail}</p>
+          <p className="mt-1 break-words text-sm leading-6 text-[#9baac0]">{detail}</p>
         </div>
       </div>
     </div>
@@ -2089,19 +2083,19 @@ function BeneficiaryEditor({
   const walletInvalid = beneficiary.wallet.trim().length > 0 && !isWalletAddress(beneficiary.wallet);
 
   return (
-    <div className="border border-[#dce4d8] bg-white p-3">
+    <div className="rounded-xl border border-[#303a49] bg-[#10151d] p-3 text-[#e6edf8]">
       <div className="flex items-center gap-2">
         <span className={`h-8 w-8 shrink-0 ${beneficiary.color}`} />
         <input
           aria-label={text.name}
-          className="min-w-0 flex-1 border border-[#e3e8df] bg-[#fbfcf8] px-2 py-2 text-sm font-semibold outline-none focus:border-[#17231e]"
+          className="min-w-0 flex-1 rounded-lg border border-[#334052] bg-[#0b1018] px-2 py-2 text-sm font-semibold text-[#f5f7fb] outline-none placeholder:text-[#8190a6] focus:border-[#5868ea]"
           onChange={(event) => onUpdateBeneficiary(beneficiary.id, "name", event.target.value)}
           placeholder={text.namePlaceholder}
           value={beneficiary.name}
         />
         <button
           aria-label={text.remove}
-          className="flex h-9 w-9 items-center justify-center border border-[#e3e8df] text-[#66746e] transition hover:border-red-300 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#334052] text-[#9baac0] transition hover:border-red-300 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-40"
           disabled={!canRemove}
           onClick={() => onRemoveBeneficiary(beneficiary.id)}
           type="button"
@@ -2112,8 +2106,8 @@ function BeneficiaryEditor({
       <div className="mt-2 grid grid-cols-[1fr_88px] gap-2">
         <input
           aria-label={text.wallet}
-          className={`min-w-0 border bg-[#fbfcf8] px-2 py-2 text-xs outline-none focus:border-[#17231e] ${
-            walletInvalid ? "border-red-300" : "border-[#e3e8df]"
+          className={`min-w-0 rounded-lg border bg-[#0b1018] px-2 py-2 text-xs text-[#f5f7fb] outline-none placeholder:text-[#8190a6] focus:border-[#5868ea] ${
+            walletInvalid ? "border-red-400" : "border-[#334052]"
           }`}
           onChange={(event) => onUpdateBeneficiary(beneficiary.id, "wallet", event.target.value)}
           placeholder={text.walletPlaceholder}
@@ -2121,7 +2115,7 @@ function BeneficiaryEditor({
         />
         <input
           aria-label={text.share}
-          className="border border-[#e3e8df] bg-[#fbfcf8] px-2 py-2 text-right text-sm font-semibold outline-none focus:border-[#17231e]"
+          className="rounded-lg border border-[#334052] bg-[#0b1018] px-2 py-2 text-right text-sm font-semibold text-[#f5f7fb] outline-none focus:border-[#5868ea]"
           max={100}
           min={0}
           onChange={(event) => onUpdateBeneficiary(beneficiary.id, "percent", event.target.value)}
@@ -2150,8 +2144,8 @@ function Checklist({ items }: { items: string[] }) {
 
 function QuoteMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="border border-[#dce4d8] bg-white p-4">
-      <p className="text-sm text-[#66746e]">{label}</p>
+    <div className="rounded-xl border border-[#303a49] bg-[#10151d] p-4 text-[#f5f7fb]">
+      <p className="text-sm text-[#9baac0]">{label}</p>
       <p className="mt-2 text-xl font-semibold">{value}</p>
     </div>
   );
@@ -2167,9 +2161,9 @@ function RuleRow({
   value: string;
 }) {
   return (
-    <div className="flex items-center justify-between border border-[#dce4d8] bg-white p-3">
+    <div className="flex items-center justify-between rounded-xl border border-[#303a49] bg-[#10151d] p-3 text-[#f5f7fb]">
       <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 items-center justify-center bg-amber-50 text-amber-700">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#20295b] text-[#aeb8ff]">
           <Icon className="h-5 w-5" />
         </div>
         <p className="text-sm font-semibold">{label}</p>
@@ -2191,10 +2185,10 @@ function ConsentCheck({
   onChange: (checked: boolean) => void;
 }) {
   return (
-    <label className={`flex items-start gap-3 border border-[#dce4d8] bg-white p-3 text-sm ${disabled ? "opacity-50" : ""}`}>
+    <label className={`flex items-start gap-3 rounded-xl border border-[#303a49] bg-[#10151d] p-3 text-sm text-[#e6edf8] ${disabled ? "opacity-50" : ""}`}>
       <input
         checked={checked}
-        className="mt-1 h-4 w-4 accent-[#17231e]"
+        className="mt-1 h-4 w-4 accent-[#5868ea]"
         disabled={disabled}
         onChange={(event) => onChange(event.target.checked)}
         type="checkbox"
@@ -2206,7 +2200,7 @@ function ConsentCheck({
 
 function StatusPill({ complete, label }: { complete: boolean; label: string }) {
   return (
-    <div className={`flex items-center gap-2 border px-3 py-2 text-xs ${complete ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-[#e3e8df] bg-white text-[#66746e]"}`}>
+    <div className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs ${complete ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-200" : "border-[#334052] bg-[#111722] text-[#9baac0]"}`}>
       <span className="flex h-4 w-4 items-center justify-center">
         {complete && <Check className="h-3.5 w-3.5" />}
       </span>
@@ -2217,8 +2211,8 @@ function StatusPill({ complete, label }: { complete: boolean; label: string }) {
 
 function SummaryFact({ label, value }: { label: string; value: string }) {
   return (
-    <div className="border border-[#dce4d8] bg-[#f8faf6] p-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#66746e]">{label}</p>
+    <div className="rounded-xl border border-[#303a49] bg-[#10151d] p-4 text-[#f5f7fb]">
+      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8190a6]">{label}</p>
       <p className="mt-2 break-words font-semibold">{value}</p>
     </div>
   );

@@ -270,10 +270,10 @@ export function WorldIdGate({
       <div className="flex flex-col items-center gap-3 py-8 text-center">
         {error && <p className={errorClass}>{error}</p>}
         {status === "verified" ? (
-          <p className="text-sm font-semibold text-emerald-700">{copy.statuses.verified}</p>
+          <p className="text-sm font-semibold text-emerald-300">{copy.statuses.verified}</p>
         ) : (
           <button
-            className="rounded-full bg-[#202027] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#5868ea] disabled:cursor-not-allowed disabled:bg-[#d9d9e0] disabled:text-[#858590]"
+            className="rounded-xl bg-[#5868ea] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#4f63e8] disabled:cursor-not-allowed disabled:bg-[#303a49] disabled:text-[#8190a6]"
             disabled={buttonDisabled}
             onClick={startVerification}
             type="button"
