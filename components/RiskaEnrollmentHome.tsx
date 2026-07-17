@@ -118,7 +118,6 @@ const beneficiaryColors = ["bg-rose-500", "bg-amber-500", "bg-emerald-500", "bg-
 const steps: WizardStep[] = [
   { accent: "bg-[#5868ea]", icon: Fingerprint, id: "identity" },
   { accent: "bg-[#5868ea]", icon: Users, id: "beneficiaries" },
-  { accent: "bg-[#5868ea]", icon: CircleDollarSign, id: "quote" },
   { accent: "bg-[#5868ea]", icon: FileCheck2, id: "confirm" }
 ];
 
@@ -696,7 +695,9 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
     };
   }, [hydrated, testnetConfigured, walletAddress]);
 
-  const visibleStepId = state.issuedPolicyId ? "confirm" : activeStepId;
+  // Existing local sessions may still point to the former quote step. It now
+  // lives inside Dashboard, so they continue directly there instead of resetting.
+  const visibleStepId = state.issuedPolicyId || activeStepId === "quote" ? "confirm" : activeStepId;
   const activeStepIndex = steps.findIndex((step) => step.id === visibleStepId);
   const activeStep = steps[activeStepIndex] ?? steps[0];
   const beneficiaryTotal = state.beneficiaries.reduce((total, beneficiary) => total + beneficiary.percent, 0);
@@ -866,7 +867,7 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
           <div className="space-y-4">
             {!state.issuedPolicyId && (
               <StepRail
-                activeStepId={activeStepId}
+                activeStepId={visibleStepId}
                 completion={completion}
                 content={content}
                 onStepSelect={setActiveStepId}
@@ -1229,7 +1230,7 @@ function BeneficiariesScreen({
   );
 }
 
-function QuoteScreen({ content, onSetState, state }: EnrollmentWizardProps) {
+function QuoteScreen({ content, onSetState, state }: Pick<EnrollmentWizardProps, "content" | "onSetState" | "state">) {
   const text = content.wizard.quote;
   const ruleIcons = [Percent, HeartHandshake, BadgeCheck, Users];
 
@@ -1297,6 +1298,10 @@ function ConfirmScreen({
       <div className="rounded-xl border border-[#303a49] bg-[#10151d] p-4">
         <p className="text-sm text-[#aeb8ff]">{text.termsHash}</p>
         <p className="mt-2 break-all font-mono text-xs text-[#c5d1e5]">{RISKA_POLICY_TERMS_HASH}</p>
+      </div>
+
+      <div className="border-t border-[#202936] pt-5">
+        <QuoteScreen content={content} onSetState={onSetState} state={state} />
       </div>
 
       <TestnetIssuePanel
