@@ -16,7 +16,6 @@ import {
   HeartHandshake,
   Percent,
   RefreshCw,
-  Send,
   ShieldCheck,
   Trash2,
   UserPlus,
@@ -26,7 +25,6 @@ import {
 import {
   useCallback,
   useEffect,
-  useRef,
   useState,
   type ComponentType,
   type Dispatch,
@@ -108,13 +106,11 @@ type ExistingPolicyLookupState =
   | { status: "none" }
   | { message: string; status: "error" };
 
-type TestnetAuxiliaryTokenOption = NonNullable<RiskaTestnetDeployment["testAuxiliaryTokens"]>[string];
 type AssetOperation = "dashboard" | "deposit" | "withdraw";
 
 const storageKey = "riska.enrollment.v2";
 const pendingWalletStorageKey = "riska.pending-wallet-session";
 const beneficiaryColors = ["bg-rose-500", "bg-amber-500", "bg-emerald-500", "bg-cyan-500", "bg-violet-500"];
-const testAuxiliaryTokenOrder = ["mBTC", "mETH", "mSOL"];
 
 const steps: WizardStep[] = [
   { accent: "bg-[#5868ea]", icon: Fingerprint, id: "identity" },
@@ -1417,7 +1413,6 @@ function PolicyControlPanel({
   const [workingAction, setWorkingAction] = useState<TestnetPolicyAction | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusTone, setStatusTone] = useState("text-[#66746e]");
-  const tokenAddressInputRef = useRef<HTMLInputElement | null>(null);
 
   const refreshPolicy = useCallback(async () => {
     const nextPolicy = await getTestnetPolicy({ policyId, viewer: walletAddress });
@@ -1501,19 +1496,8 @@ function PolicyControlPanel({
     ? yieldConfigured && availableYieldStrategies.length > 0 && status === 1 && policy.totalPrincipal > yieldAllocated
     : false;
   const canUseTokenVault = policy ? canUseHolderAction && (minimumFunded || status === 2) : false;
-  const tokenVaultShortfall = policy && policy.remainingMinimumPrincipal < MINIMUM_POLICY_PRINCIPAL
-    ? MINIMUM_POLICY_PRINCIPAL - policy.remainingMinimumPrincipal
-    : 0n;
-  const tokenVaultMessage = policy && !canUseTokenVault
-    ? canUseHolderAction
-      ? text.tokenVaultLocked(formatUsdcAmount(tokenVaultShortfall))
-      : text.tokenVaultClosed
-    : null;
-  const auxiliaryTokenOptions = getTestnetAuxiliaryTokenOptions(deployment);
-  const normalizedTokenAddress = tokenAddress.trim().toLowerCase();
   const hasTokenAddress = isWalletAddress(tokenAddress);
-  const tokenAddressInvalid = tokenAddress.trim().length > 0 && !hasTokenAddress;
-  const selectedPresetToken = auxiliaryTokenOptions.find((token) => token.address.toLowerCase() === normalizedTokenAddress);
+  const normalizedTokenAddress = tokenAddress.trim().toLowerCase();
   const selectedAuxiliaryToken = policy?.auxiliaryTokens.find(
     (token) => token.address.toLowerCase() === normalizedTokenAddress
   );
@@ -1645,7 +1629,7 @@ function PolicyControlPanel({
                     <p className="mt-1 text-sm text-[#8d9bb0]">{assetOperation === "deposit" ? text.operationHint : text.withdrawExtraAmount}</p>
                   </div>
                   <span className="rounded-full border border-[#3a4656] bg-[#0b1018] px-3 py-1 text-sm font-semibold text-[#c8ff75]">
-                    {tokenAddress ? selectedPresetToken?.symbol ?? selectedAuxiliaryToken?.symbol ?? "ERC20" : "USDC"}
+                    {tokenAddress ? selectedAuxiliaryToken?.symbol ?? "ERC20" : "USDC"}
                   </span>
                 </div>
                 <label className="mt-5 block text-xs font-semibold uppercase tracking-[0.14em] text-[#8d9bb0]">
@@ -1777,124 +1761,6 @@ function PolicyControlPanel({
             </div>
           </div>
 
-          <div className="mt-3 rounded-xl border border-[#202936] bg-[#10151d] p-4">
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8d9bb0]">{text.tokenVault}</p>
-              <p className="text-sm font-semibold text-[#f5f7fb]">
-                {policy.auxiliaryTokens.length > 0 ? `${policy.auxiliaryTokens.length}` : text.noAuxiliaryTokens}
-              </p>
-            </div>
-            <p className="mt-2 text-sm leading-6 text-[#8d9bb0]">{text.tokenVaultNote}</p>
-            {tokenVaultMessage && (
-              <p className="mt-2 rounded-lg border border-amber-800/60 bg-amber-950/30 px-3 py-2 text-sm leading-6 text-amber-200">
-                {tokenVaultMessage}
-              </p>
-            )}
-
-            {policy.auxiliaryTokens.length > 0 && (
-              <div className="mt-3 overflow-hidden rounded-xl border border-[#202936] bg-[#0b1018]">
-                <div className="hidden grid-cols-[1.2fr_1fr_0.7fr_auto] gap-4 border-b border-[#202936] px-5 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-[#8190a6] md:grid">
-                  <span>{text.asset}</span><span>{text.balance}</span><span>{text.allocation}</span><span>{text.actions}</span>
-                </div>
-                {policy.auxiliaryTokens.map((token) => (
-                  <AssetTableRow
-                    balance={formatTokenAmount(token.balance, token.decimals)}
-                    key={token.address}
-                    label={token.symbol}
-                    onReceive={() => { chooseAsset(token.address); setAssetOperation("deposit"); }}
-                    onSend={() => { chooseAsset(token.address); setAssetOperation("withdraw"); }}
-                    receiveLabel={text.depositFunds}
-                    sendLabel={text.withdrawFunds}
-                    share={shortAddress(token.address)}
-                  />
-                ))}
-              </div>
-            )}
-
-            {auxiliaryTokenOptions.length > 0 && (
-              <div className="mt-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8d9bb0]">{text.commonTokens}</p>
-                <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  {auxiliaryTokenOptions.map((token) => {
-                    const selected = selectedPresetToken?.address === token.address;
-
-                    return (
-                      <button
-                        aria-pressed={selected}
-                        className={`flex min-h-14 flex-col justify-center border px-3 py-2 text-left transition ${
-                          selected
-                            ? "border-[#c8ff75] bg-[#1d2b25] text-[#c8ff75]"
-                            : "border-[#334052] bg-[#0b1018] text-[#e6edf8] hover:border-[#718299]"
-                        }`}
-                        key={token.address}
-                        onClick={() => setTokenAddress(token.address)}
-                        type="button"
-                      >
-                        <span className="text-sm font-semibold">{token.symbol}</span>
-                        <span className="mt-1 font-mono text-[11px] leading-none text-[#8d9bb0]">{shortAddress(token.address)}</span>
-                      </button>
-                    );
-                  })}
-                  <button
-                    className="flex min-h-14 flex-col justify-center rounded-lg border border-[#334052] bg-[#0b1018] px-3 py-2 text-left text-[#e6edf8] transition hover:border-[#718299]"
-                    onClick={() => {
-                      tokenAddressInputRef.current?.focus();
-                      tokenAddressInputRef.current?.select();
-                    }}
-                    type="button"
-                  >
-                    <span className="text-sm font-semibold">{text.customToken}</span>
-                    <span className="mt-1 font-mono text-[11px] leading-none text-[#8d9bb0]">0x...</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {selectedPresetToken && (
-              <p className="mt-3 text-xs font-semibold text-[#c8ff75]">
-                {text.selectedToken}: {selectedPresetToken.name} ({selectedPresetToken.symbol})
-              </p>
-            )}
-
-            <div className="mt-3 grid gap-2 lg:grid-cols-[1.4fr_0.8fr_auto_auto]">
-              <input
-                aria-label={text.tokenAddress}
-                className="min-h-11 rounded-lg border border-[#334052] bg-[#0b1018] px-3 text-sm text-[#f5f7fb] outline-none focus:border-[#c8ff75]"
-                onChange={(event) => setTokenAddress(event.target.value)}
-                placeholder="0x..."
-                ref={tokenAddressInputRef}
-                type="text"
-                value={tokenAddress}
-              />
-              <input
-                aria-label={text.tokenAmount}
-                className="min-h-11 rounded-lg border border-[#334052] bg-[#0b1018] px-3 text-sm text-[#f5f7fb] outline-none focus:border-[#c8ff75]"
-                min="0"
-                onChange={(event) => setTokenAmount(event.target.value)}
-                step="any"
-                type="number"
-                value={tokenAmount}
-              />
-              <PolicyActionButton
-                action="depositToken"
-                disabled={!canUseTokenVault || !hasTokenAddress || isWorking}
-                icon={Send}
-                label={text.depositToken}
-                onClick={runAction}
-                workingAction={workingAction}
-              />
-              <PolicyActionButton
-                action="withdrawToken"
-                disabled={!canWithdrawToken || isWorking}
-                icon={HandCoins}
-                label={text.withdrawToken}
-                onClick={runAction}
-                workingAction={workingAction}
-              />
-            </div>
-            {tokenAddressInvalid && <p className="mt-2 text-sm text-red-700">{text.tokenAddressInvalid}</p>}
-          </div>
-
           <p className="mt-3 rounded-lg border border-amber-800/60 bg-amber-950/30 px-3 py-2 text-xs leading-5 text-amber-200">
             {text.claimAllFeeNote}
           </p>
@@ -1955,21 +1821,6 @@ function PolicyControlPanel({
       {statusMessage && <p className={`mt-3 text-sm ${statusTone}`}>{statusMessage}</p>}
     </div>
   );
-}
-
-function getTestnetAuxiliaryTokenOptions(deployment: RiskaTestnetDeployment | null): TestnetAuxiliaryTokenOption[] {
-  const order = new Map(testAuxiliaryTokenOrder.map((symbol, index) => [symbol, index]));
-
-  return Object.values(deployment?.testAuxiliaryTokens ?? {}).sort((left, right) => {
-    const leftOrder = order.get(left.symbol) ?? Number.MAX_SAFE_INTEGER;
-    const rightOrder = order.get(right.symbol) ?? Number.MAX_SAFE_INTEGER;
-
-    if (leftOrder !== rightOrder) {
-      return leftOrder - rightOrder;
-    }
-
-    return left.symbol.localeCompare(right.symbol);
-  });
 }
 
 function PolicyActionButton({
