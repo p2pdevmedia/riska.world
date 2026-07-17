@@ -37,7 +37,7 @@ import { Navbar } from "@/components/Navbar";
 import { WalletAuth, type WalletAuthSession } from "@/components/WalletAuth";
 import { WorldIdGate, type PolicyHumanReservationView } from "@/components/WorldIdGate";
 import type { Language } from "@/lib/i18n";
-import { RISKA_POLICY_TERMS_HASH, WORLDCHAIN_SEPOLIA_CHAIN_ID, type RiskaTestnetDeployment } from "@/lib/riska-testnet";
+import { WORLDCHAIN_SEPOLIA_CHAIN_ID, type RiskaTestnetDeployment } from "@/lib/riska-testnet";
 import {
   formatTestnetContractError,
   formatTokenAmount,
@@ -191,7 +191,7 @@ const copy = {
       submitted: "Policy issued",
       steps: {
         beneficiaries: { meta: "Beneficiaries", title: "Beneficiary allocation" },
-        confirm: { meta: "Dashboard", title: "Review and consent" },
+        confirm: { meta: "Create policy / vault", title: "Create policy / vault" },
         identity: { meta: "Wallet + World ID", title: "Verified human" },
         quote: { meta: "30 USDC / month", title: "Policy quote" }
       },
@@ -401,7 +401,7 @@ const copy = {
       submitted: "Póliza emitida",
       steps: {
         beneficiaries: { meta: "Beneficiarios", title: "Asignación de beneficiarios" },
-        confirm: { meta: "Dashboard", title: "Revisión y consentimiento" },
+        confirm: { meta: "Crear póliza / bóveda", title: "Crear póliza / bóveda" },
         identity: { meta: "Wallet + World ID", title: "Humano verificado" },
         quote: { meta: "30 USDC / mes", title: "Cotización de póliza" }
       },
@@ -1294,21 +1294,7 @@ function ConfirmScreen({
 
   return (
     <div className="space-y-5">
-      <div className="grid gap-3 md:grid-cols-2">
-        <SummaryFact label={text.wallet} value={state.walletSession ? shortAddress(state.walletSession.address) : "-"} />
-        <SummaryFact label={text.proof} value={state.humanReservation ? shortProofId(state.humanReservation.nullifier) : "-"} />
-        <SummaryFact label={text.firstPayment} value="30 USDC" />
-        <SummaryFact label={text.network} value="World Chain Sepolia" />
-      </div>
-
-      <div className="rounded-xl border border-[#303a49] bg-[#10151d] p-4">
-        <p className="text-sm text-[#aeb8ff]">{text.termsHash}</p>
-        <p className="mt-2 break-all font-mono text-xs text-[#c5d1e5]">{RISKA_POLICY_TERMS_HASH}</p>
-      </div>
-
-      <div className="border-t border-[#202936] pt-5">
-        <QuoteScreen content={content} onSetState={onSetState} state={state} />
-      </div>
+      <QuoteScreen content={content} onSetState={onSetState} state={state} />
 
       <TestnetIssuePanel
         content={content}
