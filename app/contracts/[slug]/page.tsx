@@ -49,7 +49,7 @@ export default async function ContractPage({ params }: ContractPageProps) {
   const sourceCode = contract.sourceFile ? await readContractSource(contract.sourceFile) : null;
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f5f7f2] text-[#18211d]">
+    <div className="riska-dark-surface flex min-h-screen flex-col bg-[#080b10] text-[#f5f7fb]">
       <Navbar />
       <main className="flex-1">
         <ContractDetailContent contract={contract} sourceCode={sourceCode} />

@@ -864,7 +864,7 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
       : !completion[activeStep.id];
 
   return (
-    <div className={`min-h-screen overflow-x-hidden ${view === "apply" ? "bg-[#080b10] text-[#f5f7fb]" : "bg-[#f4f4f8] text-[#202027]"}`}>
+    <div className="riska-dark-surface min-h-screen overflow-x-hidden bg-[#080b10] text-[#f5f7fb]">
       <Navbar />
       <main className="pb-28">
         {view === "home" && <WelcomeScreen content={content} onStartApplication={startApplication} />}

@@ -19,12 +19,12 @@ export function ContractDetailContent({ contract, sourceCode }: ContractDetailCo
   return (
     <div className="pb-24">
       <section className="mx-auto w-full max-w-5xl px-5 py-12 md:px-8">
-        <Link href="/docs" className="text-sm font-semibold text-emerald-700 transition hover:text-[#18211d]">
+        <Link href="/docs" className="text-sm font-semibold text-[#aeb8ff] transition hover:text-[#f5f7fb]">
           {labels.backLabel}
         </Link>
         <div className="mt-10 grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
           <div className="space-y-6">
-            <p className="text-sm font-semibold text-emerald-700">{labels.eyebrow}</p>
+            <p className="text-sm font-semibold text-[#aeb8ff]">{labels.eyebrow}</p>
             <div className="space-y-4">
               <h1 className="text-4xl font-semibold tracking-tight text-[#18211d] sm:text-5xl">{docs.title}</h1>
               <p className="text-base leading-7 text-[#516159] sm:text-lg">{docs.summary}</p>
@@ -35,12 +35,12 @@ export function ContractDetailContent({ contract, sourceCode }: ContractDetailCo
                   href={contract.explorerUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="border border-[#cbd7cf] bg-white px-5 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-[#26342d] transition hover:border-[#17231e] hover:text-[#18211d]"
+                  className="rounded-lg border border-[#334052] bg-[#151d28] px-5 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-[#d8e0ee] transition hover:border-[#5868ea] hover:text-[#f5f7fb]"
                 >
                   {labels.explorerLabel}
                 </a>
               ) : null}
-              <span className="border border-emerald-200 bg-emerald-50 px-5 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-emerald-800">
+              <span className="rounded-lg border border-[#5868ea]/40 bg-[#20295b] px-5 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-[#c8d0ff]">
                 {contract.sourceIncluded ? labels.sourceIncludedLabel : labels.sourcePendingLabel}
               </span>
             </div>

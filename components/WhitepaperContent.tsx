@@ -9,7 +9,7 @@ export function WhitepaperContent() {
   return (
     <div className="mx-auto w-full max-w-4xl px-5 py-12 md:px-8 md:py-16">
       <header className="mb-12 space-y-4 text-center">
-        <p className="text-sm font-semibold text-emerald-700">
+        <p className="text-sm font-semibold text-[#aeb8ff]">
           {whitepaper.header.badge}
         </p>
         <h1 className="text-3xl font-semibold tracking-tight text-[#18211d] sm:text-5xl">
@@ -20,7 +20,7 @@ export function WhitepaperContent() {
           <a
             href="/whitepapers/riska-whitepaper-v2.pdf"
             download
-            className="bg-[#17231e] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#26342d] hover:text-white"
+            className="rounded-lg bg-[#5868ea] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#4f63e8] hover:text-white"
           >
             {whitepaper.download.label}
           </a>

@@ -3,31 +3,58 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 body {
-  @apply bg-[#f4f4f8] text-[#202027] font-sans antialiased;
+  @apply bg-[#080b10] text-[#f5f7fb] font-sans antialiased;
   letter-spacing: -0.012em;
 }
 
 a {
-  @apply text-[#4f63e8] hover:text-[#202027] transition-colors;
+  @apply text-[#aeb8ff] hover:text-white transition-colors;
 }
 
 .glass-panel {
-  @apply rounded-2xl border border-[#e2e2e8] bg-white shadow-[0_12px_36px_rgba(30,30,45,0.06)];
+  @apply rounded-2xl border border-[#202936] bg-[#10151d] shadow-[0_16px_38px_rgba(8,11,16,0.2)];
 }
 
 .section-title {
-  @apply text-4xl md:text-5xl font-semibold tracking-tight text-[#202027];
+  @apply text-4xl md:text-5xl font-semibold tracking-tight text-[#f5f7fb];
 }
 
 .section-subtitle {
-  @apply text-lg md:text-xl text-[#696975];
+  @apply text-lg md:text-xl text-[#9baac0];
 }
 
 ::selection {
-  background: #dfe3ff;
-  color: #202027;
+  background: #5868ea;
+  color: #f5f7fb;
+}
+
+.riska-dark-surface .text-\[\#18211d\],
+.riska-dark-surface .text-\[\#202027\] {
+  color: #f5f7fb !important;
+}
+
+.riska-dark-surface .text-\[\#405047\],
+.riska-dark-surface .text-\[\#516159\],
+.riska-dark-surface .text-\[\#66746e\],
+.riska-dark-surface .text-\[\#696975\],
+.riska-dark-surface .text-\[\#777782\] {
+  color: #9baac0 !important;
+}
+
+.riska-dark-surface .bg-white,
+.riska-dark-surface .bg-\[\#f4f4f8\],
+.riska-dark-surface .bg-\[\#f5f7f2\],
+.riska-dark-surface .bg-\[\#fbfcf8\] {
+  background-color: #10151d !important;
+}
+
+.riska-dark-surface .border-\[\#cbd7cf\],
+.riska-dark-surface .border-\[\#d9ded5\],
+.riska-dark-surface .border-\[\#e2e2e8\],
+.riska-dark-surface .border-\[\#e3e8df\] {
+  border-color: #303a49 !important;
 }

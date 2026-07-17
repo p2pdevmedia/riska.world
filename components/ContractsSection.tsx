@@ -24,7 +24,7 @@ export function ContractsSection() {
             <article key={contract.id} className="glass-panel flex flex-col justify-between gap-6 p-6">
               <div className="space-y-4">
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#aeb8ff]">
                     {contract.network}
                   </p>
                   <h3 className="text-lg font-semibold text-[#18211d]">{content?.name ?? contract.id}</h3>
@@ -37,11 +37,11 @@ export function ContractsSection() {
                     {contractsText.addressLabel}
                   </span>
                   {contract.address ? (
-                    <code className="mt-2 block break-words border border-[#e3e8df] bg-[#fbfcf8] px-3 py-2 font-mono text-sm text-emerald-800">
+                    <code className="mt-2 block break-words rounded-lg border border-[#334052] bg-[#0b1018] px-3 py-2 font-mono text-sm text-[#aeb8ff]">
                       {contract.address}
                     </code>
                   ) : (
-                    <p className="mt-2 border border-[#e3e8df] bg-[#fbfcf8] px-3 py-2 text-sm text-[#66746e]">
+                    <p className="mt-2 rounded-lg border border-[#334052] bg-[#0b1018] px-3 py-2 text-sm text-[#9baac0]">
                       {contractsText.pendingLabel}
                     </p>
                   )}
@@ -71,4 +71,4 @@ export function ContractsSection() {
 }
 
 const linkClassName =
-  "border border-[#cbd7cf] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-[#26342d] transition hover:border-[#17231e] hover:text-[#18211d]";
+  "rounded-lg border border-[#334052] bg-[#151d28] px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-[#d8e0ee] transition hover:border-[#5868ea] hover:text-[#f5f7fb]";

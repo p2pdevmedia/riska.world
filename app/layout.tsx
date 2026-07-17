@@ -22,7 +22,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-[#f4f4f8] text-[#202027]">
+      <body className="min-h-screen bg-[#080b10] text-[#f5f7fb]">
         <MiniAppProvider>
           <LanguageProvider>{children}</LanguageProvider>
         </MiniAppProvider>
