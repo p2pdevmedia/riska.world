@@ -1968,6 +1968,18 @@ function DashboardMetric({ accent = false, label, value }: { accent?: boolean; l
   );
 }
 
+function getTokenLogo(symbol: string) {
+  const normalized = symbol.replace(/^m/, "").toUpperCase();
+  const logos: Record<string, string> = {
+    BTC: "https://cryptologos.cc/logos/bitcoin-btc-logo.png?v=040",
+    ETH: "https://cryptologos.cc/logos/ethereum-eth-logo.png?v=040",
+    SOL: "https://cryptologos.cc/logos/solana-sol-logo.png?v=040",
+    USDC: "https://cryptologos.cc/logos/usd-coin-usdc-logo.png?v=040"
+  };
+
+  return logos[normalized];
+}
+
 function AssetTableRow({
   balance,
   label,
@@ -1985,10 +1997,16 @@ function AssetTableRow({
   sendLabel: string;
   share: string;
 }) {
+  const logo = getTokenLogo(label);
+
   return (
     <div className="grid gap-3 border-b border-[#202936] px-5 py-4 last:border-b-0 md:grid-cols-[1.2fr_1fr_0.7fr_auto] md:items-center md:gap-4">
       <div className="flex items-center gap-3">
-        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#20295b] text-sm font-bold text-[#aeb8ff]">{label.slice(0, 1)}</span>
+        {logo ? (
+          <img alt={`${label} logo`} className="h-9 w-9 rounded-xl bg-[#20295b] object-cover" src={logo} />
+        ) : (
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#20295b] text-sm font-bold text-[#aeb8ff]">{label.slice(0, 1)}</span>
+        )}
         <span className="font-semibold text-[#f5f7fb]">{label}</span>
       </div>
       <p className="font-semibold text-[#f5f7fb]">{balance}</p>
