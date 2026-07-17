@@ -16,6 +16,7 @@
     "contracts:deploy:testnet-token-faucet:worldchain-sepolia": "hardhat run --config hardhat.config.cjs scripts/deploy-testnet-token-faucet.cjs --network worldchainSepolia"
   },
   "dependencies": {
+    "@metamask/sdk": "^0.34.0",
     "@prisma/client": "5.13.0",
     "@worldcoin/idkit": "^4.1.6",
     "@worldcoin/minikit-js": "^2.0.3",

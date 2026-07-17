@@ -11,9 +11,7 @@ import { WorldIdGate } from "@/components/WorldIdGate";
 import {
   connectWallet,
   disconnectWallet,
-  isMobileMetaMaskDeeplinkRequired,
-  onWalletChange,
-  openMetaMaskMobile
+  onWalletChange
 } from "@/lib/web3/metamask";
 
 function truncateAddress(address: string) {
@@ -118,12 +116,6 @@ export function WalletAuth({
       setMessage({ type: "welcome" });
     } catch (error) {
       console.error(error);
-
-      if (isMobileMetaMaskDeeplinkRequired(error)) {
-        openMetaMaskMobile();
-        return;
-      }
-
       setState({ status: "disconnected" });
       if (error instanceof Error && error.message) {
         setMessage({ type: "custom", text: error.message });

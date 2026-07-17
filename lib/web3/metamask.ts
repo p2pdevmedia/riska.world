@@ -33,9 +33,9 @@ type Eip6963ProviderDetail = {
 const METAMASK_RDNS = "io.metamask";
 const WALLET_REQUEST_TIMEOUT_MS = 45_000;
 const PROVIDER_INITIALIZATION_TIMEOUT_MS = 1_200;
-const MOBILE_METAMASK_DEEPLINK_ERROR = "METAMASK_MOBILE_DEEPLINK_REQUIRED";
 
 let cachedMetaMaskProvider: MetaMaskEthereum | undefined;
+let cachedMobileSdkProvider: MetaMaskEthereum | undefined;
 
 function getInjectedMetaMask(): MetaMaskEthereum | undefined {
   if (typeof window === "undefined") {
@@ -119,19 +119,6 @@ function waitForInjectedMetaMask(): Promise<MetaMaskEthereum | undefined> {
   });
 }
 
-export function isMobileMetaMaskDeeplinkRequired(error: unknown): boolean {
-  return error instanceof Error && error.message === MOBILE_METAMASK_DEEPLINK_ERROR;
-}
-
-export function openMetaMaskMobile(): void {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  const dappUrl = window.location.href.replace(/^https?:\/\//, "");
-  window.location.assign(`https://metamask.app.link/dapp/${dappUrl}`);
-}
-
 function isMobileDevice(): boolean {
   if (typeof navigator === "undefined") {
     return false;
@@ -140,14 +127,36 @@ function isMobileDevice(): boolean {
   return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
+async function getMobileSdkProvider(): Promise<MetaMaskEthereum | undefined> {
+  if (!isMobileDevice()) {
+    return undefined;
+  }
+
+  if (cachedMobileSdkProvider) {
+    return cachedMobileSdkProvider;
+  }
+
+  const { default: MetaMaskSDK } = await import("@metamask/sdk");
+  const sdk = new MetaMaskSDK({
+    dappMetadata: {
+      name: "Riska",
+      url: window.location.origin
+    }
+  });
+
+  const provider = sdk.getProvider();
+  if (!provider) {
+    return undefined;
+  }
+
+  cachedMobileSdkProvider = provider as unknown as MetaMaskEthereum;
+  return cachedMobileSdkProvider;
+}
+
 export async function getBrowserEthereumProvider(): Promise<MetaMaskEthereum> {
-  const ethereum = await getMetaMaskProvider();
+  const ethereum = (await getMetaMaskProvider()) ?? (await getMobileSdkProvider());
 
   if (!ethereum) {
-    if (isMobileDevice()) {
-      throw new Error(MOBILE_METAMASK_DEEPLINK_ERROR);
-    }
-
     throw new Error("MetaMask no está disponible en este navegador.");
   }
 
