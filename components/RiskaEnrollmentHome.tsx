@@ -1553,7 +1553,7 @@ function PolicyControlPanel({
           <p className="text-sm font-semibold text-[#f5f7fb]">{text.title}</p>
           {policy && (
             <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs">
-              <span className="text-[#8d9bb0]">{text.status}: <strong className="font-semibold text-[#c8ff75]">{getPolicyStatusLabel(policy.status)}</strong></span>
+              <span className="text-[#8d9bb0]">{text.status}: <strong className="font-semibold text-[#aeb8ff]">{getPolicyStatusLabel(policy.status)}</strong></span>
               <span className="text-[#8d9bb0]">{text.deathNotice}: <strong className="font-semibold text-[#f5f7fb]">{policy.deathNotice.active ? formatUnixDate(policy.deathNotice.reportedAt) : text.noDeathNotice}</strong></span>
               <span className="text-[#8d9bb0]">{text.lastActivity}: <strong className="font-semibold text-[#f5f7fb]">{formatUnixDate(policy.lastHolderInteractionAt)}</strong></span>
             </div>
@@ -1585,7 +1585,7 @@ function PolicyControlPanel({
                     <DashboardMetric label={text.payoutProgress} value={`${policy.payoutsMade} / 120`} />
                   </div>
                   <div className="mt-6 flex flex-wrap gap-2">
-                    <button className="flex h-11 items-center gap-2 rounded-xl bg-[#c8ff75] px-4 text-sm font-semibold text-[#10170f] transition hover:bg-[#d8ff9b]" onClick={() => openAssetOperation("deposit", "", true)} type="button">
+                    <button className="flex h-11 items-center gap-2 rounded-xl bg-[#5868ea] px-4 text-sm font-semibold text-white transition hover:bg-[#4f63e8]" onClick={() => openAssetOperation("deposit", "", true)} type="button">
                       <ArrowDownToLine className="h-4 w-4" />
                       {text.depositFunds}
                     </button>
@@ -1601,7 +1601,7 @@ function PolicyControlPanel({
                   <p className="text-sm font-medium text-[#9baac0]">{text.policyHistory}</p>
                   <div className="mt-5 flex h-24 items-end gap-1.5 border-b border-[#2b3543] pb-2">
                     {[28, 36, 32, 52, 65, 61, 78, 69, 84, 72, 64, 76].map((height, index) => (
-                      <span className="flex-1 rounded-t-sm bg-gradient-to-t from-[#214a42] to-[#9be669]" key={index} style={{ height: `${height}%` }} />
+                      <span className="flex-1 rounded-t-sm bg-gradient-to-t from-[#2a347e] to-[#aeb8ff]" key={index} style={{ height: `${height}%` }} />
                     ))}
                   </div>
                   <div className="relative mt-5 flex items-center justify-between gap-3">
@@ -1609,7 +1609,7 @@ function PolicyControlPanel({
                       <p className="text-xl font-semibold text-[#f6f8fc]">{text.policyActive}</p>
                       <p className="mt-1 text-sm text-[#9baac0]">{text.monthlyEstimate}: {formatUsdcAmount(policy.monthlyPayoutEstimate)} USDC</p>
                     </div>
-                    <span className="rounded-full border border-[#4d6d45] bg-[#1d2b25] px-3 py-1 text-xs font-semibold text-[#c8ff75]">World Chain</span>
+                    <span className="rounded-full border border-[#5868ea] bg-[#20295b] px-3 py-1 text-xs font-semibold text-[#c8d0ff]">World Chain</span>
                   </div>
                 </section>
               </div>
@@ -1617,7 +1617,7 @@ function PolicyControlPanel({
               <section className="mt-5 overflow-hidden rounded-[22px] border border-[#202936] bg-[#10151d]">
                 <div className="flex items-center justify-between border-b border-[#202936] px-5 py-4">
                   <div className="flex items-center gap-5 text-sm font-semibold">
-                    <span className="border-b-2 border-[#c8ff75] pb-4 -mb-4 text-[#f5f7fb]">{text.assetsTab}</span>
+                    <span className="border-b-2 border-[#5868ea] pb-4 -mb-4 text-[#f5f7fb]">{text.assetsTab}</span>
                     <span className="text-[#8190a6]">{text.activityTab}</span>
                   </div>
                   <span className="text-sm text-[#8190a6]">{policy.auxiliaryTokens.length + 1} {text.holdings.toLowerCase()}</span>
@@ -1661,7 +1661,7 @@ function PolicyControlPanel({
                   {canChooseAsset ? (
                     <select
                       aria-label={text.chooseAsset}
-                      className="h-9 rounded-full border border-[#3a4656] bg-[#0b1018] px-3 text-sm font-semibold text-[#c8ff75] outline-none focus:border-[#c8ff75]"
+                      className="h-9 rounded-full border border-[#3a4656] bg-[#0b1018] px-3 text-sm font-semibold text-[#aeb8ff] outline-none focus:border-[#5868ea]"
                       onChange={(event) => chooseAsset(event.target.value)}
                       value={tokenAddress}
                     >
@@ -1671,7 +1671,7 @@ function PolicyControlPanel({
                       ))}
                     </select>
                   ) : (
-                    <span className="rounded-full border border-[#3a4656] bg-[#0b1018] px-3 py-1 text-sm font-semibold text-[#c8ff75]">
+                    <span className="rounded-full border border-[#3a4656] bg-[#0b1018] px-3 py-1 text-sm font-semibold text-[#aeb8ff]">
                       {tokenAddress ? selectedAuxiliaryToken?.symbol ?? "ERC20" : "USDC"}
                     </span>
                   )}
@@ -1681,7 +1681,7 @@ function PolicyControlPanel({
                   <input
                     aria-label={assetOperation === "deposit" ? text.depositAmount : text.withdrawExtraAmount}
                     autoFocus
-                    className="mt-2 min-h-12 w-full rounded-lg border border-[#334052] bg-[#0b1018] px-3 text-base font-semibold text-[#f5f7fb] outline-none focus:border-[#c8ff75]"
+                    className="mt-2 min-h-12 w-full rounded-lg border border-[#334052] bg-[#0b1018] px-3 text-base font-semibold text-[#f5f7fb] outline-none focus:border-[#5868ea]"
                     max={assetOperation === "withdraw" ? withdrawableBalanceLabel : undefined}
                     min="0"
                     onChange={(event) => tokenAddress ? setTokenAmount(event.target.value) : (assetOperation === "deposit" ? setDepositAmount(event.target.value) : setExtraWithdrawAmount(event.target.value))}
@@ -1695,7 +1695,7 @@ function PolicyControlPanel({
                     <div className="mt-3 grid grid-cols-4 gap-2">
                       {[25, 50, 75, 100].map((percentage) => (
                         <button
-                          className="h-9 rounded-lg border border-[#334052] bg-[#151d28] text-xs font-semibold text-[#d8e0ee] transition hover:border-[#c8ff75] hover:text-[#c8ff75]"
+                          className="h-9 rounded-lg border border-[#334052] bg-[#151d28] text-xs font-semibold text-[#d8e0ee] transition hover:border-[#5868ea] hover:text-[#aeb8ff]"
                           key={percentage}
                           onClick={() => setWithdrawalPercentage(percentage)}
                           type="button"
@@ -1779,7 +1779,7 @@ function PolicyControlPanel({
             <div className="mt-3 grid gap-2 lg:grid-cols-[0.7fr_1fr_auto]">
               <select
                 aria-label={text.yieldStrategy}
-                className="min-h-11 rounded-lg border border-[#334052] bg-[#0b1018] px-3 text-sm text-[#f5f7fb] outline-none focus:border-[#c8ff75]"
+                className="min-h-11 rounded-lg border border-[#334052] bg-[#0b1018] px-3 text-sm text-[#f5f7fb] outline-none focus:border-[#5868ea]"
                 onChange={(event) => setYieldStrategyId(event.target.value)}
                 value={yieldStrategyId}
               >
@@ -1792,7 +1792,7 @@ function PolicyControlPanel({
               </select>
               <input
                 aria-label={text.yieldAmount}
-                className="min-h-11 rounded-lg border border-[#334052] bg-[#0b1018] px-3 text-sm text-[#f5f7fb] outline-none focus:border-[#c8ff75]"
+                className="min-h-11 rounded-lg border border-[#334052] bg-[#0b1018] px-3 text-sm text-[#f5f7fb] outline-none focus:border-[#5868ea]"
                 min="0"
                 onChange={(event) => setYieldAmount(event.target.value)}
                 step="0.000001"
@@ -1906,7 +1906,7 @@ function DashboardMetric({ accent = false, label, value }: { accent?: boolean; l
   return (
     <div>
       <p className="text-xs font-medium text-[#8d9bb0]">{label}</p>
-      <p className={`mt-1 text-lg font-semibold ${accent ? "text-[#c8ff75]" : "text-[#f5f7fb]"}`}>{value}</p>
+      <p className={`mt-1 text-lg font-semibold ${accent ? "text-[#aeb8ff]" : "text-[#f5f7fb]"}`}>{value}</p>
     </div>
   );
 }
@@ -1931,7 +1931,7 @@ function AssetTableRow({
   return (
     <div className="grid gap-3 border-b border-[#202936] px-5 py-4 last:border-b-0 md:grid-cols-[1.2fr_1fr_0.7fr_auto] md:items-center md:gap-4">
       <div className="flex items-center gap-3">
-        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1b2830] text-sm font-bold text-[#c8ff75]">{label.slice(0, 1)}</span>
+        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#20295b] text-sm font-bold text-[#aeb8ff]">{label.slice(0, 1)}</span>
         <span className="font-semibold text-[#f5f7fb]">{label}</span>
       </div>
       <p className="font-semibold text-[#f5f7fb]">{balance}</p>
@@ -1941,7 +1941,7 @@ function AssetTableRow({
           <ArrowUpFromLine className="h-3.5 w-3.5" />
           {sendLabel}
         </button>
-        <button className="flex h-9 items-center gap-1.5 rounded-lg bg-[#c8ff75] px-3 text-xs font-semibold text-[#10170f] transition hover:bg-[#d8ff9b]" onClick={onReceive} type="button">
+        <button className="flex h-9 items-center gap-1.5 rounded-lg bg-[#5868ea] px-3 text-xs font-semibold text-white transition hover:bg-[#4f63e8]" onClick={onReceive} type="button">
           <ArrowDownToLine className="h-3.5 w-3.5" />
           {receiveLabel}
         </button>
