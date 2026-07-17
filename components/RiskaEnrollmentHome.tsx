@@ -42,6 +42,7 @@ import {
   formatTestnetContractError,
   formatTokenAmount,
   formatUsdcAmount,
+  getTestnetPolicyCashflow,
   getRiskaTestnetDeployment,
   getTestnetPolicy,
   getTestnetPolicyIdForHolder,
@@ -49,6 +50,7 @@ import {
   MINIMUM_POLICY_PRINCIPAL,
   runTestnetPolicyAction,
   type RiskaTestnetPolicyView,
+  type RiskaTestnetCashflow,
   type TestnetIssuanceResult,
   type TestnetIssuanceStatus,
   type TestnetPolicyAction,
@@ -291,6 +293,8 @@ const copy = {
           holdings: "Holdings",
           policyHistory: "Policy history",
           policyActive: "Policy active",
+          activityCount: (count: number) => `${count} ${count === 1 ? "movement" : "movements"}`,
+          noActivity: "No movements yet",
           assetsTab: "Assets",
           activityTab: "Activity",
           asset: "Asset",
@@ -495,6 +499,8 @@ const copy = {
           holdings: "Activos",
           policyHistory: "Historial de la póliza",
           policyActive: "Póliza activa",
+          activityCount: (count: number) => `${count} ${count === 1 ? "movimiento" : "movimientos"}`,
+          noActivity: "Sin movimientos todavía",
           assetsTab: "Activos",
           activityTab: "Actividad",
           asset: "Activo",
@@ -1406,6 +1412,7 @@ function PolicyControlPanel({
 }) {
   const text = content.wizard.confirm.policy;
   const [policy, setPolicy] = useState<RiskaTestnetPolicyView | null>(null);
+  const [cashflow, setCashflow] = useState<RiskaTestnetCashflow[]>([]);
   const [depositAmount, setDepositAmount] = useState("10770");
   const [extraWithdrawAmount, setExtraWithdrawAmount] = useState("100");
   const [yieldAmount, setYieldAmount] = useState("100");
@@ -1443,6 +1450,26 @@ function PolicyControlPanel({
       mounted = false;
     };
   }, [policyId, walletAddress]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    void getTestnetPolicyCashflow(policyId)
+      .then((history) => {
+        if (mounted) {
+          setCashflow(history);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setCashflow([]);
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [policyId]);
 
   async function runAction(action: TestnetPolicyAction, options?: { amount?: string; strategyId?: number }) {
     setWorkingAction(action);
@@ -1532,6 +1559,11 @@ function PolicyControlPanel({
   const withdrawableBalanceLabel = tokenAddress && selectedAuxiliaryToken
     ? formatTokenAmount(withdrawableBalance, selectedAuxiliaryToken.decimals)
     : formatUsdcAmount(withdrawableBalance);
+  const visibleCashflow = cashflow.slice(-12);
+  const largestCashflow = visibleCashflow.reduce(
+    (largest, movement) => movement.amount > largest ? movement.amount : largest,
+    1n
+  );
 
   function setWithdrawalPercentage(percentage: number) {
     const amount = (withdrawableBalance * BigInt(percentage)) / 100n;
@@ -1597,19 +1629,31 @@ function PolicyControlPanel({
                 </section>
 
                 <section className="relative overflow-hidden rounded-[22px] border border-[#202936] bg-[#101722] p-5">
-                  <div className="absolute inset-x-0 bottom-0 h-32 bg-[linear-gradient(160deg,transparent_8%,rgba(67,182,130,0.18)_9%,transparent_11%,transparent_28%,rgba(67,182,130,0.12)_29%,transparent_31%)] opacity-80" />
                   <p className="text-sm font-medium text-[#9baac0]">{text.policyHistory}</p>
                   <div className="mt-5 flex h-24 items-end gap-1.5 border-b border-[#2b3543] pb-2">
-                    {[28, 36, 32, 52, 65, 61, 78, 69, 84, 72, 64, 76].map((height, index) => (
-                      <span className="flex-1 rounded-t-sm bg-gradient-to-t from-[#2a347e] to-[#aeb8ff]" key={index} style={{ height: `${height}%` }} />
-                    ))}
+                    {visibleCashflow.length > 0 ? visibleCashflow.map((movement, index) => {
+                      const height = Math.max(12, Number((movement.amount * 100n) / largestCashflow));
+
+                      return (
+                        <span
+                          aria-label={`${movement.kind === "deposit" ? text.depositFunds : text.withdrawFunds}: ${formatUsdcAmount(movement.amount)} USDC · ${formatShortDate(movement.timestamp)}`}
+                          className={`flex-1 rounded-t-sm ${movement.kind === "deposit" ? "bg-gradient-to-t from-[#2a347e] to-[#aeb8ff]" : "bg-gradient-to-t from-[#7d3656] to-[#f0a2c2]"}`}
+                          key={`${movement.timestamp}-${index}`}
+                          style={{ height: `${height}%` }}
+                          title={`${movement.kind === "deposit" ? text.depositFunds : text.withdrawFunds}: ${formatUsdcAmount(movement.amount)} USDC · ${formatShortDate(movement.timestamp)}`}
+                        />
+                      );
+                    }) : <span className="text-sm text-[#8d9bb0]">{text.noActivity}</span>}
                   </div>
                   <div className="relative mt-5 flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-xl font-semibold text-[#f6f8fc]">{text.policyActive}</p>
-                      <p className="mt-1 text-sm text-[#9baac0]">{text.monthlyEstimate}: {formatUsdcAmount(policy.monthlyPayoutEstimate)} USDC</p>
+                      <p className="text-xl font-semibold text-[#f6f8fc]">{text.activityCount(visibleCashflow.length)}</p>
+                      <p className="mt-1 text-sm text-[#9baac0]">{visibleCashflow.length > 0 ? `${formatShortDate(visibleCashflow[0].timestamp)} — ${formatShortDate(visibleCashflow[visibleCashflow.length - 1].timestamp)}` : text.policyActive}</p>
                     </div>
-                    <span className="rounded-full border border-[#5868ea] bg-[#20295b] px-3 py-1 text-xs font-semibold text-[#c8d0ff]">World Chain</span>
+                    <div className="flex gap-2 text-xs font-semibold">
+                      <span className="rounded-full border border-[#5868ea] bg-[#20295b] px-3 py-1 text-[#c8d0ff]">{text.depositFunds}</span>
+                      <span className="rounded-full border border-[#7d3656] bg-[#341b2d] px-3 py-1 text-[#f0a2c2]">{text.withdrawFunds}</span>
+                    </div>
                   </div>
                 </section>
               </div>
@@ -2236,6 +2280,14 @@ function formatUnixDate(timestamp: number) {
   }
 
   return new Date(timestamp * 1000).toLocaleString();
+}
+
+function formatShortDate(timestamp: number) {
+  if (!timestamp) {
+    return "-";
+  }
+
+  return new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short" }).format(new Date(timestamp * 1000));
 }
 
 function getTestnetPanelStatus(

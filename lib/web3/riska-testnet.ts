@@ -114,6 +114,12 @@ export type RiskaTestnetPolicyView = {
   totalPrincipal: bigint;
 };
 
+export type RiskaTestnetCashflow = {
+  amount: bigint;
+  kind: "deposit" | "withdraw";
+  timestamp: number;
+};
+
 type ContractAddresses = {
   mockUsdc: `0x${string}`;
   policyManager: `0x${string}`;
@@ -172,6 +178,41 @@ const erc20Abi = [
     type: "function"
   }
 ] as const;
+
+const policyOpenedEvent = {
+  anonymous: false,
+  inputs: [
+    { indexed: true, name: "policyId", type: "uint256" },
+    { indexed: true, name: "holder", type: "address" },
+    { indexed: true, name: "termsHash", type: "bytes32" }
+  ],
+  name: "PolicyOpened",
+  type: "event"
+} as const;
+
+const policyDepositEvent = {
+  anonymous: false,
+  inputs: [
+    { indexed: true, name: "policyId", type: "uint256" },
+    { indexed: true, name: "holder", type: "address" },
+    { indexed: false, name: "amount", type: "uint256" },
+    { indexed: false, name: "minimumPrincipalAdded", type: "uint256" },
+    { indexed: false, name: "extraPrincipalAdded", type: "uint256" }
+  ],
+  name: "PolicyDeposit",
+  type: "event"
+} as const;
+
+const extraWithdrawnEvent = {
+  anonymous: false,
+  inputs: [
+    { indexed: true, name: "policyId", type: "uint256" },
+    { indexed: true, name: "holder", type: "address" },
+    { indexed: false, name: "amount", type: "uint256" }
+  ],
+  name: "ExtraWithdrawn",
+  type: "event"
+} as const;
 
 const policyManagerAbi = [
   {
@@ -542,6 +583,56 @@ export async function getTestnetPolicy({
     termsHash: policy[1],
     totalPrincipal
   };
+}
+
+export async function getTestnetPolicyCashflow(policyId: string): Promise<RiskaTestnetCashflow[]> {
+  const deployment = await getRiskaTestnetDeployment();
+  const { policyManager } = getRequiredContracts(deployment);
+  const id = BigInt(policyId);
+  const fromBlock = BigInt(deployment.blockNumber ?? 0);
+
+  const [opened, deposits, withdrawals] = await Promise.all([
+    publicClient.getLogs({
+      address: policyManager,
+      args: { policyId: id },
+      event: policyOpenedEvent,
+      fromBlock
+    }),
+    publicClient.getLogs({
+      address: policyManager,
+      args: { policyId: id },
+      event: policyDepositEvent,
+      fromBlock
+    }),
+    publicClient.getLogs({
+      address: policyManager,
+      args: { policyId: id },
+      event: extraWithdrawnEvent,
+      fromBlock
+    })
+  ]);
+
+  const movements = [
+    ...opened.map((log) => ({ amount: FIRST_PREMIUM, blockNumber: log.blockNumber, kind: "deposit" as const })),
+    ...deposits.map((log) => ({ amount: log.args.amount ?? 0n, blockNumber: log.blockNumber, kind: "deposit" as const })),
+    ...withdrawals.map((log) => ({ amount: log.args.amount ?? 0n, blockNumber: log.blockNumber, kind: "withdraw" as const }))
+  ];
+  const blockTimestamps = new Map<bigint, number>();
+
+  await Promise.all(
+    [...new Set(movements.map((movement) => movement.blockNumber))].map(async (blockNumber) => {
+      const block = await publicClient.getBlock({ blockNumber });
+      blockTimestamps.set(blockNumber, Number(block.timestamp));
+    })
+  );
+
+  return movements
+    .map((movement) => ({
+      amount: movement.amount,
+      kind: movement.kind,
+      timestamp: blockTimestamps.get(movement.blockNumber) ?? 0
+    }))
+    .sort((left, right) => left.timestamp - right.timestamp);
 }
 
 async function getYieldStrategies(yieldStrategyManager?: `0x${string}`) {
