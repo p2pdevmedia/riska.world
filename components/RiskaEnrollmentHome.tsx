@@ -109,7 +109,7 @@ type ExistingPolicyLookupState =
   | { status: "none" }
   | { message: string; status: "error" };
 
-type AssetOperation = "dashboard" | "deposit" | "withdraw";
+type AssetOperation = "dashboard" | "deposit" | "withdraw" | "yield";
 
 const storageKey = "riska.enrollment.v2";
 const pendingWalletStorageKey = "riska.pending-wallet-session";
@@ -266,12 +266,15 @@ const copy = {
           depositToken: "Deposit token",
           extraPrincipal: "Extra principal",
           heartbeat: "Heartbeat",
+          yield: "Yield",
           yieldAmount: "Yield amount",
           yieldCostBasis: "Cost basis",
           yieldDeposit: "Start yield",
           yieldEstimated: "Estimated assets",
           yieldStrategy: "Strategy",
           chooseYieldStrategy: "Choose Morpho strategy",
+          yieldProtocolHint: "Morpho is the only configured yield protocol. It currently accepts USDC.",
+          yieldUnavailable: "There is no yield protocol configured for this token yet.",
           staticUsdc: "Keep USDC static",
           staticUsdcNote: (amount: string) => `${amount} USDC remain in the Riska contract. They earn no yield and are not exposed to Morpho.`,
           yieldVault: "Yield opt-in",
@@ -473,12 +476,15 @@ const copy = {
           depositToken: "Depositar token",
           extraPrincipal: "Principal extra",
           heartbeat: "Heartbeat",
+          yield: "Yield",
           yieldAmount: "Monto yield",
           yieldCostBasis: "Costo base",
           yieldDeposit: "Activar yield",
           yieldEstimated: "Activos estimados",
           yieldStrategy: "Estrategia",
           chooseYieldStrategy: "Elegí una estrategia Morpho",
+          yieldProtocolHint: "Morpho es el único protocolo de yield configurado. Actualmente acepta USDC.",
+          yieldUnavailable: "Todavía no hay un protocolo de yield configurado para este token.",
           staticUsdc: "Mantener USDC estático",
           staticUsdcNote: (amount: string) => `${amount} USDC quedan en el contrato de Riska. No generan yield ni quedan expuestos a Morpho.`,
           yieldVault: "Yield opt-in",
@@ -1574,6 +1580,9 @@ function PolicyControlPanel({
   function openAssetOperation(operation: Exclude<AssetOperation, "dashboard">, address = "", allowSelection = false) {
     chooseAsset(address);
     setCanChooseAsset(allowSelection);
+    if (operation === "yield" && address === "" && availableYieldStrategies.length === 1) {
+      setYieldStrategyId(String(availableYieldStrategies[0].strategyId));
+    }
     setAssetOperation(operation);
   }
 
@@ -1708,9 +1717,11 @@ function PolicyControlPanel({
                   label="USDC"
                   onReceive={() => openAssetOperation("deposit")}
                   onSend={() => openAssetOperation("withdraw")}
+                  onYield={() => openAssetOperation("yield")}
                   receiveLabel={text.depositFunds}
                   sendLabel={text.withdrawFunds}
                   share="100% policy base"
+                  yieldLabel={text.yield}
                 />
                 {policy.auxiliaryTokens.map((token) => (
                   <AssetTableRow
@@ -1719,9 +1730,11 @@ function PolicyControlPanel({
                     label={token.symbol}
                     onReceive={() => openAssetOperation("deposit", token.address)}
                     onSend={() => openAssetOperation("withdraw", token.address)}
+                    onYield={() => openAssetOperation("yield", token.address)}
                     receiveLabel={text.depositFunds}
                     sendLabel={text.withdrawFunds}
                     share={shortAddress(token.address)}
+                    yieldLabel={text.yield}
                   />
                 ))}
               </section>
@@ -1729,12 +1742,12 @@ function PolicyControlPanel({
           )}
 
           {assetOperation !== "dashboard" && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#05070b]/80 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={assetOperation === "deposit" ? text.depositTitle : text.withdrawTitle}>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#05070b]/80 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={assetOperation === "deposit" ? text.depositTitle : assetOperation === "withdraw" ? text.withdrawTitle : text.yield}>
               <div className="w-full max-w-sm rounded-[22px] border border-[#334052] bg-[#10151d] p-5 shadow-2xl">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-lg font-semibold text-[#f5f7fb]">{assetOperation === "deposit" ? text.depositTitle : text.withdrawTitle}</p>
-                    <p className="mt-1 text-sm text-[#8d9bb0]">{assetOperation === "deposit" ? text.operationHint : text.withdrawExtraAmount}</p>
+                    <p className="text-lg font-semibold text-[#f5f7fb]">{assetOperation === "deposit" ? text.depositTitle : assetOperation === "withdraw" ? text.withdrawTitle : text.yield}</p>
+                    <p className="mt-1 text-sm text-[#8d9bb0]">{assetOperation === "deposit" ? text.operationHint : assetOperation === "withdraw" ? text.withdrawExtraAmount : text.yieldProtocolHint}</p>
                   </div>
                   {canChooseAsset ? (
                     <select
@@ -1754,18 +1767,34 @@ function PolicyControlPanel({
                     </span>
                   )}
                 </div>
+                {assetOperation === "yield" && tokenAddress === "" && (
+                  <label className="mt-5 block text-xs font-semibold uppercase tracking-[0.14em] text-[#8d9bb0]">
+                    {text.yieldStrategy}
+                    <select
+                      aria-label={text.yieldStrategy}
+                      className="mt-2 min-h-12 w-full rounded-lg border border-[#334052] bg-[#0b1018] px-3 text-sm font-semibold text-[#f5f7fb] outline-none focus:border-[#5868ea]"
+                      onChange={(event) => setYieldStrategyId(event.target.value)}
+                      value={yieldStrategyId}
+                    >
+                      <option value="">{text.chooseYieldStrategy}</option>
+                      {availableYieldStrategies.map((strategy) => (
+                        <option key={strategy.strategyId} value={strategy.strategyId}>{strategy.name}</option>
+                      ))}
+                    </select>
+                  </label>
+                )}
                 <label className="mt-5 block text-xs font-semibold uppercase tracking-[0.14em] text-[#8d9bb0]">
-                  {assetOperation === "deposit" ? text.depositAmount : text.withdrawExtraAmount}
+                  {assetOperation === "deposit" ? text.depositAmount : assetOperation === "withdraw" ? text.withdrawExtraAmount : text.yieldAmount}
                   <input
-                    aria-label={assetOperation === "deposit" ? text.depositAmount : text.withdrawExtraAmount}
+                    aria-label={assetOperation === "deposit" ? text.depositAmount : assetOperation === "withdraw" ? text.withdrawExtraAmount : text.yieldAmount}
                     autoFocus
                     className="mt-2 min-h-12 w-full rounded-lg border border-[#334052] bg-[#0b1018] px-3 text-base font-semibold text-[#f5f7fb] outline-none focus:border-[#5868ea]"
                     max={assetOperation === "withdraw" ? withdrawableBalanceLabel : undefined}
                     min="0"
-                    onChange={(event) => tokenAddress ? setTokenAmount(event.target.value) : (assetOperation === "deposit" ? setDepositAmount(event.target.value) : setExtraWithdrawAmount(event.target.value))}
+                    onChange={(event) => assetOperation === "yield" ? setYieldAmount(event.target.value) : tokenAddress ? setTokenAmount(event.target.value) : (assetOperation === "deposit" ? setDepositAmount(event.target.value) : setExtraWithdrawAmount(event.target.value))}
                     step="any"
                     type="number"
-                    value={tokenAddress ? tokenAmount : (assetOperation === "deposit" ? depositAmount : extraWithdrawAmount)}
+                    value={assetOperation === "yield" ? yieldAmount : tokenAddress ? tokenAmount : (assetOperation === "deposit" ? depositAmount : extraWithdrawAmount)}
                   />
                 </label>
                 {assetOperation === "withdraw" && (
@@ -1787,15 +1816,18 @@ function PolicyControlPanel({
                     </p>
                   </>
                 )}
+                {assetOperation === "yield" && tokenAddress !== "" && (
+                  <p className="mt-3 rounded-lg border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-sm text-amber-100">{text.yieldUnavailable}</p>
+                )}
                 <div className="mt-5 grid grid-cols-2 gap-2">
                   <button className="min-h-11 rounded-lg border border-[#334052] bg-[#151d28] px-3 text-sm font-semibold text-[#e6edf8] transition hover:border-[#718299]" onClick={() => setAssetOperation("dashboard")} type="button">
                     {text.cancel}
                   </button>
                   <PolicyActionButton
-                    action={assetOperation === "deposit" ? (tokenAddress ? "depositToken" : "deposit") : (tokenAddress ? "withdrawToken" : "withdrawExtra")}
-                    disabled={isWorking || (assetOperation === "deposit" ? (tokenAddress ? !canUseTokenVault : !canDeposit) : (tokenAddress ? !canWithdrawToken : !canWithdrawExtra))}
-                    icon={assetOperation === "deposit" ? ArrowDownToLine : ArrowUpFromLine}
-                    label={assetOperation === "deposit" ? text.depositFunds : text.withdrawFunds}
+                    action={assetOperation === "deposit" ? (tokenAddress ? "depositToken" : "deposit") : assetOperation === "withdraw" ? (tokenAddress ? "withdrawToken" : "withdrawExtra") : "depositYield"}
+                    disabled={isWorking || (assetOperation === "deposit" ? (tokenAddress ? !canUseTokenVault : !canDeposit) : assetOperation === "withdraw" ? (tokenAddress ? !canWithdrawToken : !canWithdrawExtra) : tokenAddress !== "" || !canDepositYield || yieldStrategyId === "")}
+                    icon={assetOperation === "deposit" ? ArrowDownToLine : assetOperation === "withdraw" ? ArrowUpFromLine : Percent}
+                    label={assetOperation === "deposit" ? text.depositFunds : assetOperation === "withdraw" ? text.withdrawFunds : text.yieldDeposit}
                     onClick={runAction}
                     workingAction={workingAction}
                   />
@@ -1803,90 +1835,6 @@ function PolicyControlPanel({
               </div>
             </div>
           )}
-
-          <div className="mt-3 rounded-xl border border-[#202936] bg-[#10151d] p-4">
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8d9bb0]">{text.yieldVault}</p>
-              <p className="text-sm font-semibold text-[#f5f7fb]">
-                {policy.yieldPositions.length > 0 ? `${policy.yieldPositions.length}` : text.noYieldPositions}
-              </p>
-            </div>
-            <p className="mt-2 text-sm leading-6 text-[#8d9bb0]">{text.yieldVaultNote}</p>
-            <div className="mt-3 rounded-lg border border-[#283443] bg-[#0b1018] p-3">
-              <p className="text-sm font-semibold text-[#f5f7fb]">{text.staticUsdc}</p>
-              <p className="mt-1 text-sm text-[#8d9bb0]">
-                {text.staticUsdcNote(formatUsdcAmount(policy.totalPrincipal - yieldAllocated))}
-              </p>
-            </div>
-
-            {policy.yieldPositions.length > 0 && (
-              <div className="mt-3 grid gap-2 md:grid-cols-2">
-                {policy.yieldPositions.map((position) => (
-                  <div className="rounded-lg border border-[#283443] bg-[#0b1018] p-3" key={position.strategyId}>
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold text-[#f5f7fb]">{position.name}</p>
-                        <p className="mt-1 text-xs text-[#8d9bb0]">
-                          {text.yieldStrategy} #{position.strategyId}
-                        </p>
-                      </div>
-                      <button
-                        className="flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg border border-[#334052] bg-[#151d28] px-3 text-xs font-semibold text-[#e6edf8] transition hover:border-[#718299] disabled:opacity-50"
-                        disabled={isWorking || status !== 1}
-                        onClick={() =>
-                          void runAction("withdrawYield", {
-                            amount: formatUsdcAmount(position.shares),
-                            strategyId: position.strategyId
-                          })
-                        }
-                        type="button"
-                      >
-                        <HandCoins className="h-4 w-4" />
-                        {text.yieldWithdraw}
-                      </button>
-                    </div>
-                    <div className="mt-3 grid gap-2">
-                      <SummaryFact label={text.yieldCostBasis} value={`${formatUsdcAmount(position.costBasis)} USDC`} />
-                      <SummaryFact label={text.yieldEstimated} value={`${formatUsdcAmount(position.estimatedAssets)} USDC`} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="mt-3 grid gap-2 lg:grid-cols-[0.7fr_1fr_auto]">
-              <select
-                aria-label={text.yieldStrategy}
-                className="min-h-11 rounded-lg border border-[#334052] bg-[#0b1018] px-3 text-sm text-[#f5f7fb] outline-none focus:border-[#5868ea]"
-                onChange={(event) => setYieldStrategyId(event.target.value)}
-                value={yieldStrategyId}
-              >
-                <option value="">{text.chooseYieldStrategy}</option>
-                {availableYieldStrategies.map((strategy) => (
-                  <option key={strategy.strategyId} value={strategy.strategyId}>
-                    {strategy.name}
-                  </option>
-                ))}
-              </select>
-              <input
-                aria-label={text.yieldAmount}
-                className="min-h-11 rounded-lg border border-[#334052] bg-[#0b1018] px-3 text-sm text-[#f5f7fb] outline-none focus:border-[#5868ea]"
-                min="0"
-                onChange={(event) => setYieldAmount(event.target.value)}
-                step="0.000001"
-                type="number"
-                value={yieldAmount}
-              />
-              <PolicyActionButton
-                action="depositYield"
-                disabled={!canDepositYield || yieldStrategyId === "" || isWorking}
-                icon={Percent}
-                label={text.yieldDeposit}
-                onClick={runAction}
-                workingAction={workingAction}
-              />
-            </div>
-          </div>
 
           <p className="mt-3 rounded-lg border border-amber-800/60 bg-amber-950/30 px-3 py-2 text-xs leading-5 text-amber-200">
             {text.claimAllFeeNote}
@@ -2006,17 +1954,21 @@ function AssetTableRow({
   label,
   onReceive,
   onSend,
+  onYield,
   receiveLabel,
   sendLabel,
-  share
+  share,
+  yieldLabel
 }: {
   balance: string;
   label: string;
   onReceive: () => void;
   onSend: () => void;
+  onYield: () => void;
   receiveLabel: string;
   sendLabel: string;
   share: string;
+  yieldLabel: string;
 }) {
   const logo = getTokenLogo(label);
 
@@ -2032,7 +1984,11 @@ function AssetTableRow({
       </div>
       <p className="font-semibold text-[#f5f7fb]">{balance}</p>
       <p className="text-sm text-[#8d9bb0]">{share}</p>
-      <div className="flex gap-2 md:justify-end">
+      <div className="flex flex-wrap gap-2 md:justify-end">
+        <button className="flex h-9 items-center gap-1.5 rounded-lg border border-[#5868ea] px-3 text-xs font-semibold text-[#aeb8ff] transition hover:bg-[#20295b]" onClick={onYield} type="button">
+          <Percent className="h-3.5 w-3.5" />
+          {yieldLabel}
+        </button>
         <button className="flex h-9 items-center gap-1.5 rounded-lg border border-[#334052] px-3 text-xs font-semibold text-[#d8e0ee] transition hover:border-[#74869f]" onClick={onSend} type="button">
           <ArrowUpFromLine className="h-3.5 w-3.5" />
           {sendLabel}
