@@ -67,7 +67,7 @@ export function WorldIdGate({
   walletAddress
 }: {
   onReservationChange?: (reservation: PolicyHumanReservationView | null) => void;
-  variant?: "dark" | "light";
+  variant?: "compact" | "dark" | "light";
   walletAddress?: string;
 }) {
   const { language, t } = useLanguage();
@@ -264,6 +264,42 @@ export function WorldIdGate({
   const buttonClass = isLight
     ? "bg-[#17231e] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#26342d] disabled:cursor-not-allowed disabled:bg-[#ccd6cf] disabled:text-[#728078]"
     : "rounded-full bg-aurora-600 px-5 py-3 text-sm font-medium text-white shadow-glow transition hover:bg-aurora-500 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400 disabled:shadow-none";
+
+  if (variant === "compact") {
+    return (
+      <div className="flex flex-col items-center gap-3 py-8 text-center">
+        {error && <p className={errorClass}>{error}</p>}
+        {status === "verified" ? (
+          <p className="text-sm font-semibold text-emerald-700">{copy.statuses.verified}</p>
+        ) : (
+          <button
+            className="rounded-full bg-[#202027] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#5868ea] disabled:cursor-not-allowed disabled:bg-[#d9d9e0] disabled:text-[#858590]"
+            disabled={buttonDisabled}
+            onClick={startVerification}
+            type="button"
+          >
+            {status === "loading" ? copy.actionLoading : copy.action}
+          </button>
+        )}
+        {worldAppId && rpContext && (
+          <IDKitRequestWidget
+            open={isOpen}
+            onOpenChange={setIsOpen}
+            app_id={worldAppId}
+            action={RISKA_WORLD_ID_POLICY_ACTION}
+            rp_context={rpContext}
+            allow_legacy_proofs={true}
+            preset={proofOfHuman({ signal: normalizeWorldIdSignal(walletAddress ?? "") })}
+            environment={RISKA_WORLD_ID_ENVIRONMENT}
+            handleVerify={handleVerify}
+            onSuccess={handleSuccess}
+            onError={handleError}
+            language={language}
+          />
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className={panelClass}>

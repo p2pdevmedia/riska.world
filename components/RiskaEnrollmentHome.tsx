@@ -35,7 +35,7 @@ import { Footer } from "@/components/Footer";
 import { useLanguage } from "@/components/LanguageProvider";
 import { Navbar } from "@/components/Navbar";
 import { WalletAuth, type WalletAuthSession } from "@/components/WalletAuth";
-import type { PolicyHumanReservationView } from "@/components/WorldIdGate";
+import { WorldIdGate, type PolicyHumanReservationView } from "@/components/WorldIdGate";
 import type { Language } from "@/lib/i18n";
 import { RISKA_POLICY_TERMS_HASH, WORLDCHAIN_SEPOLIA_CHAIN_ID, type RiskaTestnetDeployment } from "@/lib/riska-testnet";
 import {
@@ -751,6 +751,10 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
         humanReservation
       };
     });
+
+    if (humanReservation) {
+      setActiveStepId("beneficiaries");
+    }
   }, []);
 
   function updateBeneficiary(id: string, field: keyof Pick<Beneficiary, "name" | "percent" | "wallet">, value: string) {
@@ -1072,6 +1076,7 @@ function EnrollmentWizard(props: EnrollmentWizardProps) {
       </div>}
 
       <div className={isDashboard ? "" : "px-5 py-6 md:px-7"}>
+        {state.walletSession && !isDashboard && <EnrollmentSessionBar address={state.walletSession.address} label={content.wizard.confirm.policy.logout} />}
         {renderScreen(props)}
 
         {state.submitted && !state.issuedPolicyId && (
@@ -1087,7 +1092,7 @@ function EnrollmentWizard(props: EnrollmentWizardProps) {
           </p>
         )}
 
-        {!state.issuedPolicyId && (
+        {!state.issuedPolicyId && !(step.id === "identity" && state.walletSession) && (
           <div className="mt-7 flex flex-col-reverse gap-3 border-t border-[#eeeeF2] pt-5 sm:flex-row sm:items-center sm:justify-between">
             <button
               className="flex h-12 items-center justify-center gap-2 rounded-full border border-[#dedee5] bg-white px-5 text-sm font-semibold text-[#42424c] transition hover:border-[#aeb8ff] hover:text-[#4f63e8] disabled:cursor-not-allowed disabled:opacity-40"
@@ -1127,35 +1132,52 @@ function renderScreen(props: EnrollmentWizardProps) {
   }
 }
 
+function EnrollmentSessionBar({ address, label }: { address: string; label: string }) {
+  async function logout() {
+    try {
+      await disconnectWallet();
+    } finally {
+      window.localStorage.clear();
+      window.sessionStorage.clear();
+      window.location.assign("/");
+    }
+  }
+
+  return (
+    <div className="mb-5 flex items-center justify-between gap-3 rounded-xl border border-[#e2e2e8] bg-[#fafafd] px-4 py-3">
+      <div className="min-w-0">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#777782]">Wallet</p>
+        <p className="mt-1 font-mono text-sm font-semibold text-[#202027]">{shortAddress(address)}</p>
+      </div>
+      <button
+        className="shrink-0 rounded-lg border border-[#dedee5] bg-white px-3 py-2 text-xs font-semibold text-[#42424c] transition hover:border-[#5868ea] hover:text-[#5868ea]"
+        onClick={() => void logout()}
+        type="button"
+      >
+        {label}
+      </button>
+    </div>
+  );
+}
+
 function IdentityScreen({
-  content,
   onHumanReservationChange,
   onWalletSessionChange,
   state
 }: EnrollmentWizardProps) {
-  const text = content.wizard.identity;
+  if (state.walletSession) {
+    return (
+      <WorldIdGate
+        onReservationChange={onHumanReservationChange}
+        variant="compact"
+        walletAddress={state.walletSession.address}
+      />
+    );
+  }
 
   return (
-    <div className="space-y-5">
-      <p className="max-w-3xl text-sm leading-6 text-[#516159]">{text.instruction}</p>
-      <div className="grid gap-3 md:grid-cols-2">
-        <InteractiveInfoBlock
-          checked={Boolean(state.walletSession)}
-          detail={state.walletSession ? shortAddress(state.walletSession.address) : text.walletDetail}
-          icon={WalletCards}
-          title={text.wallet}
-        />
-        <InteractiveInfoBlock
-          checked={Boolean(state.humanReservation)}
-          detail={state.humanReservation ? shortProofId(state.humanReservation.nullifier) : text.worldIdDetail}
-          icon={ShieldCheck}
-          title={text.worldId}
-        />
-      </div>
+    <div>
       <WalletAuth
-        initialSession={state.walletSession}
-        key={state.walletSession?.address ?? "disconnected"}
-        onHumanReservationChange={onHumanReservationChange}
         onSessionChange={onWalletSessionChange}
         variant="light"
       />

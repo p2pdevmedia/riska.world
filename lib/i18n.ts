@@ -489,7 +489,7 @@ export const dictionaries = {
         error: "World ID verification needs attention.",
         notConfigured: "World ID is not configured. Contact support."
       },
-      action: "Verify identity",
+      action: "Verify I am human",
       actionLoading: "Preparing proof...",
       walletRequired: "Connect your wallet before verifying with World ID.",
       configMissing: "World ID is not configured. Contact support.",
@@ -897,7 +897,7 @@ export const dictionaries = {
         error: "La verificación World ID necesita atención.",
         notConfigured: "World ID no está configurado. Contactá soporte."
       },
-      action: "Verificar identidad",
+      action: "Verificar que soy humano",
       actionLoading: "Preparando prueba...",
       walletRequired: "Conectá tu wallet antes de verificar con World ID.",
       configMissing: "World ID no está configurado. Contactá soporte.",
