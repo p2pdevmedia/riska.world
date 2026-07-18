@@ -257,15 +257,22 @@ export const dictionaries = {
       languageToggle: { label: "ES", ariaLabel: "Switch to Spanish" }
     },
     hero: {
-      badge: "Riska 30 · Flexible USDC policy",
-      title: "Any verified human can open a policy.",
+      brand: "RISKA · LEGACY, MADE CLEAR",
+      badge: "Riska 30 · Protection account",
+      title: "Your future. Your rules. Your legacy.",
       description:
-        "Fund the 10,800 USDC minimum over time or upfront. Extra deposits increase future monthly payout and can be withdrawn in parts. After the USDC minimum is covered, other ERC20 tokens can be stored with no Riska fee and pass fully to beneficiaries on death settlement.",
+        "Build protection at your own pace, choose how to receive future payments, and leave clear instructions for the people who matter most.",
       chips: [
-        "10,800 USDC minimum",
-        "30 USDC base unit",
-        "120 monthly payouts",
-        "Heartbeat death-flow guard"
+        "Your balance stays visible",
+        "Your beneficiaries are defined by you",
+        "Your rules are verifiable"
+      ],
+      secondaryAction: "See how Riska protects your legacy",
+      walletEyebrow: "Start with your wallet",
+      proofs: [
+        { title: "Built at your pace", description: "Fund your protection account over time or upfront, with clear minimum and extra balances." },
+        { title: "Designed for your people", description: "Set beneficiaries and leave a transparent route for the people you choose." },
+        { title: "Verified for humans", description: "World ID helps protect one policy per verified person without storing biometrics." }
       ]
     },
     impactMetrics: {
@@ -681,15 +688,22 @@ export const dictionaries = {
       languageToggle: { label: "EN", ariaLabel: "Switch to English" }
     },
     hero: {
-      badge: "Riska 30 · Póliza USDC flexible",
-      title: "Cualquier humano verificado puede abrir una póliza.",
+      brand: "RISKA · LEGADO CLARO",
+      badge: "Riska 30 · Cuenta de protección",
+      title: "Tu futuro. Tus reglas. Tu legado.",
       description:
-        "Fondea el mínimo de 10,800 USDC poco a poco o de una sola vez. Los depósitos extra aumentan tu pago mensual futuro y puedes retirarlos en partes. Una vez cubierto el mínimo, puedes guardar otros tokens ERC20 sin comisión de Riska; si se liquida la póliza, pasan completos a tus beneficiarios.",
+        "Construye protección a tu ritmo, decide cómo recibir tus pagos futuros y deja instrucciones claras para las personas que más importan.",
       chips: [
-        "Mínimo 10,800 USDC",
-        "Unidad base 30 USDC",
-        "120 pagos mensuales",
-        "Prueba de vida contra reportes falsos"
+        "Tu saldo siempre visible",
+        "Tus beneficiarios, definidos por ti",
+        "Tus reglas, verificables"
+      ],
+      secondaryAction: "Ver cómo Riska protege tu legado",
+      walletEyebrow: "Empieza con tu wallet",
+      proofs: [
+        { title: "Construida a tu ritmo", description: "Fondea tu cuenta de protección poco a poco o de una sola vez, con mínimo y extra claramente separados." },
+        { title: "Pensada para los tuyos", description: "Define beneficiarios y deja un camino transparente para las personas que eliges." },
+        { title: "Verificada para humanos", description: "World ID ayuda a proteger una póliza por humano verificado, sin guardar datos biométricos." }
       ]
     },
     impactMetrics: {
