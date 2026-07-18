@@ -28,6 +28,9 @@ type VerifyPolicyHumanResponse = {
   reservation?: {
     credentialIdentifiers: string[];
     nullifier: string;
+    nullifierHash: `0x${string}`;
+    deadline: string;
+    authorization: `0x${string}`;
     protocolVersion: string;
     reservedAt: string;
     walletAddress: string;

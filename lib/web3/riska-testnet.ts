@@ -225,7 +225,10 @@ const policyManagerAbi = [
     inputs: [
       { name: "beneficiaries", type: "address[]" },
       { name: "sharesBps", type: "uint16[]" },
-      { name: "termsHash", type: "bytes32" }
+      { name: "termsHash", type: "bytes32" },
+      { name: "nullifierHash", type: "bytes32" },
+      { name: "deadline", type: "uint256" },
+      { name: "authorization", type: "bytes" }
     ],
     name: "openPolicy",
     outputs: [{ name: "policyId", type: "uint256" }],
@@ -928,10 +931,12 @@ async function getPolicyYieldPositions({
 export async function issueTestnetPolicy({
   beneficiaries,
   holder,
+  humanAuthorization,
   onStatus
 }: {
   beneficiaries: TestnetBeneficiaryInput[];
   holder: string;
+  humanAuthorization: { authorization: `0x${string}`; deadline: string; nullifierHash: `0x${string}` };
   onStatus?: (status: TestnetIssuanceStatus) => void;
 }): Promise<TestnetIssuanceResult> {
   onStatus?.("loading_contracts");
@@ -947,7 +952,7 @@ export async function issueTestnetPolicy({
     throw new Error("This wallet already has a Riska policy. Use the policy dashboard instead of opening a new one.");
   }
 
-  if (sharesBps.reduce((total, share) => total + share, 0) !== 10_000) {
+  if (sharesBps.length > 0 && sharesBps.reduce((total, share) => total + share, 0) !== 10_000) {
     throw new Error("Beneficiary shares must total 100% before issuing a policy.");
   }
 
@@ -965,7 +970,7 @@ export async function issueTestnetPolicy({
     abi: policyManagerAbi,
     account,
     address: contracts.policyManager,
-    args: [beneficiaryAddresses, sharesBps, RISKA_POLICY_TERMS_HASH],
+    args: [beneficiaryAddresses, sharesBps, RISKA_POLICY_TERMS_HASH, humanAuthorization.nullifierHash, BigInt(humanAuthorization.deadline), humanAuthorization.authorization],
     functionName: "openPolicy"
   });
   txHashes.openPolicy = openPolicyHash;

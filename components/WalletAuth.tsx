@@ -10,8 +10,10 @@ import { useLanguage } from "@/components/LanguageProvider";
 import { WorldIdGate } from "@/components/WorldIdGate";
 import {
   connectWallet,
+  discoverBrowserWallets,
   disconnectWallet,
-  onWalletChange
+  onWalletChange,
+  type BrowserWalletOption
 } from "@/lib/web3/metamask";
 
 function truncateAddress(address: string) {
@@ -48,6 +50,8 @@ export function WalletAuth({
 
   const [state, setState] = useState<AuthState>(() => initialSession ?? { status: "disconnected" });
   const [message, setMessage] = useState<MessageState | null>(null);
+  const [browserWallets, setBrowserWallets] = useState<BrowserWalletOption[]>([]);
+  const [walletPickerOpen, setWalletPickerOpen] = useState(false);
 
   const connectMiniAppWallet = useCallback(async () => {
     const nonceResponse = await fetch("/api/minikit/nonce", {
@@ -102,7 +106,7 @@ export function WalletAuth({
     };
   }, [walletText.messages.nonceError, walletText.messages.verifyError, walletText.messages.worldAppRequired]);
 
-  const connect = useCallback(async () => {
+  const connect = useCallback(async (walletId?: string) => {
     setState({ status: "connecting" });
     setMessage(null);
     try {
@@ -110,7 +114,7 @@ export function WalletAuth({
         const connection = await connectMiniAppWallet();
         setState({ status: "connected", method: "world-app", ...connection });
       } else {
-        const connection = await connectWallet();
+        const connection = await connectWallet(undefined, walletId);
         setState({ status: "connected", method: "browser", ...connection });
       }
       setMessage({ type: "welcome" });
@@ -124,6 +128,36 @@ export function WalletAuth({
       }
     }
   }, [connectMiniAppWallet, isInstalled]);
+
+  const chooseBrowserWallet = useCallback(async () => {
+    if (isInstalled) {
+      await connect();
+      return;
+    }
+
+    try {
+      setMessage(null);
+      const wallets = await discoverBrowserWallets();
+      setBrowserWallets(wallets);
+
+      if (wallets.length === 1) {
+        await connect(wallets[0].id);
+        return;
+      }
+
+      setWalletPickerOpen(true);
+    } catch (error) {
+      setMessage({ type: "custom", text: error instanceof Error ? error.message : walletText.messages.error });
+    }
+  }, [connect, isInstalled, walletText.messages.error]);
+
+  const connectSelectedWallet = useCallback(
+    async (walletId: string) => {
+      setWalletPickerOpen(false);
+      await connect(walletId);
+    },
+    [connect]
+  );
 
   const disconnect = useCallback(async () => {
     if (state.status === "connected" && state.method === "browser") {
@@ -224,7 +258,7 @@ export function WalletAuth({
       <button
         className="flex h-12 items-center justify-center rounded-full bg-[#202027] px-6 text-sm font-semibold text-white transition hover:bg-[#5868ea] disabled:cursor-not-allowed disabled:bg-[#d9d9e0] disabled:text-[#858590]"
         disabled={state.status === "connecting"}
-        onClick={connect}
+        onClick={chooseBrowserWallet}
         type="button"
       >
         {actionLabel}
@@ -265,7 +299,7 @@ export function WalletAuth({
           </button>
         ) : (
           <button
-            onClick={connect}
+            onClick={chooseBrowserWallet}
             disabled={state.status === "connecting"}
             className={primaryButtonClass}
           >
@@ -278,6 +312,37 @@ export function WalletAuth({
         <p className={messageClass}>
           {messageText}
         </p>
+      )}
+
+      {walletPickerOpen && (
+        <div className={miniPanelClass}>
+          <p className={eyebrowClass}>{walletText.walletPicker.title}</p>
+          {browserWallets.length > 0 ? (
+            <div className="mt-3 grid gap-2">
+              {browserWallets.map((wallet) => (
+                <button
+                  className="flex min-h-11 items-center gap-3 rounded-xl border border-white/10 bg-black/10 px-3 text-left text-sm font-medium transition hover:border-aurora-500"
+                  key={wallet.id}
+                  onClick={() => void connectSelectedWallet(wallet.id)}
+                  type="button"
+                >
+                  {wallet.icon ? (
+                    // EIP-6963 wallet icons are supplied by the installed wallet extension.
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img alt="" className="h-6 w-6 rounded-md" src={wallet.icon} />
+                  ) : (
+                    <span className="flex h-6 w-6 items-center justify-center rounded-md bg-aurora-500/15 text-xs text-aurora-500">W</span>
+                  )}
+                  <span>{wallet.name}</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className={detailTextClass}>
+              {walletText.walletPicker.empty}
+            </p>
+          )}
+        </div>
       )}
 
       <WorldIdGate

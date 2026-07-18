@@ -34,7 +34,8 @@ async function deployFixture() {
   const RiskaPolicyManager = await ethers.getContractFactory("RiskaPolicyManager");
   const manager = await RiskaPolicyManager.deploy(
     await beneficiaryRegistry.getAddress(),
-    await premiumVault.getAddress()
+    await premiumVault.getAddress(),
+    owner.address
   );
 
   const RiskaYieldStrategyManager = await ethers.getContractFactory("RiskaYieldStrategyManager");
@@ -97,7 +98,16 @@ async function deployErc4626YieldFixture() {
 }
 
 async function openPolicy(ctx, beneficiaries = [ctx.beneficiaryA.address], shares = [10_000]) {
-  await ctx.manager.connect(ctx.holder).openPolicy(beneficiaries, shares, termsHash);
+  const nullifierHash = ethers.keccak256(ethers.toUtf8Bytes(`test-nullifier-${ctx.holder.address}`));
+  const deadline = (await ethers.provider.getBlock("latest")).timestamp + 3600;
+  const signature = await ctx.owner.signTypedData(
+    { name: "RiskaPolicyManager", version: "1", chainId: 31337, verifyingContract: await ctx.manager.getAddress() },
+    { PolicyHumanAuthorization: [
+      { name: "holder", type: "address" }, { name: "nullifierHash", type: "bytes32" }, { name: "deadline", type: "uint256" }
+    ] },
+    { holder: ctx.holder.address, nullifierHash, deadline }
+  );
+  await ctx.manager.connect(ctx.holder).openPolicy(beneficiaries, shares, termsHash, nullifierHash, deadline, signature);
   return 1;
 }
 
@@ -134,7 +144,7 @@ describe("RiskaPolicyManager", function () {
   it("opens a policy directly from the holder wallet without an admin gate", async function () {
     const ctx = await deployFixture();
 
-    await ctx.manager.connect(ctx.holder).openPolicy([ctx.beneficiaryA.address], [10_000], termsHash);
+    await openPolicy(ctx);
 
     const policy = await ctx.manager.policies(1);
     expect(policy.holder).to.equal(ctx.holder.address);
@@ -159,23 +169,35 @@ describe("RiskaPolicyManager", function () {
     expect(await ctx.manager.beneficiaryAt(policyId, 1)).to.deep.equal([ctx.beneficiaryB.address, 4_000n]);
 
     await expect(
-      ctx.manager.connect(ctx.holder).openPolicy([ctx.beneficiaryA.address], [10_000], termsHash)
+      openPolicy(ctx)
     ).to.be.revertedWith("POLICY_EXISTS");
+  });
+
+  it("opens without beneficiaries and lets the holder add them later", async function () {
+    const ctx = await deployFixture();
+    const policyId = await openPolicy(ctx, [], []);
+
+    expect(await ctx.manager.beneficiaryCount(policyId)).to.equal(0);
+    expect((await ctx.manager.policies(policyId)).remainingMinimumPrincipal).to.equal(usdc("30"));
+
+    await ctx.manager
+      .connect(ctx.holder)
+      .updateBeneficiaries(policyId, [ctx.beneficiaryA.address, ctx.beneficiaryB.address], [6_000, 4_000]);
+
+    expect(await ctx.manager.beneficiaryCount(policyId)).to.equal(2);
+    expect(await ctx.manager.beneficiaryAt(policyId, 0)).to.deep.equal([ctx.beneficiaryA.address, 6_000n]);
+    expect(await ctx.manager.beneficiaryAt(policyId, 1)).to.deep.equal([ctx.beneficiaryB.address, 4_000n]);
   });
 
   it("rejects invalid beneficiary splits", async function () {
     const ctx = await deployFixture();
 
     await expect(
-      ctx.manager
-        .connect(ctx.holder)
-        .openPolicy([ctx.beneficiaryA.address, ctx.beneficiaryB.address], [8_000, 1_000], termsHash)
+      openPolicy(ctx, [ctx.beneficiaryA.address, ctx.beneficiaryB.address], [8_000, 1_000])
     ).to.be.revertedWith("INVALID_SHARES");
 
     await expect(
-      ctx.manager
-        .connect(ctx.holder)
-        .openPolicy([ctx.beneficiaryA.address, ctx.beneficiaryB.address], [10_000], termsHash)
+      openPolicy(ctx, [ctx.beneficiaryA.address, ctx.beneficiaryB.address], [10_000])
     ).to.be.revertedWith("BENEFICIARY_LENGTH");
   });
 
@@ -183,16 +205,14 @@ describe("RiskaPolicyManager", function () {
     const ctx = await deployFixture();
 
     await expect(
-      ctx.manager
-        .connect(ctx.holder)
-        .openPolicy([ctx.beneficiaryA.address, ctx.beneficiaryA.address], [5_000, 5_000], termsHash)
+      openPolicy(ctx, [ctx.beneficiaryA.address, ctx.beneficiaryA.address], [5_000, 5_000])
     ).to.be.revertedWith("DUPLICATE_BENEFICIARY");
 
     const tooManyBeneficiaries = Array.from({ length: 9 }, () => ethers.Wallet.createRandom().address);
     const tooManyShares = [1_200, 1_100, 1_100, 1_100, 1_100, 1_100, 1_100, 1_100, 1_100];
 
     await expect(
-      ctx.manager.connect(ctx.holder).openPolicy(tooManyBeneficiaries, tooManyShares, termsHash)
+      openPolicy(ctx, tooManyBeneficiaries, tooManyShares)
     ).to.be.revertedWith("TOO_MANY_BENEFICIARIES");
   });
 
@@ -330,7 +350,7 @@ describe("RiskaPolicyManager", function () {
     expect(await ctx.manager.policyOf(ctx.holder.address)).to.equal(policyId);
 
     await expect(
-      ctx.manager.connect(ctx.holder).openPolicy([ctx.beneficiaryA.address], [10_000], termsHash)
+      openPolicy(ctx)
     ).to.be.revertedWith("POLICY_EXISTS");
   });
 

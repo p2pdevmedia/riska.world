@@ -231,10 +231,12 @@ const copy = {
       beneficiaries: {
         add: "Add beneficiary",
         invalid: "Shares must total exactly 100%.",
+        optional: "You can add beneficiaries later from your policy dashboard. If you add any now, their shares must total 100%.",
         name: "Name",
         namePlaceholder: "Full name",
         remove: "Remove beneficiary",
         share: "Share",
+        skip: "Continue without beneficiaries",
         total: (value: number) => `Total allocation: ${value}%`,
         wallet: "Wallet",
         walletInvalid: "Each beneficiary needs a valid 0x wallet address.",
@@ -479,10 +481,12 @@ const copy = {
       beneficiaries: {
         add: "Agregar beneficiario",
         invalid: "Los porcentajes deben sumar exactamente 100%.",
+        optional: "Puedes agregar beneficiarios después desde el panel de tu póliza. Si agregas alguno ahora, sus porcentajes deben sumar 100%.",
         name: "Nombre",
         namePlaceholder: "Nombre completo",
         remove: "Quitar beneficiario",
         share: "Porcentaje",
+        skip: "Continuar sin beneficiarios",
         total: (value: number) => `Asignación total: ${value}%`,
         wallet: "Wallet",
         walletInvalid: "Cada beneficiario necesita una wallet 0x válida.",
@@ -906,6 +910,7 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
           const result = await issueTestnetPolicy({
             beneficiaries: state.beneficiaries,
             holder: state.walletSession.address,
+            humanAuthorization: state.humanReservation!,
             onStatus: (step) => setTestnetIssue({ status: "working", step })
           });
 
@@ -1353,16 +1358,17 @@ function BeneficiariesScreen({
         onClick={onSkipBeneficiaries}
         type="button"
       >
-        Continuar sin beneficiarios
+        {text.skip}
       </button>
+      <p className="text-xs leading-5 text-[#9baac0]">{text.optional}</p>
       <div className="h-2 overflow-hidden rounded-full bg-[#202936]">
         <div className="h-full bg-[#5868ea]" style={{ width: `${Math.min(beneficiaryTotal, 100)}%` }} />
       </div>
       <div className="flex flex-col gap-1 text-xs sm:flex-row sm:items-center sm:justify-between">
-        <p className={beneficiaryTotal === 100 ? "text-emerald-300" : "text-red-300"}>
+        <p className={state.beneficiaries.length === 0 || beneficiaryTotal === 100 ? "text-emerald-300" : "text-red-300"}>
           {text.total(beneficiaryTotal)}
         </p>
-        {beneficiaryTotal !== 100 && <p className="text-red-300">{text.invalid}</p>}
+        {state.beneficiaries.length > 0 && beneficiaryTotal !== 100 && <p className="text-red-300">{text.invalid}</p>}
         {hasWalletError && <p className="text-red-300">{text.walletInvalid}</p>}
       </div>
     </div>
@@ -1407,7 +1413,7 @@ function ConfirmScreen({
   const text = content.wizard.confirm;
   const checklist = [
     completion.identity,
-    completion.beneficiaries,
+    state.beneficiaries.length === 0 || completion.beneficiaries,
     completion.quote
   ];
 

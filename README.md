@@ -152,6 +152,21 @@ only inside `app/api/world-id/rp-signature/route.ts`. `RISKA_SESSION_SECRET`
 signs the server-side Wallet Auth session that binds IDKit proofs to the
 authenticated wallet.
 
+World ID reservations require PostgreSQL in every environment, including
+production. Set a pooled, TLS-enabled connection string and apply the checked-in
+migration before serving World ID verification requests:
+
+```bash
+DATABASE_URL=postgresql://...
+npm run db:migrate:deploy
+```
+
+The `PolicyHumanReservation` table stores a one-way SHA-256 digest of each
+action/nullifier pair and has a database-enforced unique constraint. This makes
+the one-policy-per-human reservation safe across restarts, concurrent requests,
+and multiple application instances; if the database is unavailable, verification
+fails closed with HTTP 503 rather than falling back to memory.
+
 ```bash
 npm run dev
 npm run build

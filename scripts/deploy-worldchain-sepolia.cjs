@@ -89,6 +89,7 @@ async function main() {
   }
 
   const deployerAddress = await deployer.getAddress();
+  const policyHumanVerifier = process.env.RISKA_POLICY_HUMAN_VERIFIER || deployerAddress;
   const balance = await ethers.provider.getBalance(deployerAddress);
 
   console.log(`Network: ${hre.network.name} (${chainId})`);
@@ -117,7 +118,8 @@ async function main() {
   const premiumVault = await deployContract("RiskaPremiumVault", [mockUsdc.address, beneficiaryRegistry.address]);
   const policyManager = await deployContract("RiskaPolicyManager", [
     beneficiaryRegistry.address,
-    premiumVault.address
+    premiumVault.address,
+    policyHumanVerifier
   ]);
   const yieldStrategyManager = await deployContract("RiskaYieldStrategyManager", [
     mockUsdc.address,
@@ -198,6 +200,7 @@ async function main() {
     deployedAt: new Date().toISOString(),
     blockNumber,
     deployer: deployerAddress,
+    policyHumanVerifier,
     explorerBaseUrl: "https://worldchain-sepolia.explorer.alchemy.com/address/",
     contracts: {
       mockUsdc: contractRecord(mockUsdc),

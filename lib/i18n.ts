@@ -474,6 +474,10 @@ export const dictionaries = {
         connecting: "Connecting...",
         disconnect: "Disconnect"
       },
+      walletPicker: {
+        empty: "Install an EIP-1193 compatible wallet to connect from your browser.",
+        title: "Choose your wallet"
+      },
       messages: {
         welcome: "Welcome to Riska 30. Wallet Auth is ready for the next onboarding step.",
         disconnected: "Session closed. Reconnect to manage policies, beneficiaries, heartbeat, and payout actions.",
@@ -888,6 +892,10 @@ export const dictionaries = {
         connectBrowser: "Conectar wallet web",
         connecting: "Conectando...",
         disconnect: "Desconectar"
+      },
+      walletPicker: {
+        empty: "Instala una wallet compatible con EIP-1193 para conectarte desde el navegador.",
+        title: "Elige tu wallet"
       },
       messages: {
         welcome: "Bienvenido a Riska 30. Wallet Auth está lista para el siguiente paso.",

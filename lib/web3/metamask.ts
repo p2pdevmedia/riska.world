@@ -16,6 +16,9 @@ export type WalletConnection = {
 
 export type MetaMaskEthereum = {
   isMetaMask?: boolean;
+  isCoinbaseWallet?: boolean;
+  isUniswapWallet?: boolean;
+  isRabby?: boolean;
   providers?: MetaMaskEthereum[];
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
   on?: (event: string, handler: (...args: unknown[]) => void) => void;
@@ -24,10 +27,19 @@ export type MetaMaskEthereum = {
 
 type Eip6963ProviderDetail = {
   info: {
+    icon?: string;
+    uuid?: string;
     rdns?: string;
     name?: string;
   };
   provider: MetaMaskEthereum;
+};
+
+export type BrowserWalletOption = {
+  icon?: string;
+  id: string;
+  name: string;
+  rdns?: string;
 };
 
 const METAMASK_RDNS = "io.metamask";
@@ -36,6 +48,8 @@ const PROVIDER_INITIALIZATION_TIMEOUT_MS = 1_200;
 
 let cachedMetaMaskProvider: MetaMaskEthereum | undefined;
 let cachedMobileSdkProvider: MetaMaskEthereum | undefined;
+let activeBrowserProvider: MetaMaskEthereum | undefined;
+let discoveredBrowserWallets: Array<BrowserWalletOption & { provider: MetaMaskEthereum }> = [];
 
 function getInjectedMetaMask(): MetaMaskEthereum | undefined {
   if (typeof window === "undefined") {
@@ -51,9 +65,9 @@ function getInjectedMetaMask(): MetaMaskEthereum | undefined {
   );
 }
 
-async function getEip6963MetaMask(): Promise<MetaMaskEthereum | undefined> {
+async function getEip6963Providers(): Promise<Eip6963ProviderDetail[]> {
   if (typeof window === "undefined") {
-    return undefined;
+    return [];
   }
 
   return new Promise((resolve) => {
@@ -68,10 +82,7 @@ async function getEip6963MetaMask(): Promise<MetaMaskEthereum | undefined> {
       settled = true;
       window.removeEventListener("eip6963:announceProvider", handleProvider);
 
-      resolve(
-        providers.find(({ info }) => info.rdns === METAMASK_RDNS)?.provider ??
-          providers.find(({ provider }) => provider.isMetaMask)?.provider
-      );
+      resolve(providers);
     };
 
     const handleProvider = (event: Event) => {
@@ -84,12 +95,73 @@ async function getEip6963MetaMask(): Promise<MetaMaskEthereum | undefined> {
   });
 }
 
+function getWalletName(provider: MetaMaskEthereum, fallback = "Browser wallet") {
+  if (provider.isMetaMask) return "MetaMask";
+  if (provider.isCoinbaseWallet) return "Coinbase Wallet";
+  if (provider.isUniswapWallet) return "Uniswap Wallet";
+  if (provider.isRabby) return "Rabby Wallet";
+  return fallback;
+}
+
+function getInjectedProviders() {
+  if (typeof window === "undefined") return [];
+
+  const { ethereum } = window as unknown as { ethereum?: MetaMaskEthereum };
+  if (!ethereum) return [];
+  return ethereum.providers?.length ? ethereum.providers : [ethereum];
+}
+
+export async function discoverBrowserWallets(): Promise<BrowserWalletOption[]> {
+  const announced = await getEip6963Providers();
+  const candidates: Array<BrowserWalletOption & { provider: MetaMaskEthereum }> = [];
+  const seenProviders = new Set<MetaMaskEthereum>();
+
+  const add = (provider: MetaMaskEthereum, option: BrowserWalletOption) => {
+    if (seenProviders.has(provider)) return;
+    seenProviders.add(provider);
+    candidates.push({ ...option, provider });
+  };
+
+  announced.forEach(({ info, provider }, index) => {
+    add(provider, {
+      icon: info.icon,
+      id: `eip6963:${info.rdns ?? info.uuid ?? index}`,
+      name: info.name ?? getWalletName(provider),
+      rdns: info.rdns
+    });
+  });
+
+  getInjectedProviders().forEach((provider, index) => {
+    add(provider, {
+      id: `injected:${index}:${getWalletName(provider).toLowerCase().replace(/\s+/g, "-")}`,
+      name: getWalletName(provider),
+      rdns: provider.isMetaMask ? METAMASK_RDNS : undefined
+    });
+  });
+
+  // MetaMask Mobile does not always expose an injected provider before its SDK
+  // has initialized. Keep its existing deep-link fallback available on phones.
+  if (candidates.length === 0 && isMobileDevice()) {
+    const mobileProvider = await getMobileSdkProvider();
+    if (mobileProvider) {
+      add(mobileProvider, { id: "metamask-mobile", name: "MetaMask" , rdns: METAMASK_RDNS });
+    }
+  }
+
+  discoveredBrowserWallets = candidates;
+  return candidates.map(({ provider: _provider, ...option }) => option);
+}
+
 async function getMetaMaskProvider(): Promise<MetaMaskEthereum | undefined> {
   if (cachedMetaMaskProvider) {
     return cachedMetaMaskProvider;
   }
 
-  cachedMetaMaskProvider = (await getEip6963MetaMask()) ?? getInjectedMetaMask();
+  const announced = await getEip6963Providers();
+  cachedMetaMaskProvider =
+    announced.find(({ info }) => info.rdns === METAMASK_RDNS)?.provider ??
+    announced.find(({ provider }) => provider.isMetaMask)?.provider ??
+    getInjectedMetaMask();
 
   // MetaMask Mobile injects the provider asynchronously after its in-app browser
   // has loaded the page. Waiting for its initialization event avoids presenting a
@@ -153,13 +225,25 @@ async function getMobileSdkProvider(): Promise<MetaMaskEthereum | undefined> {
   return cachedMobileSdkProvider;
 }
 
-export async function getBrowserEthereumProvider(): Promise<MetaMaskEthereum> {
-  const ethereum = (await getMetaMaskProvider()) ?? (await getMobileSdkProvider());
-
-  if (!ethereum) {
-    throw new Error("MetaMask no está disponible en este navegador.");
+export async function getBrowserEthereumProvider(walletId?: string): Promise<MetaMaskEthereum> {
+  if (walletId) {
+    if (discoveredBrowserWallets.length === 0) {
+      await discoverBrowserWallets();
+    }
+    const selected = discoveredBrowserWallets.find((wallet) => wallet.id === walletId)?.provider;
+    if (selected) {
+      activeBrowserProvider = selected;
+      return selected;
+    }
   }
 
+  const ethereum = activeBrowserProvider ?? (await getMetaMaskProvider()) ?? (await getMobileSdkProvider());
+
+  if (!ethereum) {
+    throw new Error("No encontramos una wallet compatible. Instala o abre MetaMask, Coinbase Wallet, Uniswap Wallet, Rabby u otra wallet EIP-1193.");
+  }
+
+  activeBrowserProvider = ethereum;
   return ethereum;
 }
 
@@ -179,18 +263,18 @@ async function requestWithTimeout<T>(request: Promise<T>, message: string): Prom
   }
 }
 
-export async function connectWallet(chain: Chain = worldchain): Promise<WalletConnection> {
-  const ethereum = await getBrowserEthereumProvider();
+export async function connectWallet(chain: Chain = worldchain, walletId?: string): Promise<WalletConnection> {
+  const ethereum = await getBrowserEthereumProvider(walletId);
 
   const [account] = (await requestWithTimeout(
     ethereum.request({
       method: "eth_requestAccounts"
     }) as Promise<string[]>,
-    "MetaMask no respondió a tiempo. Revisa si la extensión está desbloqueada y vuelve a intentar."
+    "La wallet no respondió a tiempo. Revisa que esté desbloqueada y vuelve a intentar."
   )) as string[];
 
   if (!account) {
-    throw new Error("MetaMask no devolvió ninguna cuenta.");
+    throw new Error("La wallet no devolvió ninguna cuenta.");
   }
 
   const walletClient = createWalletClient({
@@ -246,7 +330,7 @@ export async function createWorldchainSepoliaWalletClient() {
 }
 
 export async function disconnectWallet(): Promise<void> {
-  const ethereum = await getMetaMaskProvider();
+  const ethereum = activeBrowserProvider ?? (await getMetaMaskProvider());
 
   if (!ethereum) {
     return;
@@ -258,7 +342,9 @@ export async function disconnectWallet(): Promise<void> {
       params: [{ eth_accounts: {} }]
     });
   } catch (error) {
-    console.warn("No se pudo cerrar la sesión de MetaMask:", error);
+    console.warn("No se pudo revocar el acceso de la wallet:", error);
+  } finally {
+    activeBrowserProvider = undefined;
   }
 }
 
@@ -280,7 +366,7 @@ export function onWalletChange(
   let removeListeners = () => undefined;
   let disposed = false;
 
-  void getMetaMaskProvider().then((ethereum) => {
+  void getBrowserEthereumProvider().then((ethereum) => {
     if (disposed || !ethereum?.on) {
       return;
     }

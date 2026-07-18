@@ -2,6 +2,8 @@ import type { IDKitResult } from "@worldcoin/idkit";
 import { hashSignal } from "@worldcoin/idkit/hashing";
 import { cookies } from "next/headers";
 import { getAddress } from "viem";
+import { keccak256, stringToHex } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
 import { NextResponse } from "next/server";
 
 import {
@@ -9,10 +11,7 @@ import {
   RISKA_WORLD_ID_POLICY_ACTION,
   normalizeWorldIdSignal
 } from "@/lib/world/idkit";
-import {
-  normalizeNullifier,
-  reservePolicyHuman
-} from "@/lib/world/policy-human-registry";
+import { normalizeNullifier } from "@/lib/world/policy-human-registry";
 import { readWalletSession } from "@/lib/world/wallet-session";
 
 type VerifyPolicyHumanRequest = {
@@ -160,31 +159,29 @@ export async function POST(request: Request) {
 
   const nullifier = normalizeNullifier(nullifierHex);
   const credentialIdentifiers = responses.map((response) => response.identifier);
-  const reservation = reservePolicyHuman({
-    action: RISKA_WORLD_ID_POLICY_ACTION,
-    credentialIdentifiers,
-    nullifier,
-    nullifierHex,
-    protocolVersion: idkitResponse.protocol_version,
-    walletAddress: normalizedWallet
-  });
-
-  if (!reservation.ok) {
+  const signingKey = process.env.RP_SIGNING_KEY as `0x${string}` | undefined;
+  const policyManager = process.env.RISKA_WORLDCHAIN_SEPOLIA_POLICY_MANAGER as `0x${string}` | undefined;
+  if (!signingKey || !policyManager) {
     return NextResponse.json(
-      {
-        success: false,
-        alreadyReserved: true,
-        error: "This verified human is already reserved for a Riska policy.",
-        reservation: reservation.reservation
-      },
-      { status: 409 }
+      { success: false, code: "policy_human_attestation_unavailable", error: "Identity authorization is temporarily unavailable." },
+      { status: 503 }
     );
   }
+  const nullifierHash = keccak256(stringToHex(`${RISKA_WORLD_ID_POLICY_ACTION}:${nullifier}`));
+  const deadline = BigInt(Math.floor(Date.now() / 1000) + 15 * 60);
+  const authorization = await privateKeyToAccount(signingKey).signTypedData({
+    domain: { name: "RiskaPolicyManager", version: "1", chainId: 4801, verifyingContract: policyManager },
+    types: { PolicyHumanAuthorization: [
+      { name: "holder", type: "address" }, { name: "nullifierHash", type: "bytes32" }, { name: "deadline", type: "uint256" }
+    ] },
+    primaryType: "PolicyHumanAuthorization",
+    message: { holder: normalizedWallet as `0x${string}`, nullifierHash, deadline }
+  });
 
   return NextResponse.json({
     success: true,
     policyGateStatus: "verified_unique_human",
-    reservation: reservation.reservation
+    reservation: { credentialIdentifiers, nullifier, protocolVersion: idkitResponse.protocol_version, reservedAt: new Date().toISOString(), walletAddress: normalizedWallet, nullifierHash, deadline: deadline.toString(), authorization }
   });
 }
 

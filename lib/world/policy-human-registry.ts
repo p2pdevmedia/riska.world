@@ -1,3 +1,7 @@
+import { createHash } from "node:crypto";
+
+import { getPrisma } from "@/lib/prisma";
+
 export type PolicyHumanReservation = {
   action: string;
   credentialIdentifiers: string[];
@@ -10,45 +14,46 @@ export type PolicyHumanReservation = {
 
 type ReservationResult =
   | { ok: true; reservation: PolicyHumanReservation }
-  | { ok: false; reservation: PolicyHumanReservation };
+  | { ok: false };
 
-type RegistryGlobal = typeof globalThis & {
-  __riskaPolicyHumanRegistry?: Map<string, PolicyHumanReservation>;
-};
-
-const registryGlobal = globalThis as RegistryGlobal;
-
-const policyHumanRegistry =
-  registryGlobal.__riskaPolicyHumanRegistry ?? new Map<string, PolicyHumanReservation>();
-
-if (process.env.NODE_ENV !== "production") {
-  registryGlobal.__riskaPolicyHumanRegistry = policyHumanRegistry;
-}
-
-export function reservePolicyHuman(
+/**
+ * Atomically reserves one World ID nullifier for an action.
+ *
+ * The database's composite unique constraint, rather than process memory,
+ * arbitrates simultaneous requests from any number of app instances. The raw
+ * nullifier is never persisted; only a namespaced SHA-256 digest is stored.
+ */
+export async function reservePolicyHuman(
   reservation: Omit<PolicyHumanReservation, "reservedAt">
-): ReservationResult {
-  const key = getReservationKey(reservation.action, reservation.nullifier);
-  const existingReservation = policyHumanRegistry.get(key);
+): Promise<ReservationResult> {
+  const reservedAt = new Date().toISOString();
 
-  if (existingReservation) {
-    return { ok: false, reservation: existingReservation };
+  try {
+    await getPrisma().policyHumanReservation.create({
+      data: {
+        action: reservation.action,
+        credentialIdentifiers: reservation.credentialIdentifiers,
+        nullifierHash: hashNullifier(reservation.action, reservation.nullifier),
+        protocolVersion: reservation.protocolVersion,
+        walletAddress: reservation.walletAddress
+      }
+    });
+  } catch (error) {
+    if (isUniqueConstraintError(error)) return { ok: false };
+    throw error;
   }
 
-  const nextReservation = {
-    ...reservation,
-    reservedAt: new Date().toISOString()
-  };
-
-  policyHumanRegistry.set(key, nextReservation);
-
-  return { ok: true, reservation: nextReservation };
+  return { ok: true, reservation: { ...reservation, reservedAt } };
 }
 
 export function normalizeNullifier(nullifier: string) {
   return BigInt(nullifier).toString(10);
 }
 
-function getReservationKey(action: string, nullifier: string) {
-  return `${action}:${nullifier}`;
+function hashNullifier(action: string, nullifier: string) {
+  return createHash("sha256").update(`${action}:${nullifier}`).digest("hex");
+}
+
+function isUniqueConstraintError(error: unknown): error is { code: "P2002" } {
+  return typeof error === "object" && error !== null && "code" in error && error.code === "P2002";
 }

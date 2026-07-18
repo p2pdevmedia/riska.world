@@ -7,6 +7,7 @@ import { worldchainSepolia } from "viem/chains";
 
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
+import { useEnvironment } from "@/components/NetworkEnvironment";
 import {
   WORLDCHAIN_SEPOLIA_CHAIN_ID,
   type RiskaTestnetConfigResponse
@@ -44,6 +45,7 @@ const assets = [
 type ClaimStatus = "idle" | "loading" | "claimed" | "error";
 
 export function TestnetTokenClaim() {
+  const { environment, setEnvironment } = useEnvironment();
   const [faucetAddress, setFaucetAddress] = useState<Address | null>(null);
   const [status, setStatus] = useState<ClaimStatus>("loading");
   const [message, setMessage] = useState("Verificando faucet de World Chain Sepolia…");
@@ -116,6 +118,15 @@ export function TestnetTokenClaim() {
     <div className="riska-dark-surface flex min-h-screen flex-col bg-[#080b10] text-[#f5f7fb]">
       <Navbar />
       <main className="flex flex-1 items-center justify-center px-5 py-16 pb-28">
+        {environment === "production" ? (
+          <section className="w-full max-w-xl rounded-[28px] border border-[#315a48] bg-[#101d18] p-6">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#8fe1ae]">Producción</p>
+            <h1 className="mt-3 text-2xl font-semibold">El faucet solo existe en Testnet.</h1>
+            <button className="mt-5 rounded-xl bg-[#5868ea] px-4 py-2 text-sm font-semibold text-white" onClick={() => setEnvironment("testnet")} type="button">
+              Cambiar a TEST
+            </button>
+          </section>
+        ) : (
         <section className="w-full max-w-xl overflow-hidden rounded-[28px] border border-[#202936] bg-[#10151d] p-5 shadow-[0_22px_60px_rgba(8,11,16,0.28)] md:p-7">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#20295b] text-[#aeb8ff]">
             <Coins className="h-6 w-6" />
@@ -148,6 +159,7 @@ export function TestnetTokenClaim() {
             {status === "claimed" ? "Claim completed" : "Claim test tokens"}
           </button>
         </section>
+        )}
       </main>
       <Footer />
     </div>

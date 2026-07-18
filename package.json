@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "db:generate": "prisma generate",
+    "db:migrate:deploy": "prisma migrate deploy",
     "contracts:compile": "hardhat compile --config hardhat.config.cjs",
     "contracts:test": "hardhat test --config hardhat.config.cjs",
     "wallet:create:worldchain-sepolia": "node scripts/create-worldchain-test-wallet.cjs",

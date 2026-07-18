@@ -2,6 +2,8 @@
 pragma solidity ^0.8.24;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
@@ -11,7 +13,10 @@ import {RiskaPolicyMath} from "./RiskaPolicyMath.sol";
 import {RiskaPremiumVault} from "./RiskaPremiumVault.sol";
 import {RiskaYieldStrategyManager} from "./RiskaYieldStrategyManager.sol";
 
-contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
+contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard, EIP712 {
+    bytes32 private constant POLICY_HUMAN_AUTHORIZATION_TYPEHASH = keccak256(
+        "PolicyHumanAuthorization(address holder,bytes32 nullifierHash,uint256 deadline)"
+    );
     enum PolicyStatus {
         None,
         Active,
@@ -22,6 +27,7 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
 
     struct Policy {
         address holder;
+        bytes32 nullifierHash;
         bytes32 termsHash;
         uint16 payoutsMade;
         uint256 openedAt;
@@ -52,11 +58,13 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
     RiskaBeneficiaryRegistry public immutable beneficiaryRegistry;
     RiskaPremiumVault public immutable premiumVault;
     RiskaYieldStrategyManager public yieldStrategyManager;
+    address public immutable policyHumanVerifier;
 
     uint256 public nextPolicyId = 1;
 
     mapping(uint256 => Policy) public policies;
     mapping(address => uint256) public policyOf;
+    mapping(bytes32 => uint256) public policyOfNullifierHash;
     mapping(uint256 => DeathNotice) public deathNotices;
     mapping(uint256 => mapping(address => uint256)) public auxiliaryTokenBalances;
     mapping(uint256 => address[]) private auxiliaryTokens;
@@ -67,7 +75,7 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
     mapping(uint256 => uint256) public yieldPrincipalAllocated;
 
     event YieldStrategyManagerUpdated(address indexed yieldStrategyManager);
-    event PolicyOpened(uint256 indexed policyId, address indexed holder, bytes32 indexed termsHash);
+    event PolicyOpened(uint256 indexed policyId, address indexed holder, bytes32 indexed nullifierHash, bytes32 termsHash);
     event PolicyDeposit(
         uint256 indexed policyId,
         address indexed holder,
@@ -108,13 +116,16 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
 
     constructor(
         RiskaBeneficiaryRegistry beneficiaryRegistry_,
-        RiskaPremiumVault premiumVault_
-    ) Ownable(msg.sender) {
+        RiskaPremiumVault premiumVault_,
+        address policyHumanVerifier_
+    ) Ownable(msg.sender) EIP712("RiskaPolicyManager", "1") {
         require(address(beneficiaryRegistry_) != address(0), "INVALID_REGISTRY");
         require(address(premiumVault_) != address(0), "INVALID_VAULT");
+        require(policyHumanVerifier_ != address(0), "INVALID_HUMAN_VERIFIER");
 
         beneficiaryRegistry = beneficiaryRegistry_;
         premiumVault = premiumVault_;
+        policyHumanVerifier = policyHumanVerifier_;
     }
 
     function pause() external onlyOwner {
@@ -134,16 +145,28 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
     function openPolicy(
         address[] memory beneficiaries,
         uint16[] memory sharesBps,
-        bytes32 termsHash
+        bytes32 termsHash,
+        bytes32 nullifierHash,
+        uint256 deadline,
+        bytes memory authorization
     ) external whenNotPaused nonReentrant returns (uint256 policyId) {
         require(policyOf[msg.sender] == 0, "POLICY_EXISTS");
         require(termsHash != bytes32(0), "INVALID_TERMS");
+        require(nullifierHash != bytes32(0), "INVALID_NULLIFIER");
+        require(policyOfNullifierHash[nullifierHash] == 0, "NULLIFIER_ALREADY_USED");
+        require(block.timestamp <= deadline, "HUMAN_AUTHORIZATION_EXPIRED");
+        bytes32 digest = _hashTypedDataV4(keccak256(abi.encode(
+            POLICY_HUMAN_AUTHORIZATION_TYPEHASH, msg.sender, nullifierHash, deadline
+        )));
+        require(ECDSA.recover(digest, authorization) == policyHumanVerifier, "INVALID_HUMAN_AUTHORIZATION");
 
         policyId = nextPolicyId++;
         policyOf[msg.sender] = policyId;
+        policyOfNullifierHash[nullifierHash] = policyId;
 
         policies[policyId] = Policy({
             holder: msg.sender,
+            nullifierHash: nullifierHash,
             termsHash: termsHash,
             payoutsMade: 0,
             openedAt: block.timestamp,
@@ -158,7 +181,7 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard {
         beneficiaryRegistry.setBeneficiaries(policyId, beneficiaries, sharesBps);
         _collectAndAllocateDeposit(policyId, RiskaPolicyMath.MINIMUM_MONTHLY_UNIT);
 
-        emit PolicyOpened(policyId, msg.sender, termsHash);
+        emit PolicyOpened(policyId, msg.sender, nullifierHash, termsHash);
     }
 
     function deposit(uint256 policyId, uint256 amount) external whenNotPaused nonReentrant {
