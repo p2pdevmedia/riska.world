@@ -33,6 +33,7 @@ import {
 import { Footer } from "@/components/Footer";
 import { useLanguage } from "@/components/LanguageProvider";
 import { Navbar } from "@/components/Navbar";
+import { useEnvironment } from "@/components/NetworkEnvironment";
 import { WalletAuth, type WalletAuthSession } from "@/components/WalletAuth";
 import { WorldIdGate, type PolicyHumanReservationView } from "@/components/WorldIdGate";
 import type { Language } from "@/lib/i18n";
@@ -125,12 +126,19 @@ const steps: WizardStep[] = [
 const copy = {
   en: {
     welcome: {
-      badge: "Riska 30",
-      title: "Flexible life protection for verified humans.",
+      badge: "RISKA · LEGACY, MADE CLEAR",
+      eyebrow: "Riska 30 · Protection account",
+      title: "Your future. Your rules. Your legacy.",
       body:
-        "Riska is a flexible USDC policy on World Chain. You fund a 10,800 USDC minimum at your own pace, add or withdraw extra principal whenever you want, and once the minimum is covered you can also hold other ERC20 tokens. If a claim is settled, those tokens pass in full to your beneficiaries.",
+        "Build protection at your own pace, choose how to receive future payments, and leave clear instructions for the people who matter most.",
       primary: "Start application",
       secondary: "Read policy rules",
+      walletEyebrow: "Start with your wallet",
+      proofs: [
+        "Your balance stays visible",
+        "Your beneficiaries are defined by you",
+        "Your rules are verifiable"
+      ],
       cards: [
         {
           icon: HeartHandshake,
@@ -366,12 +374,19 @@ const copy = {
   },
   es: {
     welcome: {
-      badge: "Riska 30",
-      title: "Protección flexible para humanos verificados.",
+      badge: "RISKA · LEGADO CLARO",
+      eyebrow: "Riska 30 · Cuenta de protección",
+      title: "Tu futuro. Tus reglas. Tu legado.",
       body:
-        "Riska es una póliza en USDC, flexible, sobre World Chain. Fondeas un mínimo de 10,800 USDC a tu propio ritmo, agregas o retiras principal extra cuando quieras y, una vez cubierto el mínimo, también puedes guardar otros tokens ERC20. Si se liquida la póliza, esos tokens pasan completos a tus beneficiarios.",
+        "Construye protección a tu ritmo, decide cómo recibir tus pagos futuros y deja instrucciones claras para las personas que más importan.",
       primary: "Empezar solicitud",
       secondary: "Ver reglas",
+      walletEyebrow: "Empieza con tu wallet",
+      proofs: [
+        "Tu saldo siempre visible",
+        "Tus beneficiarios, definidos por ti",
+        "Tus reglas, verificables"
+      ],
       cards: [
         {
           icon: HeartHandshake,
@@ -624,6 +639,7 @@ const initialState: EnrollmentState = {
 
 export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home" | "rules" }) {
   const { language } = useLanguage();
+  const { environment } = useEnvironment();
   const content = copy[language];
   const [activeStepId, setActiveStepId] = useState<StepId>("identity");
   const [hydrated, setHydrated] = useState(false);
@@ -939,7 +955,9 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
       <main className="pb-28">
         {view === "home" && <WelcomeScreen content={content} onStartApplication={startApplication} />}
 
-        {view === "apply" && <section id="enroll" className={`mx-auto px-5 py-10 md:px-8 lg:py-14 ${state.issuedPolicyId ? "max-w-6xl" : "max-w-3xl"}`}>
+        {view === "apply" && environment === "production" && <ProductionUnavailable />}
+
+        {view === "apply" && environment === "testnet" && <section id="enroll" className={`mx-auto px-5 py-10 md:px-8 lg:py-14 ${state.issuedPolicyId ? "max-w-6xl" : "max-w-3xl"}`}>
           <div className="space-y-4">
             {!state.issuedPolicyId && (
               <StepRail
@@ -1037,6 +1055,20 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
   );
 }
 
+function ProductionUnavailable() {
+  return (
+    <section className="mx-auto max-w-xl px-5 py-16 pb-32">
+      <div className="rounded-[28px] border border-[#315a48] bg-[#101d18] p-6 shadow-[0_22px_60px_rgba(8,11,16,0.28)]">
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#8fe1ae]">Producción</p>
+        <h1 className="mt-3 text-2xl font-semibold tracking-[-0.035em] text-[#f5f7fb]">El flujo mainnet todavía no está configurado.</h1>
+        <p className="mt-3 text-sm leading-6 text-[#b4c5bb]">
+          Esta protección evita enviar fondos reales al contrato de prueba. Cambiá a TEST para probar el flujo de Sepolia y reclamar tokens de prueba.
+        </p>
+      </div>
+    </section>
+  );
+}
+
 function WelcomeScreen({
   content,
   onStartApplication
@@ -1047,13 +1079,52 @@ function WelcomeScreen({
   const welcome = content.welcome;
 
   return (
-    <section className="flex min-h-[calc(100vh-7rem)] items-center justify-center px-5 py-10">
-      <div className="w-full max-w-sm text-center">
-        <p className="text-sm font-bold tracking-[-0.05em] text-[#202027]">RISKA</p>
-        <h1 className="mt-5 text-4xl font-semibold tracking-[-0.06em] text-[#202027]">{welcome.primary}</h1>
-        <p className="mt-3 text-sm leading-6 text-[#777782]">Conecta tu wallet para comenzar.</p>
-        <div className="mt-7 flex justify-center">
-          <WalletAuth onSessionChange={onStartApplication} variant="start" />
+    <section className="relative isolate overflow-hidden px-5 pb-32 pt-12 md:px-8 md:pt-24">
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_12%_16%,rgba(88,104,234,0.22),transparent_29%),radial-gradient(circle_at_84%_25%,rgba(45,212,191,0.12),transparent_26%)]" />
+      <div className="pointer-events-none absolute left-[8%] top-16 -z-10 h-56 w-56 rounded-full border border-[#5868ea]/15" />
+      <div className="pointer-events-none absolute right-[8%] top-36 -z-10 h-80 w-80 rounded-full border border-aurora-500/10" />
+
+      <div className="mx-auto grid min-h-[calc(100vh-12rem)] max-w-6xl items-center gap-12 md:grid-cols-[1.1fr_0.9fr] md:gap-16">
+        <div className="max-w-2xl space-y-8">
+          <div className="flex items-center gap-3 text-xs font-semibold tracking-[0.22em] text-[#aeb8ff]">
+            <span className="relative grid h-8 w-8 place-items-center rounded-full border border-[#5868ea]/50 bg-[#5868ea]/10">
+              <span className="absolute h-3 w-3 rounded-full border border-aurora-500" />
+              <span className="h-1.5 w-1.5 rounded-full bg-aurora-500 shadow-glow" />
+            </span>
+            {welcome.badge}
+          </div>
+
+          <div className="space-y-5">
+            <p className="text-sm font-medium tracking-wide text-aurora-500">{welcome.eyebrow}</p>
+            <h1 className="max-w-2xl text-5xl font-semibold leading-[1.04] tracking-[-0.055em] text-white md:text-7xl">
+              {welcome.title}
+            </h1>
+            <p className="max-w-xl text-lg leading-8 text-[#b7c3d5] md:text-xl">{welcome.body}</p>
+          </div>
+
+          <div className="flex flex-wrap gap-x-6 gap-y-3 text-sm text-[#c9d2df]">
+            {welcome.proofs.map((proof) => (
+              <span className="flex items-center gap-2" key={proof}>
+                <Check aria-hidden="true" className="h-4 w-4 text-aurora-500" strokeWidth={2.5} />
+                {proof}
+              </span>
+            ))}
+          </div>
+
+          <a className="inline-flex text-sm font-semibold text-[#d9dfff] transition hover:text-white" href="/rules">
+            {welcome.secondary} →
+          </a>
+        </div>
+
+        <div className="relative mx-auto w-full max-w-lg md:mx-0">
+          <div className="pointer-events-none absolute -inset-6 -z-10 rounded-[2.5rem] bg-gradient-to-br from-[#5868ea]/20 via-transparent to-aurora-500/10 blur-2xl" />
+          <p className="mb-3 flex items-center gap-2 px-2 text-xs font-medium text-[#9baac0]">
+            <ShieldCheck aria-hidden="true" className="h-4 w-4 text-aurora-500" />
+            {welcome.walletEyebrow}
+          </p>
+          <div className="glass-panel p-2 md:p-3">
+            <WalletAuth onSessionChange={onStartApplication} />
+          </div>
         </div>
       </div>
     </section>
