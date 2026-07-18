@@ -10,4 +10,7 @@ tmp/
 artifacts/
 cache/
 coverage/
+test-results/
+playwright-report/
+*.tsbuildinfo
 typechain-types/

@@ -18,8 +18,9 @@ async function advance(seconds) {
   await network.provider.send("evm_mine");
 }
 
-async function deployFixture() {
+async function deployFixture({ policyHumanSigner } = {}) {
   const [owner, holder, beneficiaryA, beneficiaryB, beneficiaryC, stranger] = await ethers.getSigners();
+  const verifier = policyHumanSigner ?? owner;
 
   const MockUSDC = await ethers.getContractFactory("MockUSDC");
   const token = await MockUSDC.deploy();
@@ -35,7 +36,7 @@ async function deployFixture() {
   const manager = await RiskaPolicyManager.deploy(
     await beneficiaryRegistry.getAddress(),
     await premiumVault.getAddress(),
-    owner.address
+    verifier.address
   );
 
   const RiskaYieldStrategyManager = await ethers.getContractFactory("RiskaYieldStrategyManager");
@@ -66,6 +67,7 @@ async function deployFixture() {
 
   return {
     owner,
+    policyHumanSigner: verifier,
     holder,
     beneficiaryA,
     beneficiaryB,
@@ -100,7 +102,7 @@ async function deployErc4626YieldFixture() {
 async function openPolicy(ctx, beneficiaries = [ctx.beneficiaryA.address], shares = [10_000]) {
   const nullifierHash = ethers.keccak256(ethers.toUtf8Bytes(`test-nullifier-${ctx.holder.address}`));
   const deadline = (await ethers.provider.getBlock("latest")).timestamp + 3600;
-  const signature = await ctx.owner.signTypedData(
+  const signature = await ctx.policyHumanSigner.signTypedData(
     { name: "RiskaPolicyManager", version: "1", chainId: 31337, verifyingContract: await ctx.manager.getAddress() },
     { PolicyHumanAuthorization: [
       { name: "holder", type: "address" }, { name: "nullifierHash", type: "bytes32" }, { name: "deadline", type: "uint256" }
@@ -187,6 +189,17 @@ describe("RiskaPolicyManager", function () {
     expect(await ctx.manager.beneficiaryCount(policyId)).to.equal(2);
     expect(await ctx.manager.beneficiaryAt(policyId, 0)).to.deep.equal([ctx.beneficiaryA.address, 6_000n]);
     expect(await ctx.manager.beneficiaryAt(policyId, 1)).to.deep.equal([ctx.beneficiaryB.address, 4_000n]);
+  });
+
+  it("opens without beneficiaries when the human authorization uses the configured verifier", async function () {
+    const [, , , , , backendSigner] = await ethers.getSigners();
+    const ctx = await deployFixture({ policyHumanSigner: backendSigner });
+
+    const policyId = await openPolicy(ctx, [], []);
+
+    expect(await ctx.manager.policyHumanVerifier()).to.equal(backendSigner.address);
+    expect(await ctx.manager.beneficiaryCount(policyId)).to.equal(0);
+    expect((await ctx.manager.policies(policyId)).remainingMinimumPrincipal).to.equal(usdc("30"));
   });
 
   it("rejects invalid beneficiary splits", async function () {

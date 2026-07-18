@@ -89,7 +89,10 @@ async function main() {
   }
 
   const deployerAddress = await deployer.getAddress();
-  const policyHumanVerifier = process.env.RISKA_POLICY_HUMAN_VERIFIER || deployerAddress;
+  const policyHumanVerifier = process.env.RISKA_POLICY_HUMAN_VERIFIER;
+  if (!ethers.isAddress(policyHumanVerifier)) {
+    throw new Error("RISKA_POLICY_HUMAN_VERIFIER must be the address for RP_SIGNING_KEY before deploying PolicyManager.");
+  }
   const balance = await ethers.provider.getBalance(deployerAddress);
 
   console.log(`Network: ${hre.network.name} (${chainId})`);
