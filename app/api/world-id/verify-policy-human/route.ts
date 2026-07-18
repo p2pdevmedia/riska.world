@@ -31,6 +31,7 @@ type NullifierResponse = {
 };
 
 export const dynamic = "force-dynamic";
+const POLICY_HUMAN_AUTHORIZATION_SESSION_SECONDS = 30 * 24 * 60 * 60;
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as VerifyPolicyHumanRequest | null;
@@ -168,7 +169,7 @@ export async function POST(request: Request) {
     );
   }
   const nullifierHash = keccak256(stringToHex(`${RISKA_WORLD_ID_POLICY_ACTION}:${nullifier}`));
-  const deadline = BigInt(Math.floor(Date.now() / 1000) + 15 * 60);
+  const deadline = BigInt(Math.floor(Date.now() / 1000) + POLICY_HUMAN_AUTHORIZATION_SESSION_SECONDS);
   const authorization = await privateKeyToAccount(signingKey).signTypedData({
     domain: { name: "RiskaPolicyManager", version: "1", chainId: 4801, verifyingContract: policyManager },
     types: { PolicyHumanAuthorization: [
