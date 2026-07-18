@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useLanguage } from "@/components/LanguageProvider";
+import { EnvironmentSwitcher, useEnvironment } from "@/components/NetworkEnvironment";
 import { disconnectWallet } from "@/lib/web3/metamask";
 
 const enrollmentStorageKey = "riska.enrollment.v2";
@@ -25,6 +26,7 @@ function hasActiveWalletSession() {
 
 export function Navbar() {
   const { t } = useLanguage();
+  const { environment } = useEnvironment();
   const pathname = usePathname();
   const rules = t.navbar.links.find((link) => link.href === "/rules");
   const contracts = t.navbar.links.find((link) => link.href === "/docs");
@@ -61,6 +63,14 @@ export function Navbar() {
 
   return (
     <header className="fixed inset-x-0 bottom-0 z-40 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <div className="mx-auto mb-2 flex max-w-lg items-center justify-end gap-2">
+        <EnvironmentSwitcher />
+        {environment === "testnet" && (
+          <Link className="rounded-xl bg-[#5868ea] px-3 py-2 text-[10px] font-bold text-white transition hover:bg-[#6d7af1]" href="/claim-tokens">
+            CLAIM
+          </Link>
+        )}
+      </div>
       <nav className="mx-auto flex max-w-lg items-center justify-between rounded-[24px] border border-[#303a49] bg-[#10151d]/95 px-2 py-2 shadow-[0_12px_40px_rgba(8,11,16,0.4)] backdrop-blur-xl">
         {items.map((item) => {
           const Icon = item.icon;
