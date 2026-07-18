@@ -150,7 +150,7 @@ export function WorldIdGate({
     let response: Response;
 
     try {
-      response = await fetch("/api/world-id/rp-signature", {
+      response = await fetch("/api/identity/rp-signature", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -190,7 +190,7 @@ export function WorldIdGate({
       let response: Response;
 
       try {
-        response = await fetch("/api/world-id/verify-policy-human", {
+        response = await fetch("/api/identity/verify-policy-human", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
