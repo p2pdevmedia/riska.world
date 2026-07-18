@@ -6,6 +6,7 @@ import {
   getAddress,
   http,
   isAddress,
+  parseEventLogs,
   parseUnits,
   type Hash
 } from "viem";
@@ -190,7 +191,8 @@ const policyOpenedEvent = {
   inputs: [
     { indexed: true, name: "policyId", type: "uint256" },
     { indexed: true, name: "holder", type: "address" },
-    { indexed: true, name: "termsHash", type: "bytes32" }
+    { indexed: true, name: "nullifierHash", type: "bytes32" },
+    { indexed: false, name: "termsHash", type: "bytes32" }
   ],
   name: "PolicyOpened",
   type: "event"
@@ -974,9 +976,14 @@ export async function issueTestnetPolicy({
     functionName: "openPolicy"
   });
   txHashes.openPolicy = openPolicyHash;
-  await publicClient.waitForTransactionReceipt({ hash: openPolicyHash });
-
-  const policyId = await waitForPolicyIdForHolder(contracts.policyManager, account);
+  const receipt = await publicClient.waitForTransactionReceipt({ hash: openPolicyHash });
+  const policyOpened = parseEventLogs({
+    abi: [policyOpenedEvent],
+    eventName: "PolicyOpened",
+    logs: receipt.logs,
+    strict: false
+  }).find((event) => event.address.toLowerCase() === contracts.policyManager.toLowerCase() && event.args.holder?.toLowerCase() === account.toLowerCase());
+  const policyId = policyOpened?.args.policyId ?? await waitForPolicyIdForHolder(contracts.policyManager, account);
 
   onStatus?.("issued");
 
@@ -1198,17 +1205,17 @@ async function readPolicyIdForHolder(policyManager: `0x${string}`, account: `0x$
 }
 
 async function waitForPolicyIdForHolder(policyManager: `0x${string}`, account: `0x${string}`) {
-  for (let attempt = 0; attempt < 8; attempt += 1) {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
     const policyId = await readPolicyIdForHolder(policyManager, account);
 
     if (policyId > 0n) {
       return policyId;
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 750));
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
   }
 
-  throw new Error("The policy transaction was confirmed, but the policy ID is not available yet. Refresh the dashboard in a moment.");
+  throw new Error("The policy transaction was confirmed, but the policy ID could not be read yet. Please try opening the dashboard again.");
 }
 
 async function getConnectedAccount(

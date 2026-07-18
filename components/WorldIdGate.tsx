@@ -66,10 +66,12 @@ function getMiniKitHumanCredentialStatus() {
 
 export function WorldIdGate({
   onReservationChange,
+  reservation: storedReservation,
   variant = "dark",
   walletAddress
 }: {
   onReservationChange?: (reservation: PolicyHumanReservationView | null) => void;
+  reservation?: PolicyHumanReservationView | null;
   variant?: "compact" | "dark" | "light";
   walletAddress?: string;
 }) {
@@ -84,8 +86,14 @@ export function WorldIdGate({
   const [rpContext, setRpContext] = useState<RpContext | null>(null);
   const [reservation, setReservation] = useState<PolicyHumanReservationView | null>(null);
   const verificationRef = useRef<VerifyPolicyHumanResponse | null>(null);
+  const previousWalletAddressRef = useRef<string | undefined>(walletAddress);
 
   useEffect(() => {
+    if (previousWalletAddressRef.current === walletAddress) {
+      return;
+    }
+
+    previousWalletAddressRef.current = walletAddress;
     setStatus("idle");
     setError(null);
     setIsOpen(false);
@@ -94,6 +102,17 @@ export function WorldIdGate({
     verificationRef.current = null;
     onReservationChange?.(null);
   }, [onReservationChange, walletAddress]);
+
+  useEffect(() => {
+    if (!storedReservation || !walletAddress || storedReservation.walletAddress.toLowerCase() !== walletAddress.toLowerCase()) {
+      return;
+    }
+
+    setReservation(storedReservation);
+    verificationRef.current = { reservation: storedReservation, success: true };
+    setStatus("verified");
+    setError(null);
+  }, [storedReservation, walletAddress]);
 
   const resolveWorldIdError = useCallback(
     (errorCode?: string, fallback?: string) => {

@@ -1303,6 +1303,7 @@ function IdentityScreen({
     return (
       <WorldIdGate
         onReservationChange={onHumanReservationChange}
+        reservation={state.humanReservation}
         variant="compact"
         walletAddress={state.walletSession.address}
       />
