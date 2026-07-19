@@ -99,16 +99,22 @@ async function deployErc4626YieldFixture() {
   return { owner, token, vault, adapter };
 }
 
-async function openPolicy(ctx, beneficiaries = [ctx.beneficiaryA.address], shares = [10_000]) {
+async function createPolicyAuthorization(ctx, signer = ctx.policyHumanSigner) {
   const nullifierHash = ethers.keccak256(ethers.toUtf8Bytes(`test-nullifier-${ctx.holder.address}`));
   const deadline = (await ethers.provider.getBlock("latest")).timestamp + 3600;
-  const signature = await ctx.policyHumanSigner.signTypedData(
+  const signature = await signer.signTypedData(
     { name: "RiskaPolicyManager", version: "1", chainId: 31337, verifyingContract: await ctx.manager.getAddress() },
     { PolicyHumanAuthorization: [
       { name: "holder", type: "address" }, { name: "nullifierHash", type: "bytes32" }, { name: "deadline", type: "uint256" }
     ] },
     { holder: ctx.holder.address, nullifierHash, deadline }
   );
+
+  return { deadline, nullifierHash, signature };
+}
+
+async function openPolicy(ctx, beneficiaries = [ctx.beneficiaryA.address], shares = [10_000]) {
+  const { deadline, nullifierHash, signature } = await createPolicyAuthorization(ctx);
   await ctx.manager.connect(ctx.holder).openPolicy(beneficiaries, shares, termsHash, nullifierHash, deadline, signature);
   return 1;
 }
@@ -207,6 +213,40 @@ describe("RiskaPolicyManager", function () {
     ctx.policyHumanSigner = ctx.stranger;
 
     await expect(openPolicy(ctx, [], [])).to.be.revertedWith("INVALID_HUMAN_AUTHORIZATION");
+  });
+
+  it("lets only the owner rotate the human verifier and invalidates signatures from the previous verifier", async function () {
+    const ctx = await deployFixture();
+    const oldAuthorization = await createPolicyAuthorization(ctx, ctx.owner);
+
+    await expect(
+      ctx.manager.connect(ctx.stranger).setPolicyHumanVerifier(ctx.stranger.address)
+    ).to.be.revertedWithCustomError(ctx.manager, "OwnableUnauthorizedAccount");
+
+    await expect(
+      ctx.manager.connect(ctx.owner).setPolicyHumanVerifier(ethers.ZeroAddress)
+    ).to.be.revertedWith("INVALID_HUMAN_VERIFIER");
+
+    await expect(
+      ctx.manager.connect(ctx.owner).setPolicyHumanVerifier(ctx.stranger.address)
+    )
+      .to.emit(ctx.manager, "PolicyHumanVerifierUpdated")
+      .withArgs(ctx.owner.address, ctx.stranger.address);
+
+    await expect(
+      ctx.manager.connect(ctx.holder).openPolicy(
+        [],
+        [],
+        termsHash,
+        oldAuthorization.nullifierHash,
+        oldAuthorization.deadline,
+        oldAuthorization.signature
+      )
+    ).to.be.revertedWith("INVALID_HUMAN_AUTHORIZATION");
+
+    ctx.policyHumanSigner = ctx.stranger;
+    await openPolicy(ctx, [], []);
+    expect(await ctx.manager.policyOf(ctx.holder.address)).to.equal(1);
   });
 
   it("rejects invalid beneficiary splits", async function () {

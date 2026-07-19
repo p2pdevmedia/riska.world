@@ -58,7 +58,7 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard, EIP712 {
     RiskaBeneficiaryRegistry public immutable beneficiaryRegistry;
     RiskaPremiumVault public immutable premiumVault;
     RiskaYieldStrategyManager public yieldStrategyManager;
-    address public immutable policyHumanVerifier;
+    address public policyHumanVerifier;
 
     uint256 public nextPolicyId = 1;
 
@@ -75,6 +75,7 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard, EIP712 {
     mapping(uint256 => uint256) public yieldPrincipalAllocated;
 
     event YieldStrategyManagerUpdated(address indexed yieldStrategyManager);
+    event PolicyHumanVerifierUpdated(address indexed previousVerifier, address indexed nextVerifier);
     event PolicyOpened(uint256 indexed policyId, address indexed holder, bytes32 indexed nullifierHash, bytes32 termsHash);
     event PolicyDeposit(
         uint256 indexed policyId,
@@ -126,6 +127,7 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard, EIP712 {
         beneficiaryRegistry = beneficiaryRegistry_;
         premiumVault = premiumVault_;
         policyHumanVerifier = policyHumanVerifier_;
+        emit PolicyHumanVerifierUpdated(address(0), policyHumanVerifier_);
     }
 
     function pause() external onlyOwner {
@@ -140,6 +142,15 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard, EIP712 {
         require(address(nextYieldStrategyManager) != address(0), "INVALID_YIELD_MANAGER");
         yieldStrategyManager = nextYieldStrategyManager;
         emit YieldStrategyManagerUpdated(address(nextYieldStrategyManager));
+    }
+
+    function setPolicyHumanVerifier(address nextPolicyHumanVerifier) external onlyOwner {
+        require(nextPolicyHumanVerifier != address(0), "INVALID_HUMAN_VERIFIER");
+
+        address previousVerifier = policyHumanVerifier;
+        policyHumanVerifier = nextPolicyHumanVerifier;
+
+        emit PolicyHumanVerifierUpdated(previousVerifier, nextPolicyHumanVerifier);
     }
 
     function openPolicy(

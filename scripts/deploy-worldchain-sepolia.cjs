@@ -124,6 +124,10 @@ async function main() {
     premiumVault.address,
     policyHumanVerifier
   ]);
+  const deployedPolicyHumanVerifier = await policyManager.instance.policyHumanVerifier();
+  if (ethers.getAddress(deployedPolicyHumanVerifier) !== ethers.getAddress(policyHumanVerifier)) {
+    throw new Error("Deployed PolicyManager human verifier does not match RISKA_POLICY_HUMAN_VERIFIER.");
+  }
   const yieldStrategyManager = await deployContract("RiskaYieldStrategyManager", [
     mockUsdc.address,
     premiumVault.address

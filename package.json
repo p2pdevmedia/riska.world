@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "npm run verify:policy-human-verifier && prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "test:e2e": "playwright test",
@@ -12,6 +12,7 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "contracts:compile": "hardhat compile --config hardhat.config.cjs",
     "contracts:test": "hardhat test --config hardhat.config.cjs",
+    "verify:policy-human-verifier": "node scripts/validate-policy-human-verifier.cjs",
     "wallet:create:worldchain-sepolia": "node scripts/create-worldchain-test-wallet.cjs",
     "contracts:deploy:worldchain-sepolia": "hardhat run --config hardhat.config.cjs scripts/deploy-worldchain-sepolia.cjs --network worldchainSepolia",
     "contracts:configure:morpho-usdc:worldchain": "hardhat run --config hardhat.config.cjs scripts/configure-morpho-usdc-worldchain.cjs --network worldchain",

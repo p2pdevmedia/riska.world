@@ -30,7 +30,9 @@ export type RiskaTestnetDeployment = {
   deployer?: `0x${string}`;
   explorerBaseUrl: string;
   network: string;
+  policyHumanVerifier?: `0x${string}`;
   testAuxiliaryTokens?: Record<string, RiskaTestnetAuxiliaryTokenRecord>;
+  /** @deprecated Use policyHumanVerifier. */
   verifier?: `0x${string}`;
 };
 

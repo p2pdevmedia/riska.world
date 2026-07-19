@@ -61,6 +61,7 @@ function readDeploymentFile(): RiskaTestnetDeployment | null {
       deployer: normalizeOptionalAddress(parsed.deployer),
       explorerBaseUrl: parsed.explorerBaseUrl ?? WORLDCHAIN_SEPOLIA_EXPLORER_URL,
       network: parsed.network ?? "worldchainSepolia",
+      policyHumanVerifier: normalizeOptionalAddress(parsed.policyHumanVerifier ?? parsed.verifier),
       ...(Object.keys(testAuxiliaryTokens).length > 0 ? { testAuxiliaryTokens } : {}),
       verifier: normalizeOptionalAddress(parsed.verifier)
     };
