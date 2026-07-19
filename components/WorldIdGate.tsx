@@ -31,6 +31,8 @@ type VerifyPolicyHumanResponse = {
     nullifierHash: `0x${string}`;
     deadline: string;
     authorization: `0x${string}`;
+    policyHumanVerifier: `0x${string}`;
+    policyManager: `0x${string}`;
     protocolVersion: string;
     reservedAt: string;
     walletAddress: string;
@@ -105,6 +107,10 @@ export function WorldIdGate({
 
   useEffect(() => {
     if (!storedReservation || !walletAddress || storedReservation.walletAddress.toLowerCase() !== walletAddress.toLowerCase()) {
+      setReservation(null);
+      verificationRef.current = null;
+      setStatus("idle");
+      setError(null);
       return;
     }
 

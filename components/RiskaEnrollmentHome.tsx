@@ -785,6 +785,26 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
     };
   }, [hydrated, testnetConfigured, walletAddress]);
 
+  useEffect(() => {
+    if (!hydrated || testnetDeployment.status !== "configured" || !state.humanReservation) {
+      return;
+    }
+
+    const configuredPolicyManager = testnetDeployment.deployment.contracts.policyManager?.address;
+    const configuredVerifier = testnetDeployment.deployment.policyHumanVerifier;
+    const reservation = state.humanReservation;
+    const matchesCurrentAuthorization =
+      configuredPolicyManager &&
+      configuredVerifier &&
+      reservation.policyManager?.toLowerCase() === configuredPolicyManager.toLowerCase() &&
+      reservation.policyHumanVerifier?.toLowerCase() === configuredVerifier.toLowerCase();
+
+    if (!matchesCurrentAuthorization) {
+      setState((current) => ({ ...clearSubmission(current), humanReservation: null }));
+      setActiveStepId("identity");
+    }
+  }, [hydrated, state.humanReservation, testnetDeployment]);
+
   // Existing local sessions may still point to the former quote step. It now
   // lives inside Dashboard, so they continue directly there instead of resetting.
   const visibleStepId = state.issuedPolicyId || activeStepId === "quote" ? "confirm" : activeStepId;

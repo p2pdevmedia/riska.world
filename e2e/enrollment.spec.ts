@@ -14,6 +14,8 @@ function verifiedEnrollment(overrides: Record<string, unknown> = {}) {
       deadline: "2000000000",
       nullifier: "e2e-nullifier",
       nullifierHash: `0x${"22".repeat(32)}`,
+      policyHumanVerifier: "0xDbe839D948A4EEA75490457F4d7C51063fbf779D",
+      policyManager: "0xaca401bE0C48Bb89231367D82770B3Ff25E70CA2",
       protocolVersion: "0.1",
       reservedAt: "2026-07-18T00:00:00.000Z",
       walletAddress: holder
@@ -46,6 +48,19 @@ test("persists a verified human session after reload", async ({ page }) => {
 
   await page.reload();
   await expect(page.getByText("Humano único verificado. Esta wallet puede continuar a beneficiarios.")).toBeVisible();
+});
+
+test("invalidates a saved authorization when the policy verifier changes", async ({ page }) => {
+  await restoreEnrollment(page, verifiedEnrollment({
+    humanReservation: {
+      ...verifiedEnrollment().humanReservation,
+      policyHumanVerifier: "0x636f792e8c2DdE8DDFC09ff41E68e85a442e1109"
+    }
+  }));
+  await page.goto("/apply");
+
+  await expect(page.getByRole("button", { name: "Verificar que soy humano" })).toBeVisible();
+  await expect(page.getByText("Humano único verificado. Esta wallet puede continuar a beneficiarios.")).not.toBeVisible();
 });
 
 test("allows continuing without beneficiaries and prepares policy issuance", async ({ page }) => {
