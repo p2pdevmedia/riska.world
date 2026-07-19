@@ -167,7 +167,8 @@ export async function postVerifyPolicyHuman(request: Request) {
   }
   const nullifierHash = keccak256(stringToHex(`${RISKA_WORLD_ID_POLICY_ACTION}:${nullifier}`));
   const deadline = BigInt(Math.floor(Date.now() / 1000) + POLICY_HUMAN_AUTHORIZATION_SESSION_SECONDS);
-  const authorization = await privateKeyToAccount(signingKey).signTypedData({
+  const policyHumanSigner = privateKeyToAccount(signingKey);
+  const authorization = await policyHumanSigner.signTypedData({
     domain: { name: "RiskaPolicyManager", version: "1", chainId: 4801, verifyingContract: policyManager },
     types: { PolicyHumanAuthorization: [
       { name: "holder", type: "address" }, { name: "nullifierHash", type: "bytes32" }, { name: "deadline", type: "uint256" }
@@ -179,7 +180,18 @@ export async function postVerifyPolicyHuman(request: Request) {
   return NextResponse.json({
     success: true,
     policyGateStatus: "verified_unique_human",
-    reservation: { credentialIdentifiers, nullifier, protocolVersion: idkitResponse.protocol_version, reservedAt: new Date().toISOString(), walletAddress: normalizedWallet, nullifierHash, deadline: deadline.toString(), authorization }
+    reservation: {
+      credentialIdentifiers,
+      nullifier,
+      protocolVersion: idkitResponse.protocol_version,
+      reservedAt: new Date().toISOString(),
+      walletAddress: normalizedWallet,
+      nullifierHash,
+      deadline: deadline.toString(),
+      authorization,
+      policyHumanVerifier: policyHumanSigner.address,
+      policyManager
+    }
   });
 }
 
