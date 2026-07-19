@@ -25,14 +25,19 @@ function loadEnvFile(fileName) {
 
 loadEnvFile(".env.local");
 
-const signingKey = process.env.RP_SIGNING_KEY;
+const signingKey = process.env.POLICY_HUMAN_SIGNING_KEY;
 if (!signingKey) {
-  throw new Error("RP_SIGNING_KEY is required to validate the PolicyManager human verifier.");
+  if (process.env.VERCEL_ENV) {
+    throw new Error("POLICY_HUMAN_SIGNING_KEY is required to validate the PolicyManager human verifier.");
+  }
+
+  console.log("Policy human verifier validation skipped outside Vercel; the private key is not stored locally.");
+  process.exit(0);
 }
 
 const normalizedSigningKey = signingKey.startsWith("0x") ? signingKey : `0x${signingKey}`;
 if (!/^0x[0-9a-fA-F]{64}$/.test(normalizedSigningKey)) {
-  throw new Error("RP_SIGNING_KEY must be a 32-byte hex private key.");
+  throw new Error("POLICY_HUMAN_SIGNING_KEY must be a 32-byte hex private key.");
 }
 
 const deploymentPath = path.join(__dirname, "..", "deployments", "worldchain-sepolia", "latest.json");
@@ -46,7 +51,7 @@ if (!configuredVerifier) {
 const derivedVerifier = privateKeyToAccount(normalizedSigningKey).address;
 if (getAddress(derivedVerifier) !== getAddress(configuredVerifier)) {
   throw new Error(
-    `RP_SIGNING_KEY resolves to ${derivedVerifier}, but the deployed PolicyManager expects ${configuredVerifier}.`
+    `POLICY_HUMAN_SIGNING_KEY resolves to ${derivedVerifier}, but the deployed PolicyManager expects ${configuredVerifier}.`
   );
 }
 

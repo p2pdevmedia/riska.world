@@ -157,7 +157,7 @@ export async function postVerifyPolicyHuman(request: Request) {
 
   const nullifier = normalizeNullifier(nullifierHex);
   const credentialIdentifiers = responses.map((response) => response.identifier);
-  const signingKey = process.env.RP_SIGNING_KEY as `0x${string}` | undefined;
+  const signingKey = process.env.POLICY_HUMAN_SIGNING_KEY as `0x${string}` | undefined;
   const policyManager = process.env.RISKA_WORLDCHAIN_SEPOLIA_POLICY_MANAGER as `0x${string}` | undefined;
   if (!signingKey || !policyManager) {
     return NextResponse.json(
