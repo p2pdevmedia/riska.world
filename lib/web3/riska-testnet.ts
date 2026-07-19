@@ -145,6 +145,24 @@ const publicClient = createPublicClient({
 const erc20Abi = [
   {
     inputs: [
+      { name: "spender", type: "address" },
+      { name: "allowance", type: "uint256" },
+      { name: "needed", type: "uint256" }
+    ],
+    name: "ERC20InsufficientAllowance",
+    type: "error"
+  },
+  {
+    inputs: [
+      { name: "sender", type: "address" },
+      { name: "balance", type: "uint256" },
+      { name: "needed", type: "uint256" }
+    ],
+    name: "ERC20InsufficientBalance",
+    type: "error"
+  },
+  {
+    inputs: [
       { name: "owner", type: "address" },
       { name: "spender", type: "address" }
     ],
@@ -223,6 +241,24 @@ const extraWithdrawnEvent = {
 } as const;
 
 const policyManagerAbi = [
+  {
+    inputs: [
+      { name: "spender", type: "address" },
+      { name: "allowance", type: "uint256" },
+      { name: "needed", type: "uint256" }
+    ],
+    name: "ERC20InsufficientAllowance",
+    type: "error"
+  },
+  {
+    inputs: [
+      { name: "sender", type: "address" },
+      { name: "balance", type: "uint256" },
+      { name: "needed", type: "uint256" }
+    ],
+    name: "ERC20InsufficientBalance",
+    type: "error"
+  },
   {
     inputs: [
       { name: "beneficiaries", type: "address[]" },
@@ -1208,7 +1244,7 @@ export function formatTestnetContractError(error: unknown) {
       shortMessage?: unknown;
     };
     const cause = candidate.cause as { details?: unknown; message?: unknown; shortMessage?: unknown } | undefined;
-    return String(
+    const message = String(
       candidate.shortMessage ??
         candidate.details ??
         cause?.shortMessage ??
@@ -1217,6 +1253,16 @@ export function formatTestnetContractError(error: unknown) {
         cause?.message ??
         "Unknown contract error."
     );
+
+    if (message.includes("0xfb8f41b2") || message.includes("ERC20InsufficientAllowance")) {
+      return "MockUSDC allowance is insufficient. Approve the requested MockUSDC amount for the current PremiumVault, then retry the transaction.";
+    }
+
+    if (message.includes("0xe450d38c") || message.includes("ERC20InsufficientBalance")) {
+      return "The wallet does not have enough MockUSDC for the requested policy transaction.";
+    }
+
+    return message;
   }
 
   return "Unknown contract error.";
@@ -1365,7 +1411,11 @@ async function ensureMockUsdcBalanceAndAllowance({
       args: [contracts.premiumVault, amount],
       functionName: "approve"
     });
-    await publicClient.waitForTransactionReceipt({ hash: txHashes.approval });
+    const receipt = await publicClient.waitForTransactionReceipt({ hash: txHashes.approval });
+    if (receipt.status === "reverted") {
+      throw new Error(`MockUSDC approval reverted. Transaction: ${txHashes.approval}.`);
+    }
+    await waitForTokenAllowance(contracts.mockUsdc, account, contracts.premiumVault, amount);
   }
 
   return txHashes;
@@ -1421,6 +1471,34 @@ async function ensureTokenBalanceAndAllowance({
       args: [spender, amount],
       functionName: "approve"
     });
-    await publicClient.waitForTransactionReceipt({ hash });
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    if (receipt.status === "reverted") {
+      throw new Error(`${symbol} approval reverted. Transaction: ${hash}.`);
+    }
+    await waitForTokenAllowance(token, account, spender, amount);
   }
+}
+
+async function waitForTokenAllowance(
+  token: `0x${string}`,
+  owner: `0x${string}`,
+  spender: `0x${string}`,
+  minimumAllowance: bigint
+) {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const allowance = await publicClient.readContract({
+      abi: erc20Abi,
+      address: token,
+      args: [owner, spender],
+      functionName: "allowance"
+    });
+
+    if (allowance >= minimumAllowance) {
+      return;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+
+  throw new Error("Token approval was confirmed, but the updated allowance is not visible on-chain yet. Retry in a moment.");
 }
