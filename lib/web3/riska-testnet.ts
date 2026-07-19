@@ -966,17 +966,43 @@ export async function issueTestnetPolicy({
   });
 
   const walletClient = await createWorldchainSepoliaWalletClient();
+  const openPolicyArgs = [
+    beneficiaryAddresses,
+    sharesBps,
+    RISKA_POLICY_TERMS_HASH,
+    humanAuthorization.nullifierHash,
+    BigInt(humanAuthorization.deadline),
+    humanAuthorization.authorization
+  ] as const;
+
+  // Catch a bad human authorization, invalid beneficiary state, or allowance issue
+  // before the wallet asks the user to spend gas on a transaction that will revert.
+  try {
+    await publicClient.simulateContract({
+      abi: policyManagerAbi,
+      account,
+      address: contracts.policyManager,
+      args: openPolicyArgs,
+      functionName: "openPolicy"
+    });
+  } catch (error) {
+    throw new Error(`Policy cannot be opened: ${formatTestnetContractError(error)}`);
+  }
 
   onStatus?.("opening_policy");
   const openPolicyHash = await walletClient.writeContract({
     abi: policyManagerAbi,
     account,
     address: contracts.policyManager,
-    args: [beneficiaryAddresses, sharesBps, RISKA_POLICY_TERMS_HASH, humanAuthorization.nullifierHash, BigInt(humanAuthorization.deadline), humanAuthorization.authorization],
+    args: openPolicyArgs,
     functionName: "openPolicy"
   });
   txHashes.openPolicy = openPolicyHash;
   const receipt = await publicClient.waitForTransactionReceipt({ hash: openPolicyHash });
+  if (receipt.status === "reverted") {
+    const reason = await explainOpenPolicyRevert({ account, args: openPolicyArgs, policyManager: contracts.policyManager });
+    throw new Error(`Policy transaction reverted. Transaction: ${openPolicyHash}. Reason: ${reason}`);
+  }
   const policyOpened = parseEventLogs({
     abi: [policyOpenedEvent],
     eventName: "PolicyOpened",
@@ -1175,8 +1201,22 @@ export function formatTokenAmount(value: bigint, decimals: number) {
 
 export function formatTestnetContractError(error: unknown) {
   if (typeof error === "object" && error !== null) {
-    const candidate = error as { details?: unknown; message?: unknown; shortMessage?: unknown };
-    return String(candidate.shortMessage ?? candidate.details ?? candidate.message ?? "Unknown contract error.");
+    const candidate = error as {
+      cause?: unknown;
+      details?: unknown;
+      message?: unknown;
+      shortMessage?: unknown;
+    };
+    const cause = candidate.cause as { details?: unknown; message?: unknown; shortMessage?: unknown } | undefined;
+    return String(
+      candidate.shortMessage ??
+        candidate.details ??
+        cause?.shortMessage ??
+        cause?.details ??
+        candidate.message ??
+        cause?.message ??
+        "Unknown contract error."
+    );
   }
 
   return "Unknown contract error.";
@@ -1202,6 +1242,29 @@ async function readPolicyIdForHolder(policyManager: `0x${string}`, account: `0x$
     args: [account],
     functionName: "policyOf"
   });
+}
+
+async function explainOpenPolicyRevert({
+  account,
+  args,
+  policyManager
+}: {
+  account: `0x${string}`;
+  args: readonly [readonly `0x${string}`[], readonly number[], `0x${string}`, `0x${string}`, bigint, `0x${string}`];
+  policyManager: `0x${string}`;
+}) {
+  try {
+    await publicClient.simulateContract({
+      abi: policyManagerAbi,
+      account,
+      address: policyManager,
+      args,
+      functionName: "openPolicy"
+    });
+    return "The transaction reverted after preflight passed. Check the transaction in the explorer for node-specific details.";
+  } catch (error) {
+    return formatTestnetContractError(error);
+  }
 }
 
 async function waitForPolicyIdForHolder(policyManager: `0x${string}`, account: `0x${string}`) {

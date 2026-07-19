@@ -202,6 +202,13 @@ describe("RiskaPolicyManager", function () {
     expect((await ctx.manager.policies(policyId)).remainingMinimumPrincipal).to.equal(usdc("30"));
   });
 
+  it("rejects a policy authorization signed by an address other than the configured verifier", async function () {
+    const ctx = await deployFixture();
+    ctx.policyHumanSigner = ctx.stranger;
+
+    await expect(openPolicy(ctx, [], [])).to.be.revertedWith("INVALID_HUMAN_AUTHORIZATION");
+  });
+
   it("rejects invalid beneficiary splits", async function () {
     const ctx = await deployFixture();
 
