@@ -6,6 +6,8 @@ type PolicyHumanResponse = {
   signal_hash?: string;
 };
 
+const POLICY_HUMAN_IDENTIFIERS = new Set(["proof_of_human", "orb"]);
+
 export function normalizeNullifier(nullifier: string) {
   return BigInt(nullifier).toString(10);
 }
@@ -18,7 +20,8 @@ export function selectPolicyHumanResponse(
 
   return responses.find(
     (response) =>
-      response.identifier === "proof_of_human" &&
+      typeof response.identifier === "string" &&
+      POLICY_HUMAN_IDENTIFIERS.has(response.identifier.toLowerCase()) &&
       typeof response.nullifier === "string" &&
       response.nullifier.length > 0 &&
       response.signal_hash?.toLowerCase() === normalizedSignalHash

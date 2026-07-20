@@ -23,6 +23,23 @@ test("rejects a proof_of_human response that is not bound to the wallet", () => 
   assert.equal(selected, undefined);
 });
 
+test("accepts a legacy v3 Orb response bound to the wallet", () => {
+  const selected = selectPolicyHumanResponse([
+    { identifier: "orb", nullifier: "0x04", signal_hash: signalHash }
+  ], signalHash);
+
+  assert.equal(selected?.nullifier, "0x04");
+});
+
+test("does not accept other legacy credential levels as policy-human proof", () => {
+  const selected = selectPolicyHumanResponse([
+    { identifier: "device", nullifier: "0x05", signal_hash: signalHash },
+    { identifier: "document", nullifier: "0x06", signal_hash: signalHash }
+  ], signalHash);
+
+  assert.equal(selected, undefined);
+});
+
 test("three distinct World ID nullifiers produce three distinct contract keys", () => {
   const identities = ["0x01", "0x02", "0x03"].map((nullifier) =>
     derivePolicyNullifier({ action: "riska-policy-human-v1", nullifier })
