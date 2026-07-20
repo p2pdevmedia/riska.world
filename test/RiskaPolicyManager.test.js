@@ -181,6 +181,37 @@ describe("RiskaPolicyManager", function () {
     ).to.be.revertedWith("POLICY_EXISTS");
   });
 
+  it("opens independent policies for three wallets with three distinct human nullifiers", async function () {
+    const ctx = await deployFixture();
+    const holders = [ctx.holder, ctx.beneficiaryC, ctx.stranger];
+    const nullifierHashes = [];
+
+    for (const holder of holders) {
+      await ctx.token.mint(holder.address, usdc("30"));
+      await ctx.token.connect(holder).approve(await ctx.premiumVault.getAddress(), usdc("30"));
+
+      const nullifierHash = ethers.keccak256(ethers.toUtf8Bytes(`three-humans-${holder.address}`));
+      const deadline = (await ethers.provider.getBlock("latest")).timestamp + 3600;
+      const signature = await ctx.policyHumanSigner.signTypedData(
+        { name: "RiskaPolicyManager", version: "1", chainId: 31337, verifyingContract: await ctx.manager.getAddress() },
+        { PolicyHumanAuthorization: [
+          { name: "holder", type: "address" }, { name: "nullifierHash", type: "bytes32" }, { name: "deadline", type: "uint256" }
+        ] },
+        { holder: holder.address, nullifierHash, deadline }
+      );
+
+      await ctx.manager.connect(holder).openPolicy([], [], termsHash, nullifierHash, deadline, signature);
+      nullifierHashes.push(nullifierHash);
+    }
+
+    expect(await ctx.manager.policyOf(holders[0].address)).to.equal(1);
+    expect(await ctx.manager.policyOf(holders[1].address)).to.equal(2);
+    expect(await ctx.manager.policyOf(holders[2].address)).to.equal(3);
+    expect(await ctx.manager.policyOfNullifierHash(nullifierHashes[0])).to.equal(1);
+    expect(await ctx.manager.policyOfNullifierHash(nullifierHashes[1])).to.equal(2);
+    expect(await ctx.manager.policyOfNullifierHash(nullifierHashes[2])).to.equal(3);
+  });
+
   it("opens without beneficiaries and lets the holder add them later", async function () {
     const ctx = await deployFixture();
     const policyId = await openPolicy(ctx, [], []);

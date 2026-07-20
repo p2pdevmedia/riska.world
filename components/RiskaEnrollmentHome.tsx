@@ -952,13 +952,9 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
             status: "error"
           });
 
-          if (message.includes("World ID identity has already opened a policy")) {
-            setState((current) => ({
-              ...clearSubmission(current),
-              humanReservation: null
-            }));
-            setActiveStepId("identity");
-          }
+          // Keep the verified reservation and the user on the confirmation step.
+          // A failed preflight or transaction must remain visible and retryable;
+          // only an explicit disconnect or a new verification clears World ID.
         }
       } else if (readyToSubmit) {
         setState((current) => ({

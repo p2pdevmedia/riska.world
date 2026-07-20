@@ -34,6 +34,19 @@ function verifiedEnrollment(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function enrollmentForIdentity({ address, nullifier, marker }: { address: string; nullifier: string; marker: string }) {
+  return verifiedEnrollment({
+    humanReservation: {
+      ...verifiedEnrollment().humanReservation,
+      authorization: `0x${marker.repeat(130)}`,
+      nullifier,
+      nullifierHash: `0x${marker.repeat(64)}`,
+      walletAddress: address
+    },
+    walletSession: { address, chainId: 4801, method: "browser", status: "connected" }
+  });
+}
+
 async function restoreEnrollment(page: Page, state = verifiedEnrollment()) {
   await page.addInitScript((enrollment) => {
     window.localStorage.setItem("riska.enrollment.v2", JSON.stringify(enrollment));
@@ -49,6 +62,30 @@ test("persists a verified human session after reload", async ({ page }) => {
 
   await page.reload();
   await expect(page.getByText("Humano único verificado. Esta wallet puede continuar a beneficiarios.")).toBeVisible();
+});
+
+test("keeps three distinct wallet and World ID reservations independent", async ({ page }) => {
+  const identities = [
+    { address: "0x1000000000000000000000000000000000000001", marker: "1", nullifier: "101" },
+    { address: "0x2000000000000000000000000000000000000002", marker: "2", nullifier: "202" },
+    { address: "0x3000000000000000000000000000000000000003", marker: "3", nullifier: "303" }
+  ];
+
+  await page.goto("/apply");
+
+  for (const identity of identities) {
+    const enrollment = enrollmentForIdentity(identity);
+    await page.evaluate((state) => {
+      window.localStorage.setItem("riska.enrollment.v2", JSON.stringify(state));
+    }, enrollment);
+    await page.reload();
+
+    await expect(page.getByText("Humano único verificado. Esta wallet puede continuar a beneficiarios.")).toBeVisible();
+    const restored = await page.evaluate(() => JSON.parse(window.localStorage.getItem("riska.enrollment.v2") ?? "{}"));
+    expect(restored.walletSession.address.toLowerCase()).toBe(identity.address.toLowerCase());
+    expect(restored.humanReservation.walletAddress.toLowerCase()).toBe(identity.address.toLowerCase());
+    expect(restored.humanReservation.nullifier).toBe(identity.nullifier);
+  }
 });
 
 test("invalidates a saved authorization when the policy verifier changes", async ({ page }) => {
@@ -78,6 +115,33 @@ test("allows continuing without beneficiaries and prepares policy issuance", asy
   await page.getByLabel("Autorizo preparar el primer pago de 30 USDC para el paso de emisión.").check();
 
   await expect(page.getByRole("button", { name: "Abrir póliza" })).toBeEnabled();
+});
+
+test("keeps the user on the final step and preserves World ID when issuance fails", async ({ page }) => {
+  await restoreEnrollment(page, enrollmentForIdentity({
+    address: "0x4000000000000000000000000000000000000004",
+    marker: "4",
+    nullifier: "404"
+  }));
+  await page.addInitScript(() => {
+    const stored = JSON.parse(window.localStorage.getItem("riska.enrollment.v2") ?? "{}");
+    window.localStorage.setItem("riska.enrollment.v2", JSON.stringify({
+      ...stored,
+      paymentReady: true,
+      quoteReviewed: true,
+      riskAccepted: true,
+      termsAccepted: true
+    }));
+  });
+  await page.goto("/apply");
+
+  await page.getByRole("button", { name: "Crear póliza / bóveda" }).click();
+  await page.getByRole("button", { name: "Abrir póliza" }).click();
+
+  await expect(page.getByRole("heading", { name: "Crear póliza / bóveda" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Abrir póliza" })).toBeVisible();
+  const restored = await page.evaluate(() => JSON.parse(window.localStorage.getItem("riska.enrollment.v2") ?? "{}"));
+  expect(restored.humanReservation).not.toBeNull();
 });
 
 test("blocks an invalid beneficiary split", async ({ page }) => {

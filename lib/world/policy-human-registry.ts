@@ -1,6 +1,9 @@
 import { createHash } from "node:crypto";
 
 import { getPrisma } from "@/lib/prisma";
+import { normalizeNullifier } from "@/lib/world/policy-human-proof";
+
+export { normalizeNullifier };
 
 export type PolicyHumanReservation = {
   action: string;
@@ -44,10 +47,6 @@ export async function reservePolicyHuman(
   }
 
   return { ok: true, reservation: { ...reservation, reservedAt } };
-}
-
-export function normalizeNullifier(nullifier: string) {
-  return BigInt(nullifier).toString(10);
 }
 
 function hashNullifier(action: string, nullifier: string) {

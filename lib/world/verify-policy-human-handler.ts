@@ -1,8 +1,7 @@
 import type { IDKitResult } from "@worldcoin/idkit";
 import { hashSignal } from "@worldcoin/idkit/hashing";
 import { cookies } from "next/headers";
-import { getAddress } from "viem";
-import { keccak256, stringToHex } from "viem";
+import { createPublicClient, getAddress, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { NextResponse } from "next/server";
 
@@ -11,7 +10,7 @@ import {
   RISKA_WORLD_ID_POLICY_ACTION,
   normalizeWorldIdSignal
 } from "@/lib/world/idkit";
-import { normalizeNullifier } from "@/lib/world/policy-human-registry";
+import { derivePolicyNullifier, selectPolicyHumanResponse } from "@/lib/world/policy-human-proof";
 import { readWalletSession } from "@/lib/world/wallet-session";
 
 type VerifyPolicyHumanRequest = {
@@ -26,11 +25,16 @@ type VerificationResponsePayload = {
   success?: boolean;
 };
 
-type NullifierResponse = {
-  nullifier: string;
-};
-
 const POLICY_HUMAN_AUTHORIZATION_SESSION_SECONDS = 30 * 24 * 60 * 60;
+const policyNullifierRegistryAbi = [
+  {
+    inputs: [{ name: "", type: "bytes32" }],
+    name: "policyOfNullifierHash",
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function"
+  }
+] as const;
 
 export async function postVerifyPolicyHuman(request: Request) {
   const body = (await request.json().catch(() => null)) as VerifyPolicyHumanRequest | null;
@@ -112,13 +116,15 @@ export async function postVerifyPolicyHuman(request: Request) {
 
   const expectedSignalHash = hashSignal(normalizeWorldIdSignal(normalizedWallet)).toLowerCase();
   const responses = idkitResponse.responses ?? [];
-  const signalMatches = responses.some(
-    (response) => response.signal_hash?.toLowerCase() === expectedSignalHash
-  );
+  const policyHumanResponse = selectPolicyHumanResponse(responses, expectedSignalHash);
 
-  if (!signalMatches) {
+  if (!policyHumanResponse) {
     return NextResponse.json(
-      { success: false, error: "World ID proof is not bound to the connected wallet." },
+      {
+        success: false,
+        code: "invalid_policy_human_proof",
+        error: "World ID proof of human is missing or is not bound to the connected wallet."
+      },
       { status: 400 }
     );
   }
@@ -145,17 +151,10 @@ export async function postVerifyPolicyHuman(request: Request) {
     );
   }
 
-  const nullifierResponse = responses.find(hasNullifier) as NullifierResponse | undefined;
-  const nullifierHex = nullifierResponse?.nullifier;
-
-  if (!nullifierHex) {
-    return NextResponse.json(
-      { success: false, error: "World ID proof does not include a uniqueness nullifier." },
-      { status: 400 }
-    );
-  }
-
-  const nullifier = normalizeNullifier(nullifierHex);
+  const { nullifier, nullifierHash } = derivePolicyNullifier({
+    action: RISKA_WORLD_ID_POLICY_ACTION,
+    nullifier: policyHumanResponse.nullifier!
+  });
   const credentialIdentifiers = responses.map((response) => response.identifier);
   const signingKey = process.env.POLICY_HUMAN_SIGNING_KEY as `0x${string}` | undefined;
   const policyManager = process.env.RISKA_WORLDCHAIN_SEPOLIA_POLICY_MANAGER as `0x${string}` | undefined;
@@ -165,7 +164,43 @@ export async function postVerifyPolicyHuman(request: Request) {
       { status: 503 }
     );
   }
-  const nullifierHash = keccak256(stringToHex(`${RISKA_WORLD_ID_POLICY_ACTION}:${nullifier}`));
+
+  let existingPolicyId: bigint;
+
+  try {
+    const publicClient = createPublicClient({
+      transport: http(process.env.WORLDCHAIN_SEPOLIA_RPC_URL ?? "https://worldchain-sepolia.g.alchemy.com/public")
+    });
+    existingPolicyId = await publicClient.readContract({
+      abi: policyNullifierRegistryAbi,
+      address: policyManager,
+      args: [nullifierHash],
+      functionName: "policyOfNullifierHash"
+    });
+  } catch {
+    return NextResponse.json(
+      {
+        success: false,
+        code: "policy_registry_unavailable",
+        error: "The policy registry could not be checked. Please try verification again."
+      },
+      { status: 503 }
+    );
+  }
+
+  if (existingPolicyId > 0n) {
+    return NextResponse.json(
+      {
+        success: false,
+        alreadyReserved: true,
+        code: "nullifier_already_used",
+        error: "This World ID identity already opened a policy for another wallet.",
+        policyId: existingPolicyId.toString()
+      },
+      { status: 409 }
+    );
+  }
+
   const deadline = BigInt(Math.floor(Date.now() / 1000) + POLICY_HUMAN_AUTHORIZATION_SESSION_SECONDS);
   const policyHumanSigner = privateKeyToAccount(signingKey);
   const authorization = await policyHumanSigner.signTypedData({
@@ -193,13 +228,4 @@ export async function postVerifyPolicyHuman(request: Request) {
       policyManager
     }
   });
-}
-
-function hasNullifier(response: unknown): response is NullifierResponse {
-  return (
-    typeof response === "object" &&
-    response !== null &&
-    "nullifier" in response &&
-    typeof (response as NullifierResponse).nullifier === "string"
-  );
 }
