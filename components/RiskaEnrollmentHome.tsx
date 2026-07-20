@@ -945,10 +945,20 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
             submittedAt: current.submittedAt ?? new Date().toISOString()
           }));
         } catch (error) {
+          const message = formatTestnetContractError(error);
+
           setTestnetIssue({
-            message: formatTestnetContractError(error),
+            message,
             status: "error"
           });
+
+          if (message.includes("World ID identity has already opened a policy")) {
+            setState((current) => ({
+              ...clearSubmission(current),
+              humanReservation: null
+            }));
+            setActiveStepId("identity");
+          }
         }
       } else if (readyToSubmit) {
         setState((current) => ({

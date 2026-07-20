@@ -1262,6 +1262,10 @@ export function formatTestnetContractError(error: unknown) {
       return "The wallet does not have enough MockUSDC for the requested policy transaction.";
     }
 
+    if (message.includes("NULLIFIER_ALREADY_USED")) {
+      return "This World ID identity has already opened a policy for another wallet. In staging, reset the World ID simulator to create a new test identity, then verify again.";
+    }
+
     return message;
   }
 
