@@ -12,6 +12,7 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "contracts:compile": "hardhat compile --config hardhat.config.cjs",
     "contracts:test": "hardhat test --config hardhat.config.cjs",
+    "test:web3": "node --experimental-strip-types --test test/wallet-client.test.ts",
     "verify:policy-human-verifier": "node scripts/validate-policy-human-verifier.cjs",
     "wallet:create:worldchain-sepolia": "node scripts/create-worldchain-test-wallet.cjs",
     "contracts:deploy:worldchain-sepolia": "hardhat run --config hardhat.config.cjs scripts/deploy-worldchain-sepolia.cjs --network worldchainSepolia",

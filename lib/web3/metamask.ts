@@ -1,13 +1,14 @@
 "use client";
 
 import { createWalletClient, custom, getAddress, type Chain } from "viem";
-import { worldchain, worldchainSepolia } from "viem/chains";
+import { worldchain } from "viem/chains";
 
 import {
   WORLDCHAIN_SEPOLIA_CHAIN_ID_HEX,
   WORLDCHAIN_SEPOLIA_EXPLORER_URL,
   WORLDCHAIN_SEPOLIA_RPC_URL
 } from "@/lib/riska-testnet";
+import { createTransactionWalletClient } from "@/lib/web3/wallet-client";
 
 export type WalletConnection = {
   address: string;
@@ -323,10 +324,13 @@ export async function switchToWorldchainSepolia(): Promise<void> {
 export async function createWorldchainSepoliaWalletClient() {
   const ethereum = await getBrowserEthereumProvider();
 
-  return createWalletClient({
-    chain: worldchainSepolia,
-    transport: custom(ethereum)
-  });
+  // `switchToWorldchainSepolia` validates/selects the network before this
+  // client is created. Keeping the wallet client chain-agnostic prevents Viem
+  // from issuing a second `eth_chainId` request while a transaction request is
+  // already in flight. Some injected providers can cross those responses and
+  // return transaction calldata (for example the policy terms hash) as the
+  // chain id, which Viem then rejects as an unsafe JavaScript integer.
+  return createTransactionWalletClient(ethereum);
 }
 
 export async function disconnectWallet(): Promise<void> {
