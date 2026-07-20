@@ -42,7 +42,7 @@ export function AdminConsole({ view, policyId }: { view: View; policyId?: string
     <div className="mx-auto max-w-6xl space-y-6">
       <header className="flex flex-col justify-between gap-4 border-b border-[#293446] pb-6 md:flex-row md:items-center">
         <div><Link href="/" className="mb-3 inline-flex items-center gap-2 text-sm text-[#aeb8ff]"><ArrowLeft className="h-4 w-4" /> Riska</Link><p className="text-xs font-bold uppercase tracking-[.24em] text-[#95a3bc]">Protocol control</p><h1 className="mt-1 text-3xl font-bold">Administración</h1></div>
-        <div className="min-w-[280px]"><WalletAuth initialSession={session} onSessionChange={setSession} variant="light" /></div>
+        <div className="min-w-[280px]"><WalletAuth initialSession={session} onSessionChange={setSession} showWorldIdGate={false} variant="light" /></div>
       </header>
 
       {message && <p className="rounded-xl border border-amber-400/30 bg-amber-300/10 px-4 py-3 text-sm text-amber-100">{message}</p>}

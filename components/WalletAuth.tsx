@@ -37,11 +37,14 @@ export function WalletAuth({
   initialSession,
   onHumanReservationChange,
   onSessionChange,
+  showWorldIdGate = true,
   variant = "dark"
 }: {
   initialSession?: WalletAuthSession | null;
   onHumanReservationChange?: Parameters<typeof WorldIdGate>[0]["onReservationChange"];
   onSessionChange?: (session: WalletAuthSession | null) => void;
+  /** Admin and operational wallet flows do not require a World ID reservation. */
+  showWorldIdGate?: boolean;
   variant?: "dark" | "light" | "start";
 }) {
   const { t } = useLanguage();
@@ -345,11 +348,13 @@ export function WalletAuth({
         </div>
       )}
 
-      <WorldIdGate
-        onReservationChange={onHumanReservationChange}
-        variant={variant}
-        walletAddress={state.status === "connected" ? state.address : undefined}
-      />
+      {showWorldIdGate && (
+        <WorldIdGate
+          onReservationChange={onHumanReservationChange}
+          variant={variant}
+          walletAddress={state.status === "connected" ? state.address : undefined}
+        />
+      )}
     </div>
   );
 }
