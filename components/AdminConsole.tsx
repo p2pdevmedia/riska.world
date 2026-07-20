@@ -41,12 +41,22 @@ function readAdminSession(): WalletAuthSession | null {
 }
 
 export function AdminConsole({ view, policyId }: { view: View; policyId?: string }) {
-  const [session, setSession] = useState<WalletAuthSession | null>(() => readAdminSession());
+  const [session, setSession] = useState<WalletAuthSession | null>(null);
+  const [sessionRestored, setSessionRestored] = useState(false);
   const [overview, setOverview] = useState<AdminOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    setSession(readAdminSession());
+    setSessionRestored(true);
+  }, []);
+
+  useEffect(() => {
+    if (!sessionRestored) {
+      return;
+    }
+
     if (typeof window === "undefined") {
       return;
     }
@@ -56,7 +66,7 @@ export function AdminConsole({ view, policyId }: { view: View; policyId?: string
     } else {
       window.sessionStorage.removeItem(adminSessionStorageKey);
     }
-  }, [session]);
+  }, [session, sessionRestored]);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -67,13 +77,20 @@ export function AdminConsole({ view, policyId }: { view: View; policyId?: string
     } finally { setLoading(false); }
   }, [session?.address]);
 
-  useEffect(() => { void refresh(); }, [refresh]);
+  useEffect(() => {
+    if (sessionRestored) {
+      void refresh();
+    }
+  }, [refresh, sessionRestored]);
 
   return <main className="min-h-screen bg-[#080b10] px-4 py-8 pb-28 text-[#f5f7fb] md:px-8">
     <div className="mx-auto max-w-6xl space-y-6">
       <header className="flex flex-col justify-between gap-4 border-b border-[#293446] pb-6 md:flex-row md:items-center">
         <div><Link href="/" className="mb-3 inline-flex items-center gap-2 text-sm text-[#aeb8ff]"><ArrowLeft className="h-4 w-4" /> Riska</Link><p className="text-xs font-bold uppercase tracking-[.24em] text-[#95a3bc]">Protocol control</p><h1 className="mt-1 text-3xl font-bold">Administración</h1></div>
-        <div className="min-w-[280px]"><WalletAuth initialSession={session} onSessionChange={setSession} showWorldIdGate={false} variant="light" /></div>
+        <div className="min-w-[280px]">{sessionRestored
+          ? <WalletAuth initialSession={session} onSessionChange={setSession} showWorldIdGate={false} variant="light" />
+          : <div className="h-[168px] border border-[#d9ded5] bg-white" aria-label="Restaurando sesión" />}
+        </div>
       </header>
 
       {message && <p className="rounded-xl border border-amber-400/30 bg-amber-300/10 px-4 py-3 text-sm text-amber-100">{message}</p>}

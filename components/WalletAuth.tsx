@@ -231,6 +231,8 @@ export function WalletAuth({
       : walletText.messages[message.type];
 
   const isLight = variant === "light";
+  const headingClass = isLight ? "text-2xl font-semibold text-[#17231e]" : "text-2xl font-semibold";
+  const statusTextClass = isLight ? "text-lg font-medium text-[#17231e]" : "text-lg font-medium";
   const panelClass = isLight
     ? "border border-[#d9ded5] bg-white p-5 md:p-7 space-y-5"
     : "glass-panel p-8 md:p-10 space-y-6 max-w-lg";
@@ -272,7 +274,7 @@ export function WalletAuth({
   return (
     <div className={panelClass}>
       <div>
-        <h3 className="text-2xl font-semibold">{walletText.heading}</h3>
+        <h3 className={headingClass}>{walletText.heading}</h3>
         <p className={descriptionClass}>{walletText.description}</p>
       </div>
 
@@ -286,7 +288,7 @@ export function WalletAuth({
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className={statusEyebrowClass}>{walletText.statusLabel}</p>
-          <p className="text-lg font-medium">{statusText}</p>
+          <p className={statusTextClass}>{statusText}</p>
           {state.status === "connected" && (
             <p className={detailTextClass}>
               {walletText.chainId(state.chainId)} · {walletText.mode[state.method]}

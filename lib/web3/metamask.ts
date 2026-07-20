@@ -370,19 +370,23 @@ export function onWalletChange(
   let removeListeners = () => undefined;
   let disposed = false;
 
-  void getBrowserEthereumProvider().then((ethereum) => {
-    if (disposed || !ethereum?.on) {
-      return;
-    }
+  void getBrowserEthereumProvider()
+    .then((ethereum) => {
+      if (disposed || !ethereum?.on) {
+        return;
+      }
 
-    ethereum.on("accountsChanged", accountsHandler);
-    ethereum.on("chainChanged", chainHandler);
+      ethereum.on("accountsChanged", accountsHandler);
+      ethereum.on("chainChanged", chainHandler);
 
-    removeListeners = () => {
-      ethereum.removeListener?.("accountsChanged", accountsHandler);
-      ethereum.removeListener?.("chainChanged", chainHandler);
-    };
-  });
+      removeListeners = () => {
+        ethereum.removeListener?.("accountsChanged", accountsHandler);
+        ethereum.removeListener?.("chainChanged", chainHandler);
+      };
+    })
+    // A browser without an injected wallet is a supported state. The connect
+    // button will surface the actionable error if the user explicitly uses it.
+    .catch(() => undefined);
 
   return () => {
     disposed = true;
