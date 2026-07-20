@@ -14,6 +14,7 @@ import {
 
 type View = "home" | "policies" | "policy" | "fees" | "ownership";
 
+const adminSessionStorageKey = "riska.admin-wallet-session";
 const card = "rounded-2xl border border-[#293446] bg-[#101722] p-5 shadow-[0_14px_36px_rgba(0,0,0,.18)]";
 const button = "rounded-xl bg-[#5868ea] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#6f7efa] disabled:cursor-not-allowed disabled:opacity-50";
 
@@ -21,11 +22,41 @@ function date(timestamp: number) {
   return timestamp ? new Intl.DateTimeFormat("es-AR", { dateStyle: "medium", timeStyle: "short" }).format(timestamp * 1000) : "—";
 }
 
+function readAdminSession(): WalletAuthSession | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const raw = window.sessionStorage.getItem(adminSessionStorageKey);
+    if (!raw) {
+      return null;
+    }
+
+    const session = JSON.parse(raw) as WalletAuthSession;
+    return session?.status === "connected" && session.address ? session : null;
+  } catch {
+    return null;
+  }
+}
+
 export function AdminConsole({ view, policyId }: { view: View; policyId?: string }) {
-  const [session, setSession] = useState<WalletAuthSession | null>(null);
+  const [session, setSession] = useState<WalletAuthSession | null>(() => readAdminSession());
   const [overview, setOverview] = useState<AdminOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    if (session) {
+      window.sessionStorage.setItem(adminSessionStorageKey, JSON.stringify(session));
+    } else {
+      window.sessionStorage.removeItem(adminSessionStorageKey);
+    }
+  }, [session]);
 
   const refresh = useCallback(async () => {
     setLoading(true);
