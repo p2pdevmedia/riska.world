@@ -692,14 +692,14 @@ describe("RiskaPolicyManager", function () {
     expect(await ctx.premiumVault.protocolReserveBalance()).to.equal(0);
   });
 
-  it("only configured beneficiaries can report death", async function () {
+  it("only configured beneficiaries or the owner can report death", async function () {
     const ctx = await deployFixture();
     const policyId = await openPolicy(ctx);
 
-    await expect(ctx.manager.connect(ctx.stranger).reportDeath(policyId)).to.be.revertedWith("ONLY_BENEFICIARY");
+    await expect(ctx.manager.connect(ctx.stranger).reportDeath(policyId)).to.be.revertedWith("ONLY_BENEFICIARY_OR_OWNER");
 
     await advance(DEATH_REPORT_DELAY);
-    await expect(ctx.manager.connect(ctx.stranger).reportDeath(policyId)).to.be.revertedWith("ONLY_BENEFICIARY");
+    await expect(ctx.manager.connect(ctx.stranger).reportDeath(policyId)).to.be.revertedWith("ONLY_BENEFICIARY_OR_OWNER");
 
     await ctx.manager.connect(ctx.beneficiaryA).reportDeath(policyId);
     const notice = await ctx.manager.deathNotices(policyId);
@@ -719,6 +719,25 @@ describe("RiskaPolicyManager", function () {
 
     await reportAfterPolicyAge(ctx, policyId);
     await expect(ctx.manager.connect(ctx.beneficiaryA).claimDeath(policyId)).to.be.revertedWith("DEATH_CLAIM_NOT_READY");
+  });
+
+  it("allows the protocol owner to report a death after the policy age delay", async function () {
+    const ctx = await deployFixture();
+    const policyId = await openPolicy(ctx);
+
+    await advance(DEATH_REPORT_DELAY);
+    await ctx.manager.connect(ctx.owner).reportDeath(policyId);
+
+    expect((await ctx.manager.deathNotices(policyId)).reporter).to.equal(ctx.owner.address);
+  });
+
+  it("does not allow a non-beneficiary, non-owner wallet to report a death", async function () {
+    const ctx = await deployFixture();
+    const policyId = await openPolicy(ctx);
+
+    await advance(DEATH_REPORT_DELAY);
+    await expect(ctx.manager.connect(ctx.stranger).reportDeath(policyId))
+      .to.be.revertedWith("ONLY_BENEFICIARY_OR_OWNER");
   });
 
   it("cancels a pending death report when the holder interacts", async function () {
@@ -807,5 +826,21 @@ describe("RiskaPolicyManager", function () {
 
     policy = await ctx.manager.policies(policyId);
     expect(policy.status).to.equal(STATUS.DeathSettled);
+  });
+
+  it("lets the owner withdraw retained protocol reserve while preserving principal", async function () {
+    const ctx = await deployFixture();
+    const policyId = await openPolicy(ctx);
+    await fundMinimum(ctx, policyId, "1200");
+    await ctx.manager.connect(ctx.holder).claimAll(policyId);
+
+    const reserve = await ctx.premiumVault.protocolReserveBalance();
+    const ownerBefore = await ctx.token.balanceOf(ctx.owner.address);
+    await ctx.premiumVault.connect(ctx.owner).withdrawProtocolReserve(ctx.owner.address, reserve);
+
+    expect(await ctx.token.balanceOf(ctx.owner.address)).to.equal(ownerBefore + reserve);
+    expect(await ctx.premiumVault.protocolReserveBalance()).to.equal(0);
+    await expect(ctx.premiumVault.connect(ctx.stranger).withdrawProtocolReserve(ctx.stranger.address, usdc("1")))
+      .to.be.revertedWithCustomError(ctx.premiumVault, "OwnableUnauthorizedAccount");
   });
 });

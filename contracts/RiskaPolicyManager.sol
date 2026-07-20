@@ -486,7 +486,7 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard, EIP712 {
         Policy storage policy = policies[policyId];
         require(policy.holder != address(0), "POLICY_NOT_FOUND");
         require(policy.status == PolicyStatus.Active || policy.status == PolicyStatus.PayoutActive, "INVALID_STATUS");
-        require(isBeneficiary(policyId, msg.sender), "ONLY_BENEFICIARY");
+        require(isBeneficiary(policyId, msg.sender) || msg.sender == owner(), "ONLY_BENEFICIARY_OR_OWNER");
         require(block.timestamp >= policy.openedAt + DEATH_REPORT_DELAY, "POLICY_TOO_NEW");
         require(!deathNotices[policyId].active, "DEATH_ALREADY_REPORTED");
 

@@ -40,6 +40,7 @@ contract RiskaPremiumVault is Ownable, Pausable, ReentrancyGuard {
         uint256 policyLoss
     );
     event ProtocolYieldReserveWithdrawn(address indexed recipient, uint256 amount);
+    event ProtocolReserveWithdrawn(address indexed recipient, uint256 amount);
     event AuxiliaryTokenCollected(uint256 indexed policyId, address indexed holder, address indexed token, uint256 amount);
     event AuxiliaryTokenHolderPaid(uint256 indexed policyId, address indexed holder, address indexed token, uint256 amount);
     event AuxiliaryTokenBeneficiariesPaid(uint256 indexed policyId, address indexed token, uint256 amount);
@@ -232,6 +233,28 @@ contract RiskaPremiumVault is Ownable, Pausable, ReentrancyGuard {
         paymentToken.safeTransfer(recipient, amount);
 
         emit ProtocolYieldReserveWithdrawn(recipient, amount);
+    }
+
+    /// @notice Withdraws fees retained when a policy is closed or settled after death.
+    /// @dev Principal liabilities are always kept in the vault before protocol funds can leave.
+    function withdrawProtocolReserve(address recipient, uint256 amount)
+        external
+        onlyOwner
+        whenNotPaused
+        nonReentrant
+    {
+        require(recipient != address(0), "INVALID_RECIPIENT");
+        require(amount > 0, "INVALID_AMOUNT");
+        require(amount <= protocolReserveBalance, "RESERVE_EXCEEDED");
+
+        uint256 requiredIdlePrincipal = idlePrincipalLiability();
+        uint256 available = paymentToken.balanceOf(address(this));
+        require(available >= requiredIdlePrincipal + amount, "INSUFFICIENT_RESERVE_LIQUIDITY");
+
+        protocolReserveBalance -= amount;
+        paymentToken.safeTransfer(recipient, amount);
+
+        emit ProtocolReserveWithdrawn(recipient, amount);
     }
 
     function collectAuxiliaryToken(uint256 policyId, address holder, IERC20 token, uint256 amount)
