@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { derivePolicyNullifier, selectPolicyHumanResponse } from "../lib/world/policy-human-proof.ts";
+import {
+  derivePolicyNullifier,
+  selectPolicyHumanResponse,
+  selectVerifiedPolicyHumanNullifier
+} from "../lib/world/policy-human-proof.ts";
+import { getWorldIdSimulatorIdentitySelectorUrl } from "../lib/world/idkit.ts";
 
 const signalHash = `0x${"ab".repeat(32)}`;
 
@@ -54,4 +59,28 @@ test("the same identity and action remain deterministic", () => {
   const second = derivePolicyNullifier({ action: "riska-policy-human-v1", nullifier: "1" });
 
   assert.deepEqual(first, second);
+});
+
+test("uses the canonical v4 nullifier returned by the World verifier", () => {
+  const nullifier = selectVerifiedPolicyHumanNullifier([
+    { identifier: "passport", nullifier: "0x01", success: true },
+    { identifier: "proof_of_human", nullifier: "0x02", success: false },
+    { identifier: "proof_of_human", nullifier: "0x03", success: true }
+  ], "proof_of_human");
+
+  assert.equal(nullifier, "0x03");
+});
+
+test("rewrites the staging simulator link to the explicit identity selector", () => {
+  const connectUrl = "https://world.org/verify?t=wld&i=request-1&k=signature";
+  const simulatorUrl = `https://simulator.worldcoin.org/?connect_url=${encodeURIComponent(connectUrl)}`;
+
+  assert.equal(
+    getWorldIdSimulatorIdentitySelectorUrl(simulatorUrl),
+    `https://simulator.worldcoin.org/select-id?connect_url=${encodeURIComponent(connectUrl)}`
+  );
+});
+
+test("does not rewrite unrelated links as simulator identity selectors", () => {
+  assert.equal(getWorldIdSimulatorIdentitySelectorUrl("https://world.org/verify"), null);
 });

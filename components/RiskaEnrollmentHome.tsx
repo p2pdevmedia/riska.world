@@ -24,6 +24,7 @@ import {
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
   type ComponentType,
   type Dispatch,
@@ -651,11 +652,17 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
   const [testnetDeployment, setTestnetDeployment] = useState<TestnetDeploymentState>({ status: "loading" });
   const [testnetIssue, setTestnetIssue] = useState<TestnetIssueState>({ status: "idle" });
   const [state, setState] = useState<EnrollmentState>(initialState);
+  const pendingWalletHydrationRef = useRef<string | null | undefined>(undefined);
 
   useEffect(() => {
+    if (pendingWalletHydrationRef.current === undefined) {
+      pendingWalletHydrationRef.current = window.sessionStorage.getItem(pendingWalletStorageKey);
+      window.sessionStorage.removeItem(pendingWalletStorageKey);
+    }
+
     try {
       const storedState = window.localStorage.getItem(storageKey);
-      const pendingWallet = window.sessionStorage.getItem(pendingWalletStorageKey);
+      const pendingWallet = pendingWalletHydrationRef.current;
       let restoredState = initialState;
 
       if (storedState) {
@@ -831,11 +838,7 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
         };
       }
 
-      return {
-        ...clearSubmission(current),
-        humanReservation: walletSession ? current.humanReservation : null,
-        walletSession
-      };
+      return { ...initialState, walletSession };
     });
   }, []);
 

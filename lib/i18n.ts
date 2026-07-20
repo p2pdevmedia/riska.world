@@ -24,7 +24,8 @@ const worldIdErrorsEn = {
   world_id_3_not_available:
     "This World App account cannot create the required proof yet. Finish verification and try again.",
   world_id_4_not_available:
-    "This World App account cannot create the required proof yet. Update World App or finish verification, then try again."
+    "This World App account cannot create the required proof yet. Update World App or finish verification, then try again.",
+  world_id_4_required: "Riska requires a World ID 4 uniqueness proof to open a policy."
 };
 
 const worldIdErrorsEs = {
@@ -51,7 +52,8 @@ const worldIdErrorsEs = {
   world_id_3_not_available:
     "Esta cuenta de World App todavía no puede crear la prueba requerida. Completa la verificación e inténtalo de nuevo.",
   world_id_4_not_available:
-    "Esta cuenta de World App todavía no puede crear la prueba requerida. Actualiza World App o completa la verificación, y vuelve a intentarlo."
+    "Esta cuenta de World App todavía no puede crear la prueba requerida. Actualiza World App o completa la verificación, y vuelve a intentarlo.",
+  world_id_4_required: "Riska requiere una prueba de unicidad de World ID 4 para abrir una póliza."
 };
 
 const contractDocsEn = {

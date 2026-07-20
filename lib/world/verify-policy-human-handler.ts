@@ -10,7 +10,11 @@ import {
   RISKA_WORLD_ID_POLICY_ACTION,
   normalizeWorldIdSignal
 } from "@/lib/world/idkit";
-import { derivePolicyNullifier, selectPolicyHumanResponse } from "@/lib/world/policy-human-proof";
+import {
+  derivePolicyNullifier,
+  selectPolicyHumanResponse,
+  selectVerifiedPolicyHumanNullifier
+} from "@/lib/world/policy-human-proof";
 import { readWalletSession } from "@/lib/world/wallet-session";
 
 type VerifyPolicyHumanRequest = {
@@ -22,6 +26,11 @@ type VerificationResponsePayload = {
   code?: string;
   detail?: string;
   error?: string;
+  results?: Array<{
+    identifier?: string;
+    nullifier?: string;
+    success?: boolean;
+  }>;
   success?: boolean;
 };
 
@@ -69,6 +78,17 @@ export async function postVerifyPolicyHuman(request: Request) {
   if (idkitResponse.environment !== RISKA_WORLD_ID_ENVIRONMENT) {
     return NextResponse.json(
       { success: false, error: "World ID environment does not match this deployment." },
+      { status: 400 }
+    );
+  }
+
+  if (idkitResponse.protocol_version !== "4.0" || "session_id" in idkitResponse) {
+    return NextResponse.json(
+      {
+        success: false,
+        code: "world_id_4_required",
+        error: "Riska policy verification requires a World ID 4.0 uniqueness proof."
+      },
       { status: 400 }
     );
   }
@@ -151,9 +171,29 @@ export async function postVerifyPolicyHuman(request: Request) {
     );
   }
 
+  const verifiedNullifier = selectVerifiedPolicyHumanNullifier(
+    verifyPayload?.results ?? [],
+    policyHumanResponse.identifier!
+  );
+
+  if (!verifiedNullifier) {
+    console.error("[world-id] verifier omitted the canonical proof-of-human nullifier", {
+      protocolVersion: idkitResponse.protocol_version,
+      responseIdentifiers: responses.map((response) => response.identifier)
+    });
+    return NextResponse.json(
+      {
+        success: false,
+        code: "invalid_policy_human_proof",
+        error: "World ID did not return a verified proof-of-human nullifier."
+      },
+      { status: 400 }
+    );
+  }
+
   const { nullifier, nullifierHash } = derivePolicyNullifier({
     action: RISKA_WORLD_ID_POLICY_ACTION,
-    nullifier: policyHumanResponse.nullifier!
+    nullifier: verifiedNullifier
   });
   const credentialIdentifiers = responses.map((response) => response.identifier);
   const signingKey = process.env.POLICY_HUMAN_SIGNING_KEY as `0x${string}` | undefined;
@@ -189,6 +229,10 @@ export async function postVerifyPolicyHuman(request: Request) {
   }
 
   if (existingPolicyId > 0n) {
+    console.info("[world-id] policy nullifier already used", {
+      existingPolicyId: existingPolicyId.toString(),
+      protocolVersion: idkitResponse.protocol_version
+    });
     return NextResponse.json(
       {
         success: false,
@@ -210,6 +254,12 @@ export async function postVerifyPolicyHuman(request: Request) {
     ] },
     primaryType: "PolicyHumanAuthorization",
     message: { holder: normalizedWallet as `0x${string}`, nullifierHash, deadline }
+  });
+
+  console.info("[world-id] policy human authorization issued", {
+    credentialIdentifiers,
+    protocolVersion: idkitResponse.protocol_version,
+    walletAddress: normalizedWallet
   });
 
   return NextResponse.json({
