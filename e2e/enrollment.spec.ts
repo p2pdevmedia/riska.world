@@ -3,6 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 const holder = "0x99d58aa8dd8311c3706d619176bb3bf2008148c3";
 const beneficiaryA = "0x1111111111111111111111111111111111111111";
 const beneficiaryB = "0x2222222222222222222222222222222222222222";
+const policyManager = "0x21E22D6C944345fF0654e31dF694972535003CC7";
 
 function verifiedEnrollment(overrides: Record<string, unknown> = {}) {
   return {
@@ -15,7 +16,7 @@ function verifiedEnrollment(overrides: Record<string, unknown> = {}) {
       nullifier: "e2e-nullifier",
       nullifierHash: `0x${"22".repeat(32)}`,
       policyHumanVerifier: "0xDbe839D948A4EEA75490457F4d7C51063fbf779D",
-      policyManager: "0xaca401bE0C48Bb89231367D82770B3Ff25E70CA2",
+      policyManager,
       protocolVersion: "0.1",
       reservedAt: "2026-07-18T00:00:00.000Z",
       walletAddress: holder
