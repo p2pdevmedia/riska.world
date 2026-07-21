@@ -27,11 +27,11 @@ loadEnvFile(".env.local");
 
 const signingKey = process.env.POLICY_HUMAN_SIGNING_KEY;
 if (!signingKey) {
-  if (process.env.VERCEL_ENV) {
+  if (process.env.VERCEL_ENV === "production") {
     throw new Error("POLICY_HUMAN_SIGNING_KEY is required to validate the PolicyManager human verifier.");
   }
 
-  console.log("Policy human verifier validation skipped outside Vercel; the private key is not stored locally.");
+  console.log("Policy human verifier validation skipped outside a production deployment; the private key is not available.");
   process.exit(0);
 }
 
