@@ -46,16 +46,8 @@ const premiumVaultAdminAbi = [
 ] as const;
 
 export type AdminOwners = { beneficiaryRegistry: Address; policyManager: Address; premiumVault: Address };
-export type AdminWorldIdReservation = {
-  action: string;
-  credentialIdentifiers: string[];
-  nullifierHash: string;
-  protocolVersion: string;
-  reservedAt: string;
-  walletAddress: Address;
-};
-export type AdminPolicy = { id: string; holder: Address; openedAt: number; principal: bigint; status: number; deathReported: boolean; worldId: AdminWorldIdReservation | null };
-export type AdminPolicyDetail = AdminPolicy & { beneficiaries: Array<{ account: Address; shareBps: number }>; death: { active: boolean; reporter: Address; reportedAt: number; claimableAt: number }; monthlyPayoutAmount: bigint; nextPayoutAt: number; remainingExtraPrincipal: bigint; remainingMinimumPrincipal: bigint; payoutsMade: number; termsHash: `0x${string}`; worldId: AdminWorldIdReservation | null };
+export type AdminPolicy = { id: string; holder: Address; openedAt: number; principal: bigint; status: number; deathReported: boolean; worldIdNullifierHash: `0x${string}` };
+export type AdminPolicyDetail = AdminPolicy & { beneficiaries: Array<{ account: Address; shareBps: number }>; death: { active: boolean; reporter: Address; reportedAt: number; claimableAt: number }; monthlyPayoutAmount: bigint; nextPayoutAt: number; remainingExtraPrincipal: bigint; remainingMinimumPrincipal: bigint; payoutsMade: number; termsHash: `0x${string}` };
 export type AdminOverview = { owners: AdminOwners; policyCount: number; protocolReserveBalance: bigint; protocolYieldReserveBalance: bigint; authorized: boolean };
 export type AdminContractKey = keyof AdminOwners;
 
@@ -64,26 +56,6 @@ async function deploymentContracts() {
   const { beneficiaryRegistry, policyManager, premiumVault } = deployment.contracts;
   if (!beneficiaryRegistry?.address || !policyManager?.address || !premiumVault?.address) throw new Error("Faltan contratos base en el despliegue.");
   return { beneficiaryRegistry: beneficiaryRegistry.address, policyManager: policyManager.address, premiumVault: premiumVault.address };
-}
-
-async function getWorldIdReservations(wallets: string[]): Promise<Record<string, AdminWorldIdReservation>> {
-  if (wallets.length === 0) {
-    return {};
-  }
-
-  const response = await fetch(`/api/admin/world-id-reservations?wallets=${encodeURIComponent(wallets.join(","))}`, {
-    cache: "no-store"
-  });
-
-  if (!response.ok) {
-    throw new Error("No se pudieron cargar las verificaciones de World ID.");
-  }
-
-  const payload = (await response.json()) as {
-    reservations?: Record<string, AdminWorldIdReservation>;
-  };
-
-  return payload.reservations ?? {};
 }
 
 export async function getAdminOverview(account?: string | null): Promise<AdminOverview> {
@@ -113,14 +85,10 @@ export async function getAdminPolicies(page: number, pageSize = 20): Promise<{ p
       publicClient.readContract({ address: contracts.policyManager, abi: policyManagerAdminAbi, functionName: "deathNotices", args: [id] }),
       publicClient.readContract({ address: contracts.policyManager, abi: policyManagerAdminAbi, functionName: "totalPrincipal", args: [id] })
     ]);
-    return { id: id.toString(), holder: policy[0], openedAt: Number(policy[4]), principal, status: Number(policy[10]), deathReported: death[2] };
+    return { id: id.toString(), holder: policy[0], worldIdNullifierHash: policy[1], openedAt: Number(policy[4]), principal, status: Number(policy[10]), deathReported: death[2] };
   }));
-  const worldIdReservations = await getWorldIdReservations(policies.map((policy) => policy.holder));
   return {
-    policies: policies.map((policy) => ({
-      ...policy,
-      worldId: worldIdReservations[policy.holder.toLowerCase()] ?? null
-    })),
+    policies,
     policyCount
   };
 }
@@ -141,8 +109,7 @@ export async function getAdminPolicy(id: string): Promise<AdminPolicyDetail> {
     const entry = await publicClient.readContract({ address: contracts.policyManager, abi: policyManagerAdminAbi, functionName: "beneficiaryAt", args: [policyId, BigInt(index)] });
     return { account: entry[0], shareBps: Number(entry[1]) };
   }));
-  const worldIdReservation = await getWorldIdReservations([policy[0]]);
-  return { id, holder: policy[0], termsHash: policy[2], payoutsMade: Number(policy[3]), openedAt: Number(policy[4]), nextPayoutAt: Number(policy[6]), remainingMinimumPrincipal: policy[7], remainingExtraPrincipal: policy[8], monthlyPayoutAmount: policy[9], status: Number(policy[10]), principal, deathReported: death[2], beneficiaries, death: { active: death[2], reporter: death[0], reportedAt: Number(death[1]), claimableAt: Number(claimableAt) }, worldId: worldIdReservation[policy[0].toLowerCase()] ?? null };
+  return { id, holder: policy[0], worldIdNullifierHash: policy[1], termsHash: policy[2], payoutsMade: Number(policy[3]), openedAt: Number(policy[4]), nextPayoutAt: Number(policy[6]), remainingMinimumPrincipal: policy[7], remainingExtraPrincipal: policy[8], monthlyPayoutAmount: policy[9], status: Number(policy[10]), principal, deathReported: death[2], beneficiaries, death: { active: death[2], reporter: death[0], reportedAt: Number(death[1]), claimableAt: Number(claimableAt) } };
 }
 
 async function write(action: (account: Address) => Promise<Hash>, account: string) {
