@@ -1,10 +1,20 @@
 "use client";
 
+import { MiniKit } from "@worldcoin/minikit-js";
+import { useMiniKit } from "@worldcoin/minikit-js/minikit-provider";
+import type { WalletAuthResult } from "@worldcoin/minikit-js/commands";
 import { useCallback, useEffect, useState } from "react";
 import { getAddress } from "viem";
 
 import { useLanguage } from "@/components/LanguageProvider";
-import { connectWallet, disconnectWallet, onWalletChange } from "@/lib/web3/metamask";
+import { WorldIdGate } from "@/components/WorldIdGate";
+import {
+  connectWallet,
+  discoverBrowserWallets,
+  disconnectWallet,
+  onWalletChange,
+  type BrowserWalletOption
+} from "@/lib/web3/metamask";
 
 function truncateAddress(address: string) {
   return `${address.slice(0, 6)}…${address.slice(-4)}`;
@@ -13,7 +23,9 @@ function truncateAddress(address: string) {
 type AuthState =
   | { status: "disconnected" }
   | { status: "connecting" }
-  | { status: "connected"; address: string; chainId: number };
+  | { status: "connected"; address: string; chainId: number; method: "world-app" | "browser" };
+
+export type WalletAuthSession = Extract<AuthState, { status: "connected" }>;
 
 type MessageState =
   | { type: "welcome" }
@@ -21,19 +33,93 @@ type MessageState =
   | { type: "error" }
   | { type: "custom"; text: string };
 
-export function WalletAuth() {
+export function WalletAuth({
+  initialSession,
+  onHumanReservationChange,
+  onSessionChange,
+  showWorldIdGate = true,
+  variant = "dark"
+}: {
+  initialSession?: WalletAuthSession | null;
+  onHumanReservationChange?: Parameters<typeof WorldIdGate>[0]["onReservationChange"];
+  onSessionChange?: (session: WalletAuthSession | null) => void;
+  /** Admin and operational wallet flows do not require a World ID reservation. */
+  showWorldIdGate?: boolean;
+  variant?: "dark" | "light" | "start";
+}) {
   const { t } = useLanguage();
+  const { isInstalled } = useMiniKit();
   const walletText = t.walletAuth;
 
-  const [state, setState] = useState<AuthState>({ status: "disconnected" });
+  const [state, setState] = useState<AuthState>(() => initialSession ?? { status: "disconnected" });
   const [message, setMessage] = useState<MessageState | null>(null);
+  const [browserWallets, setBrowserWallets] = useState<BrowserWalletOption[]>([]);
+  const [walletPickerOpen, setWalletPickerOpen] = useState(false);
 
-  const connect = useCallback(async () => {
+  const connectMiniAppWallet = useCallback(async () => {
+    const nonceResponse = await fetch("/api/minikit/nonce", {
+      cache: "no-store"
+    });
+
+    if (!nonceResponse.ok) {
+      throw new Error(walletText.messages.nonceError);
+    }
+
+    const noncePayload = (await nonceResponse.json()) as {
+      nonce: string;
+      statement: string;
+      expiresAt: string;
+    };
+
+    const result = await MiniKit.walletAuth({
+      nonce: noncePayload.nonce,
+      statement: noncePayload.statement,
+      expirationTime: new Date(noncePayload.expiresAt)
+    });
+
+    if (result.executedWith === "fallback") {
+      throw new Error(walletText.messages.worldAppRequired);
+    }
+
+    const completeResponse = await fetch("/api/minikit/complete-siwe", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        nonce: noncePayload.nonce,
+        payload: result.data satisfies WalletAuthResult
+      })
+    });
+
+    const completePayload = (await completeResponse.json()) as {
+      isValid: boolean;
+      address?: string;
+      chainId?: number;
+      error?: string;
+    };
+
+    if (!completeResponse.ok || !completePayload.isValid || !completePayload.address) {
+      throw new Error(completePayload.error ?? walletText.messages.verifyError);
+    }
+
+    return {
+      address: getAddress(completePayload.address),
+      chainId: completePayload.chainId ?? 480
+    };
+  }, [walletText.messages.nonceError, walletText.messages.verifyError, walletText.messages.worldAppRequired]);
+
+  const connect = useCallback(async (walletId?: string) => {
     setState({ status: "connecting" });
     setMessage(null);
     try {
-      const connection = await connectWallet();
-      setState({ status: "connected", ...connection });
+      if (isInstalled) {
+        const connection = await connectMiniAppWallet();
+        setState({ status: "connected", method: "world-app", ...connection });
+      } else {
+        const connection = await connectWallet(undefined, walletId);
+        setState({ status: "connected", method: "browser", ...connection });
+      }
       setMessage({ type: "welcome" });
     } catch (error) {
       console.error(error);
@@ -44,13 +130,45 @@ export function WalletAuth() {
         setMessage({ type: "error" });
       }
     }
-  }, []);
+  }, [connectMiniAppWallet, isInstalled]);
+
+  const chooseBrowserWallet = useCallback(async () => {
+    if (isInstalled) {
+      await connect();
+      return;
+    }
+
+    try {
+      setMessage(null);
+      const wallets = await discoverBrowserWallets();
+      setBrowserWallets(wallets);
+
+      if (wallets.length === 1) {
+        await connect(wallets[0].id);
+        return;
+      }
+
+      setWalletPickerOpen(true);
+    } catch (error) {
+      setMessage({ type: "custom", text: error instanceof Error ? error.message : walletText.messages.error });
+    }
+  }, [connect, isInstalled, walletText.messages.error]);
+
+  const connectSelectedWallet = useCallback(
+    async (walletId: string) => {
+      setWalletPickerOpen(false);
+      await connect(walletId);
+    },
+    [connect]
+  );
 
   const disconnect = useCallback(async () => {
-    await disconnectWallet();
+    if (state.status === "connected" && state.method === "browser") {
+      await disconnectWallet();
+    }
     setState({ status: "disconnected" });
     setMessage({ type: "disconnected" });
-  }, []);
+  }, [state]);
 
   useEffect(() => {
     return onWalletChange(({ accounts, chainId }) => {
@@ -61,6 +179,7 @@ export function WalletAuth() {
 
         const fallbackAddress = prev.status === "connected" ? prev.address : undefined;
         const fallbackChainId = prev.status === "connected" ? prev.chainId : 0;
+        const fallbackMethod = prev.status === "connected" ? prev.method : "browser";
 
         const nextAddress = accounts && accounts.length > 0 ? getAddress(accounts[0]) : fallbackAddress;
         const nextChainId = typeof chainId === "string" ? parseInt(chainId, 16) : fallbackChainId;
@@ -69,10 +188,19 @@ export function WalletAuth() {
           return prev;
         }
 
-        return { status: "connected", address: nextAddress, chainId: nextChainId };
+        return {
+          status: "connected",
+          address: nextAddress,
+          chainId: nextChainId,
+          method: fallbackMethod
+        };
       });
     });
   }, []);
+
+  useEffect(() => {
+    onSessionChange?.(state.status === "connected" ? state : null);
+  }, [onSessionChange, state]);
 
   const statusText =
     state.status === "connected"
@@ -81,8 +209,19 @@ export function WalletAuth() {
       ? walletText.status.connecting
       : walletText.status.disconnected;
 
+  const miniAppStatus =
+    isInstalled === undefined
+      ? walletText.miniApp.checking
+      : isInstalled
+      ? walletText.miniApp.installed
+      : walletText.miniApp.browserFallback;
+
   const actionLabel =
-    state.status === "connecting" ? walletText.actions.connecting : walletText.actions.connect;
+    state.status === "connecting"
+      ? walletText.actions.connecting
+      : isInstalled
+      ? walletText.actions.connectWorldApp
+      : walletText.actions.connectBrowser;
 
   const messageText =
     message == null
@@ -91,32 +230,83 @@ export function WalletAuth() {
       ? message.text
       : walletText.messages[message.type];
 
+  const isLight = variant === "light";
+  const headingClass = isLight ? "text-2xl font-semibold text-[#17231e]" : "text-2xl font-semibold";
+  const statusTextClass = isLight ? "text-lg font-medium text-[#17231e]" : "text-lg font-medium";
+  const panelClass = isLight
+    ? "border border-[#d9ded5] bg-white p-5 md:p-7 space-y-5"
+    : "glass-panel p-8 md:p-10 space-y-6 max-w-lg";
+  const descriptionClass = isLight ? "text-sm text-[#516159]" : "text-sm text-slate-300/80";
+  const miniPanelClass = isLight
+    ? "border border-[#dce4d8] bg-[#f8faf6] px-4 py-3"
+    : "rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3";
+  const eyebrowClass = isLight
+    ? "text-xs uppercase tracking-[0.26em] text-[#6b766f]"
+    : "text-xs uppercase tracking-[0.26em] text-slate-400";
+  const statusEyebrowClass = isLight
+    ? "text-sm uppercase tracking-[0.22em] text-[#6b766f]"
+    : "text-sm uppercase tracking-[0.3em] text-slate-400";
+  const secondaryTextClass = isLight ? "text-sm text-[#405047]" : "text-sm text-slate-200";
+  const detailTextClass = isLight ? "mt-1 text-xs text-[#66746e]" : "mt-1 text-xs text-slate-400";
+  const primaryButtonClass = isLight
+    ? "bg-[#17231e] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#26342d] disabled:cursor-not-allowed disabled:bg-[#ccd6cf] disabled:text-[#728078]"
+    : "rounded-full bg-aurora-600 px-6 py-3 text-white shadow-glow transition hover:bg-aurora-500 disabled:cursor-not-allowed disabled:bg-slate-600 disabled:shadow-none";
+  const secondaryButtonClass = isLight
+    ? "border border-[#cbd7cf] bg-white px-5 py-3 text-sm font-semibold text-[#26342d] transition hover:border-[#17231e]"
+    : "rounded-full border border-white/10 bg-night-800 px-6 py-3 text-slate-200 transition hover:border-aurora-500";
+  const messageClass = isLight
+    ? "border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs text-emerald-800"
+    : "rounded-xl border border-aurora-500/20 bg-aurora-500/10 px-4 py-2 text-xs text-aurora-500/90";
+
+  if (variant === "start") {
+    return (
+      <button
+        className="flex h-12 items-center justify-center rounded-full bg-[#202027] px-6 text-sm font-semibold text-white transition hover:bg-[#5868ea] disabled:cursor-not-allowed disabled:bg-[#d9d9e0] disabled:text-[#858590]"
+        disabled={state.status === "connecting"}
+        onClick={chooseBrowserWallet}
+        type="button"
+      >
+        {actionLabel}
+      </button>
+    );
+  }
+
   return (
-    <div className="glass-panel p-8 md:p-10 space-y-6 max-w-lg">
+    <div className={panelClass}>
       <div>
-        <h3 className="text-2xl font-semibold">{walletText.heading}</h3>
-        <p className="text-sm text-slate-300/80">{walletText.description}</p>
+        <h3 className={headingClass}>{walletText.heading}</h3>
+        <p className={descriptionClass}>{walletText.description}</p>
+      </div>
+
+      <div className={miniPanelClass}>
+        <p className={eyebrowClass}>
+          {walletText.miniApp.label}
+        </p>
+        <p className={`mt-1 ${secondaryTextClass}`}>{miniAppStatus}</p>
       </div>
 
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-sm uppercase tracking-[0.3em] text-slate-400">{walletText.statusLabel}</p>
-          <p className="text-lg font-medium">{statusText}</p>
+          <p className={statusEyebrowClass}>{walletText.statusLabel}</p>
+          <p className={statusTextClass}>{statusText}</p>
           {state.status === "connected" && (
-            <p className="mt-1 text-xs text-slate-400">{walletText.chainId(state.chainId)}</p>
+            <p className={detailTextClass}>
+              {walletText.chainId(state.chainId)} · {walletText.mode[state.method]}
+            </p>
           )}
         </div>
         {state.status === "connected" ? (
           <button
             onClick={disconnect}
-            className="rounded-full border border-white/10 bg-night-800 px-6 py-3 text-slate-200 transition hover:border-aurora-500"
+            className={secondaryButtonClass}
           >
             {walletText.actions.disconnect}
           </button>
         ) : (
           <button
-            onClick={connect}
-            className="rounded-full bg-aurora-600 px-6 py-3 text-white shadow-glow transition hover:bg-aurora-500"
+            onClick={chooseBrowserWallet}
+            disabled={state.status === "connecting"}
+            className={primaryButtonClass}
           >
             {actionLabel}
           </button>
@@ -124,9 +314,48 @@ export function WalletAuth() {
       </div>
 
       {messageText && (
-        <p className="rounded-xl border border-aurora-500/20 bg-aurora-500/10 px-4 py-2 text-xs text-aurora-500/90">
+        <p className={messageClass}>
           {messageText}
         </p>
+      )}
+
+      {walletPickerOpen && (
+        <div className={miniPanelClass}>
+          <p className={eyebrowClass}>{walletText.walletPicker.title}</p>
+          {browserWallets.length > 0 ? (
+            <div className="mt-3 grid gap-2">
+              {browserWallets.map((wallet) => (
+                <button
+                  className="flex min-h-11 items-center gap-3 rounded-xl border border-white/10 bg-black/10 px-3 text-left text-sm font-medium transition hover:border-aurora-500"
+                  key={wallet.id}
+                  onClick={() => void connectSelectedWallet(wallet.id)}
+                  type="button"
+                >
+                  {wallet.icon ? (
+                    // EIP-6963 wallet icons are supplied by the installed wallet extension.
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img alt="" className="h-6 w-6 rounded-md" src={wallet.icon} />
+                  ) : (
+                    <span className="flex h-6 w-6 items-center justify-center rounded-md bg-aurora-500/15 text-xs text-aurora-500">W</span>
+                  )}
+                  <span>{wallet.name}</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className={detailTextClass}>
+              {walletText.walletPicker.empty}
+            </p>
+          )}
+        </div>
+      )}
+
+      {showWorldIdGate && (
+        <WorldIdGate
+          onReservationChange={onHumanReservationChange}
+          variant={variant}
+          walletAddress={state.status === "connected" ? state.address : undefined}
+        />
       )}
     </div>
   );

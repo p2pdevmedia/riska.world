@@ -1,0 +1,112 @@
+{
+  "network": "worldchainSepolia",
+  "chainId": "4801",
+  "deployedAt": "2026-07-17T22:56:15.451Z",
+  "blockNumber": 31890775,
+  "deployer": "0x592f881B2209342D694db94020bf288791072F35",
+  "explorerBaseUrl": "https://worldchain-sepolia.explorer.alchemy.com/address/",
+  "contracts": {
+    "mockUsdc": {
+      "address": "0xe338F35d1114a0cA241A7E1fb7f4d93FD9201855",
+      "transactionHash": null
+    },
+    "beneficiaryRegistry": {
+      "address": "0xb09F5619d9AcC140e21462356c391Cc5bb6d1b08",
+      "transactionHash": "0x53826832042f32f272f9c8164aa7047cf9d811a2baf763897c3956629ad44fb7"
+    },
+    "premiumVault": {
+      "address": "0xdb08cD11faC5D68f5f5DB57C078dc970a7028818",
+      "transactionHash": "0x8dfa3ba2b81d20d05b40a6fafcc26470fe42a11a3e90236cfa6a1895729f963d"
+    },
+    "policyManager": {
+      "address": "0x20Bf98654D40A6195C8E27a8F8A641e10cF3d72e",
+      "transactionHash": "0x93eebdf5a29f8f84b2e844c6453b55d7b795c8ef751f7a3bcb5654eff4565947"
+    },
+    "yieldStrategyManager": {
+      "address": "0x79BdC67F80ea111C0B2A43ce6954ae3C82e88cfB",
+      "transactionHash": "0xe39d19d634d09a8d5f062c109233fa0ae4b52fb95b7d863f310a7fd36c5db759"
+    },
+    "governanceToken": {
+      "address": "0x806640FF0B2BE7f0Ce581156242e2745Be7d0518",
+      "transactionHash": "0xf446c62d0d70dbe93a3e23a382f3164d88e4382d799aca5d82d49122e40e7a9a"
+    },
+    "protocolGovernor": {
+      "address": "0x0b40939A9f9961E7a24F8dE82F2De9d9ef1f344d",
+      "transactionHash": "0xf5551ec65979e53c84b4944ea77744e8f2b344b169f9461ef76ffb5bd6ea239c"
+    },
+    "protocolConfig": {
+      "address": "0x7fF28DC90fbD54dc63180Fad8f125E09B9A2BDCB",
+      "transactionHash": "0xb459a2b9a011c7e2cf76cfcf9233e829e02560151bd45795d153cdf543cd19e8"
+    },
+    "userVaultFactory": {
+      "address": "0x5258549D83e964289382870b252B051C8b5ce95F",
+      "transactionHash": "0x2429773ff4119d4728f597591d80ae037421779d14a0794abf5b81e94f14b015"
+    },
+    "testnetTokenFaucet": {
+      "address": "0x3DeB13e48b1f253De5079A33d053F24c2111ce01",
+      "transactionHash": "0x6967c792be093cf5d015834f53597c750c4ec591a4b0686bfe94b3823625e7d0"
+    }
+  },
+  "setupTransactions": {
+    "beneficiaryRegistrySetPolicyManager": "0x737ab672dc052f7c140f403e5d58e1cfe15ac80d44f6394677dac857d0bf002e",
+    "premiumVaultSetPolicyManager": "0xca6d9a9f2f4a3ae92d8abb4c90d2579786793ae10c14b788a0854073134112e7",
+    "premiumVaultSetYieldStrategyManager": "0xfc71309445d05c30205d5e06b0e76f20d5d199b89e0766ef38648a85d0cbbf59",
+    "yieldStrategyManagerSetPolicyManager": "0x64ea93d358a9fd585e3885769051543b228e6967c21761afe2771ccebe2c8362",
+    "policyManagerSetYieldStrategyManager": "0x8eac464fe3cdff95cb87c6f3898d241457b1f4f132397a44ba9aa14873eee7c5",
+    "governanceDelegation": "0x7d8e889cb32628558e56834821ddb4ca9ae742ce7f299fc61c16f2ca7d2c0e5e"
+  },
+  "testMint": {
+    "token": "0xe338F35d1114a0cA241A7E1fb7f4d93FD9201855",
+    "recipient": "0x592f881B2209342D694db94020bf288791072F35",
+    "amount": "20000",
+    "transactionHash": "0x35a2269e07f9d302faa774f10ace3b06986c1147481675759df3024cc672f3ec"
+  },
+  "testAuxiliaryTokens": {
+    "mockBtc": {
+      "address": "0x6f6b5eC2D2639C6773ED5CE957093dB4736E5f6D",
+      "decimals": 8,
+      "name": "Mock Bitcoin",
+      "symbol": "mBTC",
+      "transactionHash": "0xe9e34506da4ca56aabedce90e2b0119737ccb1e3456ea706de0e2e35e8a7fa25",
+      "mintTransactionHash": "0x016b0c73b4c3db7ba4aea66510e9ee46ef8c7b764f784d19375110b4aafb5499"
+    },
+    "mockEth": {
+      "address": "0x620081C44E8b1f761d8295cE1515710B3fA7aE25",
+      "decimals": 18,
+      "name": "Mock Ether",
+      "symbol": "mETH",
+      "transactionHash": "0x0586acab3a218c85f9df8d0866309135216c3d9e659e1c831cff531bc7bb13fb",
+      "mintTransactionHash": "0xa626df467984eca3381b0e33e0464ca38af0fd6476e67fc6fcef3d47395eeb13"
+    },
+    "mockSol": {
+      "address": "0xE4fa8cDDE2fF44946559e2A9228C42EC23275E26",
+      "decimals": 9,
+      "name": "Mock Solana",
+      "symbol": "mSOL",
+      "transactionHash": "0xaf2c6e3779cf8bdfa116869d2241eda0a4cc7bc0cbd240892f49b7eb12e6d6ad",
+      "mintTransactionHash": "0x4405adf71c20b822952e20c499d37dd62c7ebadc7e47d6e81ed9603e0ac4c71a"
+    }
+  },
+  "testAuxiliaryMint": {
+    "amount": "20000",
+    "mintedAt": "2026-05-28T12:45:18.121Z",
+    "recipient": "0x1a3DB3E167Acc8451Ed1af92615EA2e97b8CC5ff",
+    "tokens": {
+      "mockBtc": {
+        "address": "0x6f6b5eC2D2639C6773ED5CE957093dB4736E5f6D",
+        "mintTransactionHash": "0x016b0c73b4c3db7ba4aea66510e9ee46ef8c7b764f784d19375110b4aafb5499",
+        "symbol": "mBTC"
+      },
+      "mockEth": {
+        "address": "0x620081C44E8b1f761d8295cE1515710B3fA7aE25",
+        "mintTransactionHash": "0xa626df467984eca3381b0e33e0464ca38af0fd6476e67fc6fcef3d47395eeb13",
+        "symbol": "mETH"
+      },
+      "mockSol": {
+        "address": "0xE4fa8cDDE2fF44946559e2A9228C42EC23275E26",
+        "mintTransactionHash": "0x4405adf71c20b822952e20c499d37dd62c7ebadc7e47d6e81ed9603e0ac4c71a",
+        "symbol": "mSOL"
+      }
+    }
+  }
+}

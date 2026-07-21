@@ -15,7 +15,7 @@ const LanguageContext = createContext<LanguageContextValue | undefined>(undefine
 const LANGUAGE_STORAGE_KEY = "riska.world.language";
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>("en");
+  const [language, setLanguage] = useState<Language>("es");
 
   useEffect(() => {
     if (typeof window === "undefined") {

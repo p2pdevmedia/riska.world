@@ -1,0 +1,90 @@
+{
+  "network": "worldchainSepolia",
+  "chainId": "4801",
+  "deployedAt": "2026-05-28T13:02:12.792Z",
+  "blockNumber": 29712954,
+  "deployer": "0x592f881B2209342D694db94020bf288791072F35",
+  "explorerBaseUrl": "https://worldchain-sepolia.explorer.alchemy.com/address/",
+  "contracts": {
+    "mockUsdc": {
+      "address": "0x00AC2BE4200ecF375790E0C08654D902011cEeE6",
+      "transactionHash": "0x5d2c46877f625580529d4e47ac3d95946e3878aac9990bb5eff73fc74bb54c12"
+    },
+    "beneficiaryRegistry": {
+      "address": "0xaab9d9d247671bB39F1E8A172f130Cc4b9EAe1E3",
+      "transactionHash": "0x470eb428787d731a533a63c9daad0c753408a76728b191e6270eb7d369dd43ed"
+    },
+    "premiumVault": {
+      "address": "0x97DAd89935C56bD8CCa1501084110F6F0717e79f",
+      "transactionHash": "0x7ea79b732199170d6eafbe4101f1a3447b73695813bab71c93e1cf7e3ed94541"
+    },
+    "policyManager": {
+      "address": "0x780ADD13EAEa2e1BF034299556975e9c4c7A240d",
+      "transactionHash": "0x816b0969e3f210431cc46689105e18cd4f6a4ce1c6ffc1443ce0633f76510737"
+    }
+  },
+  "setupTransactions": {
+    "beneficiaryRegistrySetPolicyManager": "0x32c84dc5d18ec431537062ff581eeb9f83b83bba3252a9ce3d67740f6c1ed836",
+    "premiumVaultSetPolicyManager": "0x2ed867f84c051e89b75b93b167200c17400aec77f0511a486d8802641e909092"
+  },
+  "testMint": {
+    "token": "0x00AC2BE4200ecF375790E0C08654D902011cEeE6",
+    "recipient": "0x592f881B2209342D694db94020bf288791072F35",
+    "amount": "20000",
+    "transactionHash": "0xd236825d99448ca15eec40e131eb8636a9da23c8dd0e849f5a8c29429a4823fd"
+  },
+  "testUserMint": {
+    "token": "0x00AC2BE4200ecF375790E0C08654D902011cEeE6",
+    "recipient": "0x1a3DB3E167Acc8451Ed1af92615EA2e97b8CC5ff",
+    "amount": "20000",
+    "transactionHash": "0x425ce1cdb61c6d8048595b9964df7558ae64d1038c97a8b09be6055f0ccb8025"
+  },
+  "testAuxiliaryTokens": {
+    "mockBtc": {
+      "address": "0x6f6b5eC2D2639C6773ED5CE957093dB4736E5f6D",
+      "decimals": 8,
+      "name": "Mock Bitcoin",
+      "symbol": "mBTC",
+      "transactionHash": "0xe9e34506da4ca56aabedce90e2b0119737ccb1e3456ea706de0e2e35e8a7fa25",
+      "mintTransactionHash": "0x016b0c73b4c3db7ba4aea66510e9ee46ef8c7b764f784d19375110b4aafb5499"
+    },
+    "mockEth": {
+      "address": "0x620081C44E8b1f761d8295cE1515710B3fA7aE25",
+      "decimals": 18,
+      "name": "Mock Ether",
+      "symbol": "mETH",
+      "transactionHash": "0x0586acab3a218c85f9df8d0866309135216c3d9e659e1c831cff531bc7bb13fb",
+      "mintTransactionHash": "0xa626df467984eca3381b0e33e0464ca38af0fd6476e67fc6fcef3d47395eeb13"
+    },
+    "mockSol": {
+      "address": "0xE4fa8cDDE2fF44946559e2A9228C42EC23275E26",
+      "decimals": 9,
+      "name": "Mock Solana",
+      "symbol": "mSOL",
+      "transactionHash": "0xaf2c6e3779cf8bdfa116869d2241eda0a4cc7bc0cbd240892f49b7eb12e6d6ad",
+      "mintTransactionHash": "0x4405adf71c20b822952e20c499d37dd62c7ebadc7e47d6e81ed9603e0ac4c71a"
+    }
+  },
+  "testAuxiliaryMint": {
+    "amount": "20000",
+    "mintedAt": "2026-05-28T12:45:18.121Z",
+    "recipient": "0x1a3DB3E167Acc8451Ed1af92615EA2e97b8CC5ff",
+    "tokens": {
+      "mockBtc": {
+        "address": "0x6f6b5eC2D2639C6773ED5CE957093dB4736E5f6D",
+        "mintTransactionHash": "0x016b0c73b4c3db7ba4aea66510e9ee46ef8c7b764f784d19375110b4aafb5499",
+        "symbol": "mBTC"
+      },
+      "mockEth": {
+        "address": "0x620081C44E8b1f761d8295cE1515710B3fA7aE25",
+        "mintTransactionHash": "0xa626df467984eca3381b0e33e0464ca38af0fd6476e67fc6fcef3d47395eeb13",
+        "symbol": "mETH"
+      },
+      "mockSol": {
+        "address": "0xE4fa8cDDE2fF44946559e2A9228C42EC23275E26",
+        "mintTransactionHash": "0x4405adf71c20b822952e20c499d37dd62c7ebadc7e47d6e81ed9603e0ac4c71a",
+        "symbol": "mSOL"
+      }
+    }
+  }
+}

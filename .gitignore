@@ -1,0 +1,16 @@
+.next/
+node_modules/
+
+*.log
+.env
+.env.*
+.vercel
+.vercel.*
+tmp/
+artifacts/
+cache/
+coverage/
+test-results/
+playwright-report/
+*.tsbuildinfo
+typechain-types/

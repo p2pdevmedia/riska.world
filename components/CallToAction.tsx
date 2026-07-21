@@ -13,7 +13,7 @@ export function CallToAction() {
         <p className="section-subtitle">{cta.subtitle}</p>
         <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
           <a
-            href="#login"
+            href="/whitepaper"
             className="rounded-full bg-aurora-600 px-6 py-3 font-semibold text-white shadow-glow transition hover:bg-aurora-500"
           >
             {cta.primary}

@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
+
 import { useLanguage } from "@/components/LanguageProvider";
-import { contracts } from "@/lib/contracts";
+import { contracts, getContractPath } from "@/lib/contracts";
 
 export function ContractsSection() {
   const { t } = useLanguage();
@@ -22,21 +24,27 @@ export function ContractsSection() {
             <article key={contract.id} className="glass-panel flex flex-col justify-between gap-6 p-6">
               <div className="space-y-4">
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-aurora-400">
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#aeb8ff]">
                     {contract.network}
                   </p>
-                  <h3 className="text-lg font-semibold text-white">{content?.name ?? contract.id}</h3>
+                  <h3 className="text-lg font-semibold text-[#18211d]">{content?.name ?? contract.id}</h3>
                 </div>
                 {content?.description ? (
-                  <p className="text-sm text-slate-300/80">{content.description}</p>
+                  <p className="text-sm leading-6 text-[#516159]">{content.description}</p>
                 ) : null}
                 <div>
-                  <span className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                  <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[#66746e]">
                     {contractsText.addressLabel}
                   </span>
-                  <code className="mt-2 block break-words rounded bg-black/40 px-3 py-2 font-mono text-sm text-aurora-200">
-                    {contract.address}
-                  </code>
+                  {contract.address ? (
+                    <code className="mt-2 block break-words rounded-lg border border-[#334052] bg-[#0b1018] px-3 py-2 font-mono text-sm text-[#aeb8ff]">
+                      {contract.address}
+                    </code>
+                  ) : (
+                    <p className="mt-2 rounded-lg border border-[#334052] bg-[#0b1018] px-3 py-2 text-sm text-[#9baac0]">
+                      {contractsText.pendingLabel}
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="flex flex-wrap gap-3">
@@ -50,11 +58,9 @@ export function ContractsSection() {
                     {contractsText.explorerLabel}
                   </a>
                 ) : null}
-                {contract.docsUrl ? (
-                  <a href={contract.docsUrl} target="_blank" rel="noreferrer" className={linkClassName}>
-                    {contractsText.docsLabel}
-                  </a>
-                ) : null}
+                <Link href={getContractPath(contract)} className={linkClassName}>
+                  {contractsText.docsLabel}
+                </Link>
               </div>
             </article>
           );
@@ -65,4 +71,4 @@ export function ContractsSection() {
 }
 
 const linkClassName =
-  "rounded-full border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-200 transition hover:border-aurora-400/60 hover:text-white";
+  "rounded-lg border border-[#334052] bg-[#151d28] px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-[#d8e0ee] transition hover:border-[#5868ea] hover:text-[#f5f7fb]";

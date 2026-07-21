@@ -1,0 +1,36 @@
+{
+  "network": "worldchainSepolia",
+  "chainId": "4801",
+  "deployedAt": "2026-05-28T03:44:12.190Z",
+  "blockNumber": 29696214,
+  "deployer": "0x592f881B2209342D694db94020bf288791072F35",
+  "explorerBaseUrl": "https://worldchain-sepolia.explorer.alchemy.com/address/",
+  "contracts": {
+    "mockUsdc": {
+      "address": "0x2Ab1d9a48d00d7EF499ACe84aB1dDfe2c2B5CEee",
+      "transactionHash": "0x8ae00038c65f5fac9e05f30a3946f11e789ce262bf05856f11c26355b608362a"
+    },
+    "beneficiaryRegistry": {
+      "address": "0xc96506624EffC7669d304C87695f9F1A860Fe539",
+      "transactionHash": "0xb7bdf57ec84811afc3a7325a37f27d3239f389b34e82e1b90c3b0255730f6188"
+    },
+    "premiumVault": {
+      "address": "0xfe83d9f40528DD6e2EF0063949FC81621b421Bdc",
+      "transactionHash": "0xb9e118f3598b1fb81da734f62a1e301f820d9006dbcb7a7eeacf52a7d7592ebd"
+    },
+    "policyManager": {
+      "address": "0x34cbF7A191DeD947810D7095a9e0e08897f84c73",
+      "transactionHash": "0xaeee3bbb197e9f36737d521b737364fc68509fb6a20b09236a689ee46011dc56"
+    }
+  },
+  "setupTransactions": {
+    "beneficiaryRegistrySetPolicyManager": "0x4fce33ee53ee1252f897b8b1d54a00e5e382affbea5c268614f71de45400b2ea",
+    "premiumVaultSetPolicyManager": "0xf1689460f3edb606ca1e6ee2c212ef5de0cf1152726f3367149833d8caea9053"
+  },
+  "testMint": {
+    "token": "0x2Ab1d9a48d00d7EF499ACe84aB1dDfe2c2B5CEee",
+    "recipient": "0x1a3DB3E167Acc8451Ed1af92615EA2e97b8CC5ff",
+    "amount": "20000",
+    "transactionHash": "0xec382275237c62c98cc0ef91d9d1d22eaecdc52b7380ffaef0a627c3b299d952"
+  }
+}
