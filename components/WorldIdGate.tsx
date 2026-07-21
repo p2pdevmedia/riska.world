@@ -14,6 +14,7 @@ import { useLanguage } from "@/components/LanguageProvider";
 import {
   RISKA_WORLD_ID_ENVIRONMENT,
   RISKA_WORLD_ID_POLICY_ACTION,
+  getWorldIdSimulatorIdentitySelectorUrl,
   getWorldAppId,
   normalizeWorldIdSignal
 } from "@/lib/world/idkit";
@@ -119,6 +120,33 @@ export function WorldIdGate({
     setStatus("verified");
     setError(null);
   }, [storedReservation, walletAddress]);
+
+  useEffect(() => {
+    if (!isOpen || RISKA_WORLD_ID_ENVIRONMENT !== "staging") {
+      return;
+    }
+
+    const rewriteSimulatorLinks = () => {
+      document.querySelectorAll<HTMLAnchorElement>('a[href^="https://simulator.worldcoin.org"]').forEach((link) => {
+        const identitySelectorUrl = getWorldIdSimulatorIdentitySelectorUrl(link.href);
+
+        if (identitySelectorUrl && link.href !== identitySelectorUrl) {
+          link.href = identitySelectorUrl;
+        }
+      });
+    };
+
+    rewriteSimulatorLinks();
+    const observer = new MutationObserver(rewriteSimulatorLinks);
+    observer.observe(document.body, {
+      attributeFilter: ["href"],
+      attributes: true,
+      childList: true,
+      subtree: true
+    });
+
+    return () => observer.disconnect();
+  }, [isOpen]);
 
   const resolveWorldIdError = useCallback(
     (errorCode?: string, fallback?: string) => {
@@ -316,7 +344,7 @@ export function WorldIdGate({
             app_id={worldAppId}
             action={RISKA_WORLD_ID_POLICY_ACTION}
             rp_context={rpContext}
-            allow_legacy_proofs={true}
+            allow_legacy_proofs={false}
             preset={proofOfHuman({ signal: normalizeWorldIdSignal(walletAddress ?? "") })}
             environment={RISKA_WORLD_ID_ENVIRONMENT}
             handleVerify={handleVerify}
@@ -375,7 +403,7 @@ export function WorldIdGate({
           app_id={worldAppId}
           action={RISKA_WORLD_ID_POLICY_ACTION}
           rp_context={rpContext}
-          allow_legacy_proofs={true}
+          allow_legacy_proofs={false}
           preset={proofOfHuman({ signal: normalizeWorldIdSignal(walletAddress ?? "") })}
           environment={RISKA_WORLD_ID_ENVIRONMENT}
           handleVerify={handleVerify}

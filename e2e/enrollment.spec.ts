@@ -64,6 +64,33 @@ test("persists a verified human session after reload", async ({ page }) => {
   await expect(page.getByText("Humano único verificado. Esta wallet puede continuar a beneficiarios.")).toBeVisible();
 });
 
+test("consumes a pending wallet redirect only once", async ({ page }) => {
+  const enrollment = enrollmentForIdentity({
+    address: "0x5000000000000000000000000000000000000005",
+    marker: "5",
+    nullifier: "505"
+  });
+  await restoreEnrollment(page, enrollment);
+  await page.addInitScript((walletSession) => {
+    if (window.sessionStorage.getItem("riska.e2e-pending-wallet-seeded")) {
+      return;
+    }
+    window.sessionStorage.setItem("riska.e2e-pending-wallet-seeded", "true");
+    window.sessionStorage.setItem("riska.pending-wallet-session", JSON.stringify(walletSession));
+  }, enrollment.walletSession);
+  await page.goto("/apply");
+
+  await expect(page.getByRole("button", { name: "Verificar que soy humano" })).toBeVisible();
+  expect(await page.evaluate(() => window.sessionStorage.getItem("riska.pending-wallet-session"))).toBeNull();
+
+  await page.evaluate((enrollment) => {
+    window.localStorage.setItem("riska.enrollment.v2", JSON.stringify(enrollment));
+  }, enrollment);
+  await page.reload();
+
+  await expect(page.getByText("Humano único verificado. Esta wallet puede continuar a beneficiarios.")).toBeVisible();
+});
+
 test("keeps three distinct wallet and World ID reservations independent", async ({ page }) => {
   const identities = [
     { address: "0x1000000000000000000000000000000000000001", marker: "1", nullifier: "101" },

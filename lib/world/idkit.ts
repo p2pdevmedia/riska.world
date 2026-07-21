@@ -21,6 +21,21 @@ export function normalizeWorldIdSignal(walletAddress: string) {
   return walletAddress.toLowerCase();
 }
 
+export function getWorldIdSimulatorIdentitySelectorUrl(href: string) {
+  try {
+    const url = new URL(href);
+
+    if (url.hostname !== "simulator.worldcoin.org") {
+      return null;
+    }
+
+    url.pathname = "/select-id";
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
 function getWorldIdEnvironment(value: string | undefined): WorldIdEnvironment {
   return value === "staging" ? "staging" : "production";
 }
