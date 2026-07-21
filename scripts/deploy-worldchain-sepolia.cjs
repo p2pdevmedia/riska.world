@@ -110,6 +110,7 @@ async function main() {
 
   const previousDeployment = readLatestDeployment("worldchain-sepolia");
   const previousMockUsdc = previousDeployment?.contracts?.mockUsdc?.address;
+  const previousGovernanceToken = previousDeployment?.contracts?.governanceToken?.address;
   const mockUsdc = previousMockUsdc
     ? {
         address: previousMockUsdc,
@@ -132,10 +133,16 @@ async function main() {
     mockUsdc.address,
     premiumVault.address
   ]);
-  const governanceToken = await deployContract("RiskaGovernanceToken", [
-    deployerAddress,
-    ethers.parseEther(governanceSupply)
-  ]);
+  const governanceToken = previousGovernanceToken
+    ? {
+        address: previousGovernanceToken,
+        instance: await ethers.getContractAt("RiskaGovernanceToken", previousGovernanceToken),
+        transactionHash: null
+      }
+    : await deployContract("RiskaGovernanceToken", [
+        deployerAddress,
+        ethers.parseEther(governanceSupply)
+      ]);
   const protocolGovernor = await deployContract("RiskaProtocolGovernor", [governanceToken.address]);
   const protocolConfig = await deployContract("RiskaProtocolConfig", [
     mockUsdc.address,
@@ -174,10 +181,12 @@ async function main() {
         "MockUSDC.mint",
         mockUsdc.instance.mint(mockUsdcMintRecipient, ethers.parseUnits(mockUsdcMintAmount, 6))
       );
-  const governanceDelegationTx = await runTransaction(
-    "RiskaGovernanceToken.delegate",
-    governanceToken.instance.delegate(deployerAddress)
-  );
+  const governanceDelegationTx = previousGovernanceToken
+    ? null
+    : await runTransaction(
+        "RiskaGovernanceToken.delegate",
+        governanceToken.instance.delegate(deployerAddress)
+      );
 
   let policyMathHarness = null;
   let mockYieldAdapter = null;

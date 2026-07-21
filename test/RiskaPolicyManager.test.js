@@ -752,11 +752,10 @@ describe("RiskaPolicyManager", function () {
     await expect(ctx.manager.connect(ctx.beneficiaryA).claimDeath(policyId)).to.be.revertedWith("DEATH_CLAIM_NOT_READY");
   });
 
-  it("allows the protocol owner to report a death after the policy age delay", async function () {
+  it("allows the protocol owner to report a death immediately", async function () {
     const ctx = await deployFixture();
     const policyId = await openPolicy(ctx);
 
-    await advance(DEATH_REPORT_DELAY);
     await ctx.manager.connect(ctx.owner).reportDeath(policyId);
 
     expect((await ctx.manager.deathNotices(policyId)).reporter).to.equal(ctx.owner.address);

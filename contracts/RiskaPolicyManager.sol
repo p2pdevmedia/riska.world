@@ -486,8 +486,12 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard, EIP712 {
         Policy storage policy = policies[policyId];
         require(policy.holder != address(0), "POLICY_NOT_FOUND");
         require(policy.status == PolicyStatus.Active || policy.status == PolicyStatus.PayoutActive, "INVALID_STATUS");
-        require(isBeneficiary(policyId, msg.sender) || msg.sender == owner(), "ONLY_BENEFICIARY_OR_OWNER");
-        require(block.timestamp >= policy.openedAt + DEATH_REPORT_DELAY, "POLICY_TOO_NEW");
+        bool ownerReport = msg.sender == owner();
+        require(isBeneficiary(policyId, msg.sender) || ownerReport, "ONLY_BENEFICIARY_OR_OWNER");
+        // The protocol administrator is the trusted recovery operator. It must be
+        // able to record an incident immediately, including during testnet QA;
+        // beneficiaries retain the policy-age safeguard against premature reports.
+        require(ownerReport || block.timestamp >= policy.openedAt + DEATH_REPORT_DELAY, "POLICY_TOO_NEW");
         require(!deathNotices[policyId].active, "DEATH_ALREADY_REPORTED");
 
         deathNotices[policyId] = DeathNotice({reporter: msg.sender, reportedAt: block.timestamp, active: true});
