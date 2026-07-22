@@ -2,6 +2,7 @@ import { signRequest } from "@worldcoin/idkit/signing";
 import { NextResponse } from "next/server";
 
 import { RISKA_WORLD_ID_POLICY_ACTION } from "@/lib/world/idkit";
+import { requiredEnvironment } from "@/lib/world/server-env";
 
 type RpSignatureRequest = {
   action?: string;
@@ -18,10 +19,9 @@ export async function postRpSignature(request: Request) {
     );
   }
 
-  const rpId = process.env.WORLD_ID_RP_ID;
-  const signingKey = process.env.RP_SIGNING_KEY;
+  const env = requiredEnvironment(["WORLD_ID_RP_ID", "RP_SIGNING_KEY"]);
 
-  if (!rpId || !signingKey) {
+  if (!env) {
     return NextResponse.json(
       {
         configured: false,
@@ -34,7 +34,7 @@ export async function postRpSignature(request: Request) {
 
   try {
     const { sig, nonce, createdAt, expiresAt } = signRequest({
-      signingKeyHex: signingKey,
+      signingKeyHex: env.RP_SIGNING_KEY,
       action,
       ttl: 300
     });
@@ -43,7 +43,7 @@ export async function postRpSignature(request: Request) {
       configured: true,
       action,
       rpContext: {
-        rp_id: rpId,
+        rp_id: env.WORLD_ID_RP_ID,
         nonce,
         created_at: createdAt,
         expires_at: expiresAt,

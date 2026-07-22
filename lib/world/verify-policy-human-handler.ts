@@ -15,6 +15,8 @@ import {
   selectPolicyHumanResponse,
   selectVerifiedPolicyHumanNullifier
 } from "@/lib/world/policy-human-proof";
+import { reservePolicyHuman } from "@/lib/world/policy-human-registry";
+import { policyHumanEnvironment } from "@/lib/world/server-env";
 import { readWalletSession } from "@/lib/world/wallet-session";
 
 type VerifyPolicyHumanRequest = {
@@ -59,11 +61,11 @@ export async function postVerifyPolicyHuman(request: Request) {
     );
   }
 
-  const rpId = process.env.WORLD_ID_RP_ID;
+  const serverEnvironment = policyHumanEnvironment(deployment);
 
-  if (!rpId) {
+  if (!serverEnvironment) {
     return NextResponse.json(
-      { success: false, error: "WORLD_ID_RP_ID is not configured." },
+      { success: false, error: "World ID policy verification is not configured." },
       { status: 503 }
     );
   }
@@ -151,7 +153,7 @@ export async function postVerifyPolicyHuman(request: Request) {
     );
   }
 
-  const verifyResponse = await fetch(`https://developer.world.org/api/v4/verify/${rpId}`, {
+  const verifyResponse = await fetch(`https://developer.world.org/api/v4/verify/${serverEnvironment.rpId}`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -198,22 +200,13 @@ export async function postVerifyPolicyHuman(request: Request) {
     nullifier: verifiedNullifier
   });
   const credentialIdentifiers = responses.map((response) => response.identifier);
-  const signingKey = process.env.POLICY_HUMAN_SIGNING_KEY as `0x${string}` | undefined;
-  const policyManager = (deployment === "prod-test"
-    ? process.env.RISKA_WORLDCHAIN_SEPOLIA_POLICY_MANAGER_PROD_TEST
-    : process.env.RISKA_WORLDCHAIN_SEPOLIA_POLICY_MANAGER) as `0x${string}` | undefined;
-  if (!signingKey || !policyManager) {
-    return NextResponse.json(
-      { success: false, code: "policy_human_attestation_unavailable", error: "Identity authorization is temporarily unavailable." },
-      { status: 503 }
-    );
-  }
+  const { policyManager, rpcUrl, signingKey } = serverEnvironment;
 
   let existingPolicyId: bigint;
 
   try {
     const publicClient = createPublicClient({
-      transport: http(process.env.WORLDCHAIN_SEPOLIA_RPC_URL ?? "https://worldchain-sepolia.g.alchemy.com/public")
+      transport: http(rpcUrl)
     });
     existingPolicyId = await publicClient.readContract({
       abi: policyNullifierRegistryAbi,
@@ -250,6 +243,40 @@ export async function postVerifyPolicyHuman(request: Request) {
   }
 
   const deadline = BigInt(Math.floor(Date.now() / 1000) + POLICY_HUMAN_AUTHORIZATION_SESSION_SECONDS);
+  const expiresAt = new Date(Number(deadline) * 1000);
+
+  try {
+    const reservation = await reservePolicyHuman({
+      action: RISKA_WORLD_ID_POLICY_ACTION,
+      credentialIdentifiers,
+      expiresAt,
+      nullifier,
+      protocolVersion: idkitResponse.protocol_version,
+      walletAddress: normalizedWallet
+    });
+
+    if (!reservation.ok) {
+      return NextResponse.json(
+        {
+          success: false,
+          alreadyReserved: true,
+          code: "nullifier_already_used",
+          error: "This World ID identity already opened a policy for another wallet."
+        },
+        { status: 409 }
+      );
+    }
+  } catch {
+    return NextResponse.json(
+      {
+        success: false,
+        code: "policy_reservation_unavailable",
+        error: "Identity reservation is temporarily unavailable. Please try again."
+      },
+      { status: 503 }
+    );
+  }
+
   const policyHumanSigner = privateKeyToAccount(signingKey);
   const authorization = await policyHumanSigner.signTypedData({
     domain: { name: "RiskaPolicyManager", version: "1", chainId: 4801, verifyingContract: policyManager },

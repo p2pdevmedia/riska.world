@@ -174,7 +174,9 @@ contract RiskaYieldStrategyManager is Ownable, Pausable, ReentrancyGuard {
         require(costBasis > 0, "INVALID_COST_BASIS");
 
         Strategy storage strategy = _strategy(strategyId);
-        require(strategy.active, "STRATEGY_INACTIVE");
+        // `active` controls risk acceptance for new deposits, not custody of
+        // already-deposited policy funds. Holders must always be able to exit
+        // a disabled strategy (subject to the protocol-wide pause).
         require(shares <= strategy.totalShares, "SHARES_EXCEED_STRATEGY");
         require(costBasis <= strategy.totalCostBasis, "COST_EXCEEDS_STRATEGY");
 

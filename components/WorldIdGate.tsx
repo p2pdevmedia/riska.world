@@ -54,6 +54,11 @@ function shortProofId(nullifier: string) {
   return `${nullifier.slice(0, 8)}…${nullifier.slice(-6)}`;
 }
 
+function isReservationExpired(reservation: PolicyHumanReservationView) {
+  const deadline = Number(reservation.deadline);
+  return !Number.isSafeInteger(deadline) || Math.floor(Date.now() / 1000) >= deadline;
+}
+
 function getMiniKitHumanCredentialStatus() {
   const verificationStatus = MiniKit.user?.verificationStatus;
 
@@ -117,11 +122,20 @@ export function WorldIdGate({
       return;
     }
 
+    if (isReservationExpired(storedReservation)) {
+      setReservation(null);
+      verificationRef.current = null;
+      setStatus("idle");
+      setError(null);
+      onReservationChange?.(null);
+      return;
+    }
+
     setReservation(storedReservation);
     verificationRef.current = { reservation: storedReservation, success: true };
     setStatus("verified");
     setError(null);
-  }, [storedReservation, walletAddress]);
+  }, [onReservationChange, storedReservation, walletAddress]);
 
   useEffect(() => {
     if (!isOpen || RISKA_WORLD_ID_ENVIRONMENT !== "staging") {

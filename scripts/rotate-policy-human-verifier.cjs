@@ -23,7 +23,11 @@ async function main() {
     throw new Error("RISKA_POLICY_HUMAN_VERIFIER must be a valid public address.");
   }
 
-  const deploymentPath = path.join(__dirname, "..", "deployments", "worldchain-sepolia", "latest.json");
+  const deploymentDirectory = process.env.RISKA_DEPLOYMENT_DIRECTORY || "worldchain-sepolia";
+  if (!/^[a-z0-9-]+$/i.test(deploymentDirectory)) {
+    throw new Error("RISKA_DEPLOYMENT_DIRECTORY must be a simple deployments directory name.");
+  }
+  const deploymentPath = path.join(__dirname, "..", "deployments", deploymentDirectory, "latest.json");
   const deployment = JSON.parse(fs.readFileSync(deploymentPath, "utf8"));
   const policyManagerAddress = deployment.contracts?.policyManager?.address;
   if (!ethers.isAddress(policyManagerAddress)) {

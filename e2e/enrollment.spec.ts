@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 const holder = "0x99d58aa8dd8311c3706d619176bb3bf2008148c3";
 const beneficiaryA = "0x1111111111111111111111111111111111111111";
 const beneficiaryB = "0x2222222222222222222222222222222222222222";
-const policyManager = "0x21E22D6C944345fF0654e31dF694972535003CC7";
+const policyManager = "0xeBB2dd0A8C59D2e1745eb94BF6f1714AfAb11673";
 
 function verifiedEnrollment(overrides: Record<string, unknown> = {}) {
   return {
@@ -62,6 +62,22 @@ test("persists a verified human session after reload", async ({ page }) => {
 
   await page.reload();
   await expect(page.getByText("Humano único verificado. Esta wallet puede continuar a beneficiarios.")).toBeVisible();
+});
+
+test("invalidates an expired saved human authorization before enrollment can continue", async ({ page }) => {
+  await restoreEnrollment(page, verifiedEnrollment({
+    humanReservation: {
+      ...verifiedEnrollment().humanReservation,
+      deadline: "1"
+    }
+  }));
+  await page.goto("/apply");
+
+  await expect(page.getByRole("button", { name: "Verificar que soy humano" })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => {
+    const restored = JSON.parse(window.localStorage.getItem("riska.enrollment.v2") ?? "{}");
+    return restored.humanReservation;
+  })).toBeNull();
 });
 
 test("consumes a pending wallet redirect only once", async ({ page }) => {

@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
 
+import { Prisma } from "@prisma/client";
+
 import { getPrisma } from "@/lib/prisma";
 import { normalizeNullifier } from "@/lib/world/policy-human-proof";
 
@@ -9,15 +11,12 @@ export type PolicyHumanReservation = {
   action: string;
   credentialIdentifiers: string[];
   nullifier: string;
-  nullifierHex: string;
   protocolVersion: string;
-  reservedAt: string;
   walletAddress: string;
+  expiresAt: Date;
 };
 
-type ReservationResult =
-  | { ok: true; reservation: PolicyHumanReservation }
-  | { ok: false };
+type ReservationResult = { ok: true } | { ok: false };
 
 /**
  * Atomically reserves one World ID nullifier for an action.
@@ -26,33 +25,33 @@ type ReservationResult =
  * arbitrates simultaneous requests from any number of app instances. The raw
  * nullifier is never persisted; only a namespaced SHA-256 digest is stored.
  */
-export async function reservePolicyHuman(
-  reservation: Omit<PolicyHumanReservation, "reservedAt">
-): Promise<ReservationResult> {
-  const reservedAt = new Date().toISOString();
+export async function reservePolicyHuman(reservation: PolicyHumanReservation): Promise<ReservationResult> {
+  const rows = await getPrisma().$queryRaw<{ id: string }[]>(Prisma.sql`
+    INSERT INTO "PolicyHumanReservation" (
+      "id", "action", "nullifierHash", "walletAddress", "protocolVersion", "credentialIdentifiers", "expiresAt"
+    ) VALUES (
+      ${crypto.randomUUID()},
+      ${reservation.action},
+      ${hashNullifier(reservation.action, reservation.nullifier)},
+      ${reservation.walletAddress},
+      ${reservation.protocolVersion},
+      ${JSON.stringify(reservation.credentialIdentifiers)}::jsonb,
+      ${reservation.expiresAt}
+    )
+    ON CONFLICT ("action", "nullifierHash") DO UPDATE
+    SET
+      "walletAddress" = EXCLUDED."walletAddress",
+      "protocolVersion" = EXCLUDED."protocolVersion",
+      "credentialIdentifiers" = EXCLUDED."credentialIdentifiers",
+      "createdAt" = CURRENT_TIMESTAMP,
+      "expiresAt" = EXCLUDED."expiresAt"
+    WHERE "PolicyHumanReservation"."expiresAt" <= CURRENT_TIMESTAMP
+    RETURNING "id"
+  `);
 
-  try {
-    await getPrisma().policyHumanReservation.create({
-      data: {
-        action: reservation.action,
-        credentialIdentifiers: reservation.credentialIdentifiers,
-        nullifierHash: hashNullifier(reservation.action, reservation.nullifier),
-        protocolVersion: reservation.protocolVersion,
-        walletAddress: reservation.walletAddress
-      }
-    });
-  } catch (error) {
-    if (isUniqueConstraintError(error)) return { ok: false };
-    throw error;
-  }
-
-  return { ok: true, reservation: { ...reservation, reservedAt } };
+  return rows.length === 1 ? { ok: true } : { ok: false };
 }
 
 function hashNullifier(action: string, nullifier: string) {
   return createHash("sha256").update(`${action}:${nullifier}`).digest("hex");
-}
-
-function isUniqueConstraintError(error: unknown): error is { code: "P2002" } {
-  return typeof error === "object" && error !== null && "code" in error && error.code === "P2002";
 }

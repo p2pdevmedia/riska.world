@@ -806,11 +806,27 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
       reservation.policyManager?.toLowerCase() === configuredPolicyManager.toLowerCase() &&
       reservation.policyHumanVerifier?.toLowerCase() === configuredVerifier.toLowerCase();
 
-    if (!matchesCurrentAuthorization) {
+    if (!matchesCurrentAuthorization || isHumanReservationExpired(reservation)) {
       setState((current) => ({ ...clearSubmission(current), humanReservation: null }));
       setActiveStepId("identity");
     }
   }, [environment, hydrated, state.humanReservation, testnetDeployment]);
+
+  useEffect(() => {
+    const reservation = state.humanReservation;
+    if (!reservation) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      if (isHumanReservationExpired(reservation)) {
+        setState((current) => ({ ...clearSubmission(current), humanReservation: null }));
+        setActiveStepId("identity");
+      }
+    }, 60_000);
+
+    return () => window.clearInterval(intervalId);
+  }, [state.humanReservation]);
 
   // Existing local sessions may still point to the former quote step. It now
   // lives inside Dashboard, so they continue directly there instead of resetting.
@@ -826,6 +842,12 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
   const testnetWorking = testnetIssue.status === "working";
 
   const handleWalletSessionChange = useCallback((walletSession: WalletAuthSession | null) => {
+    // WalletAuth mounts before local enrollment state is hydrated. Ignore its
+    // initial disconnected notification so it cannot erase a restored session.
+    if (!hydrated) {
+      return;
+    }
+
     setState((current) => {
       if (sameWalletSession(current.walletSession, walletSession)) {
         return current;
@@ -840,7 +862,7 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
 
       return { ...initialState, walletSession };
     });
-  }, []);
+  }, [hydrated]);
 
   const startApplication = useCallback(
     (walletSession: WalletAuthSession | null) => {
@@ -927,6 +949,12 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
 
   async function continueEnrollment() {
     if (activeStep.id === "confirm") {
+      if (state.humanReservation && isHumanReservationExpired(state.humanReservation)) {
+        setState((current) => ({ ...clearSubmission(current), humanReservation: null }));
+        setActiveStepId("identity");
+        return;
+      }
+
       if (readyToSubmit && state.walletSession && testnetReady) {
         setTestnetIssue({ status: "idle" });
         try {
@@ -1339,7 +1367,7 @@ function IdentityScreen({
 
   return (
     <div>
-      <WalletAuth onSessionChange={onWalletSessionChange} variant="dark" />
+      <WalletAuth initialSession={state.walletSession} onSessionChange={onWalletSessionChange} variant="dark" />
     </div>
   );
 }
@@ -2758,6 +2786,11 @@ function sameWalletSession(left: WalletAuthSession | null, right: WalletAuthSess
 
 function sameHumanReservation(left: PolicyHumanReservationView | null, right: PolicyHumanReservationView | null) {
   return left?.nullifier === right?.nullifier && left?.walletAddress === right?.walletAddress;
+}
+
+function isHumanReservationExpired(reservation: PolicyHumanReservationView) {
+  const deadline = Number(reservation.deadline);
+  return !Number.isSafeInteger(deadline) || Math.floor(Date.now() / 1000) >= deadline;
 }
 
 function shortAddress(address: string) {

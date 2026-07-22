@@ -132,8 +132,8 @@ components/WalletAuth.tsx
 components/WorldIdGate.tsx
 app/api/minikit/nonce/route.ts
 app/api/minikit/complete-siwe/route.ts
-app/api/world-id/rp-signature/route.ts
-app/api/world-id/verify-policy-human/route.ts
+app/api/identity/rp-signature/route.ts
+app/api/identity/verify-policy-human/route.ts
 ```
 
 For World App review, configure:
@@ -148,7 +148,7 @@ RISKA_SESSION_SECRET=long_random_server_only_secret
 ```
 
 `RP_SIGNING_KEY` must never be exposed to the browser. The IDKit flow uses it
-only inside `app/api/world-id/rp-signature/route.ts`. `RISKA_SESSION_SECRET`
+only inside `app/api/identity/rp-signature/route.ts`. `RISKA_SESSION_SECRET`
 signs the server-side Wallet Auth session that binds IDKit proofs to the
 authenticated wallet.
 
@@ -161,11 +161,20 @@ DATABASE_URL=postgresql://...
 npm run db:migrate:deploy
 ```
 
+Before applying the migration that removes the unused legacy `Policy` table,
+export it (if it exists):
+
+```bash
+npm run db:export:orphan-policy
+npm run db:migrate:deploy
+```
+
 The `PolicyHumanReservation` table stores a one-way SHA-256 digest of each
 action/nullifier pair and has a database-enforced unique constraint. This makes
 the one-policy-per-human reservation safe across restarts, concurrent requests,
 and multiple application instances; if the database is unavailable, verification
-fails closed with HTTP 503 rather than falling back to memory.
+fails closed with HTTP 503 rather than falling back to memory. Reservations expire
+with their 30-day signed authorization and can then be verified again.
 
 ```bash
 npm run dev
@@ -182,6 +191,14 @@ npm run contracts:test
 ```
 
 ### World Chain Sepolia Test Deployment
+
+Deploy the isolated production-test environment and validate the signer against
+its manifest with:
+
+```bash
+npm run contracts:deploy:worldchain-sepolia:prod-test
+RISKA_DEPLOYMENT_DIRECTORY=worldchain-sepolia-prod-test npm run verify:policy-human-verifier
+```
 
 World Chain Sepolia uses chain id `4801` and the public RPC URL
 `https://worldchain-sepolia.g.alchemy.com/public`.

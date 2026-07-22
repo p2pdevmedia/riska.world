@@ -640,6 +640,25 @@ describe("RiskaPolicyManager", function () {
     expect(await ctx.manager.yieldPrincipalAllocated(policyId)).to.equal(0);
   });
 
+  it("lets a holder exit an inactive strategy while keeping new deposits disabled", async function () {
+    const ctx = await deployFixture();
+    const policyId = await openPolicy(ctx);
+
+    await fundMinimum(ctx, policyId, "1000");
+    await ctx.manager.connect(ctx.holder).depositYield(policyId, ctx.yieldStrategyId, usdc("1000"), 0);
+    await ctx.yieldStrategyManager.connect(ctx.owner).setStrategyStatus(ctx.yieldStrategyId, false, false);
+
+    await expect(
+      ctx.manager.connect(ctx.holder).depositYield(policyId, ctx.yieldStrategyId, usdc("1"), 0)
+    ).to.be.revertedWith("STRATEGY_INACTIVE");
+
+    await ctx.manager.connect(ctx.holder).withdrawYield(policyId, ctx.yieldStrategyId, usdc("500"), 0);
+    expect((await ctx.manager.yieldPositions(policyId, ctx.yieldStrategyId)).shares).to.equal(usdc("500"));
+
+    await ctx.manager.connect(ctx.holder).withdrawAllYield(policyId, ctx.yieldStrategyId, 0);
+    expect(await ctx.manager.yieldPrincipalAllocated(policyId)).to.equal(0);
+  });
+
   it("blocks payout and extra withdrawals while yield positions are open", async function () {
     const ctx = await deployFixture();
     const policyId = await openPolicy(ctx);

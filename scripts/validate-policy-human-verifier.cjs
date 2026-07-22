@@ -40,7 +40,15 @@ if (!/^0x[0-9a-fA-F]{64}$/.test(normalizedSigningKey)) {
   throw new Error("POLICY_HUMAN_SIGNING_KEY must be a 32-byte hex private key.");
 }
 
-const deploymentPath = path.join(__dirname, "..", "deployments", "worldchain-sepolia", "latest.json");
+const deploymentDirectory = process.env.RISKA_DEPLOYMENT_DIRECTORY || "worldchain-sepolia";
+if (!/^[a-z0-9-]+$/i.test(deploymentDirectory)) {
+  throw new Error("RISKA_DEPLOYMENT_DIRECTORY must be a simple deployments directory name.");
+}
+
+const deploymentPath = path.join(__dirname, "..", "deployments", deploymentDirectory, "latest.json");
+if (!fs.existsSync(deploymentPath)) {
+  throw new Error(`Deployment manifest does not exist: ${deploymentPath}`);
+}
 const deployment = JSON.parse(fs.readFileSync(deploymentPath, "utf8"));
 const configuredVerifier = deployment.policyHumanVerifier;
 
@@ -55,4 +63,4 @@ if (getAddress(derivedVerifier) !== getAddress(configuredVerifier)) {
   );
 }
 
-console.log(`Policy human verifier validated: ${derivedVerifier}`);
+console.log(`Policy human verifier validated for ${deploymentDirectory}: ${derivedVerifier}`);
