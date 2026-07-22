@@ -3,7 +3,7 @@
 import { FlaskConical, ShieldCheck } from "lucide-react";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-export type RiskaEnvironment = "production" | "testnet";
+export type RiskaEnvironment = "prod-test" | "testnet";
 
 type EnvironmentContextValue = {
   environment: RiskaEnvironment;
@@ -18,7 +18,7 @@ export function EnvironmentProvider({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     const stored = window.localStorage.getItem(storageKey);
-    if (stored === "production" || stored === "testnet") setEnvironment(stored);
+    if (stored === "prod-test" || stored === "testnet") setEnvironment(stored);
   }, []);
 
   const value = useMemo(
@@ -52,11 +52,11 @@ export function EnvironmentSwitcher() {
         className={`flex items-center gap-1 rounded-lg px-2 py-1.5 text-[10px] font-semibold transition ${
           !isTestnet ? "bg-[#174a38] text-[#b8f5d4]" : "text-[#8190a6] hover:text-[#f5f7fb]"
         }`}
-        onClick={() => setEnvironment("production")}
+        onClick={() => setEnvironment("prod-test")}
         type="button"
       >
         <ShieldCheck className="h-3.5 w-3.5" />
-        PROD
+        PROD TEST
       </button>
       <button
         aria-pressed={isTestnet}

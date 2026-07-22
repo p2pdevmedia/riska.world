@@ -709,7 +709,7 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [environment]);
 
   useEffect(() => {
     if (!hydrated) {
@@ -790,7 +790,7 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
     return () => {
       mounted = false;
     };
-  }, [hydrated, testnetConfigured, walletAddress]);
+  }, [environment, hydrated, testnetConfigured, walletAddress]);
 
   useEffect(() => {
     if (!hydrated || testnetDeployment.status !== "configured" || !state.humanReservation) {
@@ -810,7 +810,7 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
       setState((current) => ({ ...clearSubmission(current), humanReservation: null }));
       setActiveStepId("identity");
     }
-  }, [hydrated, state.humanReservation, testnetDeployment]);
+  }, [environment, hydrated, state.humanReservation, testnetDeployment]);
 
   // Existing local sessions may still point to the former quote step. It now
   // lives inside Dashboard, so they continue directly there instead of resetting.
@@ -989,9 +989,7 @@ export function RiskaEnrollmentHome({ view = "home" }: { view?: "apply" | "home"
       <main className="pb-28">
         {view === "home" && <WelcomeScreen content={content} onStartApplication={startApplication} />}
 
-        {view === "apply" && environment === "production" && <ProductionUnavailable />}
-
-        {view === "apply" && environment === "testnet" && <section id="enroll" className={`mx-auto px-5 py-10 md:px-8 lg:py-14 ${state.issuedPolicyId ? "max-w-6xl" : "max-w-3xl"}`}>
+        {view === "apply" && <section id="enroll" className={`mx-auto px-5 py-10 md:px-8 lg:py-14 ${state.issuedPolicyId ? "max-w-6xl" : "max-w-3xl"}`}>
           <div className="space-y-4">
             {!state.issuedPolicyId && (
               <StepRail

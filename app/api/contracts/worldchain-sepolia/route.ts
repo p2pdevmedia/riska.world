@@ -17,7 +17,6 @@ import {
 
 export const dynamic = "force-dynamic";
 
-const deploymentPath = path.join(process.cwd(), "deployments", "worldchain-sepolia", "latest.json");
 const contractNames: RiskaTestnetContractName[] = [
   "mockUsdc",
   "beneficiaryRegistry",
@@ -27,8 +26,9 @@ const contractNames: RiskaTestnetContractName[] = [
   "testnetTokenFaucet"
 ];
 
-export async function GET() {
-  const deployment = readDeploymentFile() ?? readDeploymentEnv();
+export async function GET(request: Request) {
+  const environment = new URL(request.url).searchParams.get("environment") === "prod-test" ? "prod-test" : "testnet";
+  const deployment = readDeploymentFile(environment) ?? readDeploymentEnv(environment);
   const response: RiskaTestnetConfigResponse = deployment
     ? { configured: true, deployment }
     : {
@@ -39,7 +39,8 @@ export async function GET() {
   return NextResponse.json(response);
 }
 
-function readDeploymentFile(): RiskaTestnetDeployment | null {
+function readDeploymentFile(environment: "prod-test" | "testnet"): RiskaTestnetDeployment | null {
+  const deploymentPath = path.join(process.cwd(), "deployments", environment === "prod-test" ? "worldchain-sepolia-prod-test" : "worldchain-sepolia", "latest.json");
   if (!fs.existsSync(deploymentPath)) {
     return null;
   }
@@ -70,14 +71,15 @@ function readDeploymentFile(): RiskaTestnetDeployment | null {
   }
 }
 
-function readDeploymentEnv(): RiskaTestnetDeployment | null {
+function readDeploymentEnv(environment: "prod-test" | "testnet"): RiskaTestnetDeployment | null {
+  const suffix = environment === "prod-test" ? "_PROD_TEST" : "";
   const contracts = normalizeContracts({
-    mockUsdc: { address: process.env.RISKA_WORLDCHAIN_SEPOLIA_MOCK_USDC },
-    beneficiaryRegistry: { address: process.env.RISKA_WORLDCHAIN_SEPOLIA_BENEFICIARY_REGISTRY },
-    premiumVault: { address: process.env.RISKA_WORLDCHAIN_SEPOLIA_PREMIUM_VAULT },
-    policyManager: { address: process.env.RISKA_WORLDCHAIN_SEPOLIA_POLICY_MANAGER },
-    yieldStrategyManager: { address: process.env.RISKA_WORLDCHAIN_SEPOLIA_YIELD_STRATEGY_MANAGER },
-    testnetTokenFaucet: { address: process.env.RISKA_WORLDCHAIN_SEPOLIA_TESTNET_TOKEN_FAUCET }
+    mockUsdc: { address: process.env[`RISKA_WORLDCHAIN_SEPOLIA_MOCK_USDC${suffix}`] },
+    beneficiaryRegistry: { address: process.env[`RISKA_WORLDCHAIN_SEPOLIA_BENEFICIARY_REGISTRY${suffix}`] },
+    premiumVault: { address: process.env[`RISKA_WORLDCHAIN_SEPOLIA_PREMIUM_VAULT${suffix}`] },
+    policyManager: { address: process.env[`RISKA_WORLDCHAIN_SEPOLIA_POLICY_MANAGER${suffix}`] },
+    yieldStrategyManager: { address: process.env[`RISKA_WORLDCHAIN_SEPOLIA_YIELD_STRATEGY_MANAGER${suffix}`] },
+    testnetTokenFaucet: { address: process.env[`RISKA_WORLDCHAIN_SEPOLIA_TESTNET_TOKEN_FAUCET${suffix}`] }
   });
 
   if (!hasRequiredContracts(contracts)) {

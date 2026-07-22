@@ -11,6 +11,7 @@ import { useMiniKit } from "@worldcoin/minikit-js/minikit-provider";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useLanguage } from "@/components/LanguageProvider";
+import { useEnvironment } from "@/components/NetworkEnvironment";
 import {
   RISKA_WORLD_ID_ENVIRONMENT,
   RISKA_WORLD_ID_POLICY_ACTION,
@@ -79,6 +80,7 @@ export function WorldIdGate({
   walletAddress?: string;
 }) {
   const { language, t } = useLanguage();
+  const { environment } = useEnvironment();
   const { isInstalled } = useMiniKit();
   const copy = t.worldIdGate;
   const worldAppId = getWorldAppId();
@@ -230,6 +232,7 @@ export function WorldIdGate({
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
+            deployment: environment,
             idkitResponse: result,
             walletAddress
           })
@@ -265,7 +268,7 @@ export function WorldIdGate({
       onReservationChange?.(payload.reservation);
       setStatus("verified");
     },
-    [copy.duplicateError, onReservationChange, resolveWorldIdError, walletAddress]
+    [copy.duplicateError, environment, onReservationChange, resolveWorldIdError, walletAddress]
   );
 
   const handleSuccess = useCallback(() => {

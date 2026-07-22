@@ -18,6 +18,7 @@ import {
 import { readWalletSession } from "@/lib/world/wallet-session";
 
 type VerifyPolicyHumanRequest = {
+  deployment?: "prod-test" | "testnet";
   idkitResponse?: IDKitResult;
   walletAddress?: string;
 };
@@ -47,6 +48,7 @@ const policyNullifierRegistryAbi = [
 
 export async function postVerifyPolicyHuman(request: Request) {
   const body = (await request.json().catch(() => null)) as VerifyPolicyHumanRequest | null;
+  const deployment = body?.deployment === "prod-test" ? "prod-test" : "testnet";
   const idkitResponse = body?.idkitResponse;
   const walletAddress = body?.walletAddress;
 
@@ -197,7 +199,9 @@ export async function postVerifyPolicyHuman(request: Request) {
   });
   const credentialIdentifiers = responses.map((response) => response.identifier);
   const signingKey = process.env.POLICY_HUMAN_SIGNING_KEY as `0x${string}` | undefined;
-  const policyManager = process.env.RISKA_WORLDCHAIN_SEPOLIA_POLICY_MANAGER as `0x${string}` | undefined;
+  const policyManager = (deployment === "prod-test"
+    ? process.env.RISKA_WORLDCHAIN_SEPOLIA_POLICY_MANAGER_PROD_TEST
+    : process.env.RISKA_WORLDCHAIN_SEPOLIA_POLICY_MANAGER) as `0x${string}` | undefined;
   if (!signingKey || !policyManager) {
     return NextResponse.json(
       { success: false, code: "policy_human_attestation_unavailable", error: "Identity authorization is temporarily unavailable." },

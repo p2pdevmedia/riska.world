@@ -17,6 +17,15 @@ async function deployContract(name, args = []) {
   const address = await contract.getAddress();
   const tx = contract.deploymentTransaction();
 
+  // Public RPCs can briefly return stale state immediately after a deployment.
+  // Do not continue wiring a deployment until the bytecode is readable.
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    const code = await ethers.provider.getCode(address);
+    if (code !== "0x") break;
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+    if (attempt === 9) throw new Error(`${name} deployment bytecode is not available from the RPC yet.`);
+  }
+
   console.log(`${name} deployed at ${address}`);
 
   return {
@@ -108,8 +117,14 @@ async function main() {
   const governanceSupply = process.env.RISKA_GOVERNANCE_SUPPLY || DEFAULT_GOVERNANCE_SUPPLY;
   const deployTestHelpers = process.env.DEPLOY_TEST_HELPERS === "true";
 
-  const previousDeployment = readLatestDeployment("worldchain-sepolia");
-  const previousMockUsdc = previousDeployment?.contracts?.mockUsdc?.address;
+  const deploymentDirectory = process.env.RISKA_DEPLOYMENT_DIRECTORY || "worldchain-sepolia";
+  const previousDeployment = readLatestDeployment(deploymentDirectory);
+  const sharedTestnetDeployment = deploymentDirectory === "worldchain-sepolia"
+    ? previousDeployment
+    : readLatestDeployment("worldchain-sepolia");
+  const previousMockUsdc = process.env.RISKA_PAYMENT_TOKEN
+    ?? previousDeployment?.contracts?.mockUsdc?.address
+    ?? sharedTestnetDeployment?.contracts?.mockUsdc?.address;
   const previousGovernanceToken = previousDeployment?.contracts?.governanceToken?.address;
   const mockUsdc = previousMockUsdc
     ? {
@@ -228,8 +243,8 @@ async function main() {
       protocolGovernor: contractRecord(protocolGovernor),
       protocolConfig: contractRecord(protocolConfig),
       userVaultFactory: contractRecord(userVaultFactory),
-      ...(previousDeployment?.contracts?.testnetTokenFaucet
-        ? { testnetTokenFaucet: previousDeployment.contracts.testnetTokenFaucet }
+      ...((previousDeployment?.contracts?.testnetTokenFaucet ?? sharedTestnetDeployment?.contracts?.testnetTokenFaucet)
+        ? { testnetTokenFaucet: previousDeployment?.contracts?.testnetTokenFaucet ?? sharedTestnetDeployment?.contracts?.testnetTokenFaucet }
         : {}),
       ...(policyMathHarness ? { policyMathHarness: contractRecord(policyMathHarness) } : {}),
       ...(mockYieldAdapter ? { mockYieldAdapter: contractRecord(mockYieldAdapter) } : {})
@@ -239,17 +254,17 @@ async function main() {
       governanceDelegation: governanceDelegationTx,
       ...(addMockYieldStrategyTx ? { yieldStrategyManagerAddMockStrategy: addMockYieldStrategyTx } : {})
     },
-    testMint: previousDeployment?.testMint ?? {
+    testMint: previousDeployment?.testMint ?? sharedTestnetDeployment?.testMint ?? {
       token: mockUsdc.address,
       recipient: mockUsdcMintRecipient,
       amount: mockUsdcMintAmount,
       transactionHash: mockUsdcMintTx
     },
-    ...(previousDeployment?.testAuxiliaryTokens
-      ? { testAuxiliaryTokens: previousDeployment.testAuxiliaryTokens }
+    ...((previousDeployment?.testAuxiliaryTokens ?? sharedTestnetDeployment?.testAuxiliaryTokens)
+      ? { testAuxiliaryTokens: previousDeployment?.testAuxiliaryTokens ?? sharedTestnetDeployment?.testAuxiliaryTokens }
       : {}),
-    ...(previousDeployment?.testAuxiliaryMint
-      ? { testAuxiliaryMint: previousDeployment.testAuxiliaryMint }
+    ...((previousDeployment?.testAuxiliaryMint ?? sharedTestnetDeployment?.testAuxiliaryMint)
+      ? { testAuxiliaryMint: previousDeployment?.testAuxiliaryMint ?? sharedTestnetDeployment?.testAuxiliaryMint }
       : {})
   };
 
@@ -258,7 +273,7 @@ async function main() {
     return;
   }
 
-  writeDeployment("worldchain-sepolia", deployment);
+  writeDeployment(deploymentDirectory, deployment);
 }
 
 main().catch((error) => {

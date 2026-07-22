@@ -65,7 +65,7 @@ export function Navbar() {
     <header className="fixed inset-x-0 bottom-0 z-40 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
       <div className="mx-auto mb-2 flex max-w-lg items-center justify-end gap-2">
         <EnvironmentSwitcher />
-        {environment === "testnet" && (
+        {(environment === "testnet" || environment === "prod-test") && (
           <Link className="rounded-xl bg-[#5868ea] px-3 py-2 text-[10px] font-bold text-white transition hover:bg-[#6d7af1]" href="/claim-tokens">
             CLAIM
           </Link>

@@ -45,13 +45,13 @@ const assets = [
 type ClaimStatus = "idle" | "loading" | "claimed" | "error";
 
 export function TestnetTokenClaim() {
-  const { environment, setEnvironment } = useEnvironment();
+  const { environment } = useEnvironment();
   const [faucetAddress, setFaucetAddress] = useState<Address | null>(null);
   const [status, setStatus] = useState<ClaimStatus>("loading");
   const [message, setMessage] = useState("Verificando faucet de World Chain Sepolia…");
 
   useEffect(() => {
-    void fetch("/api/contracts/worldchain-sepolia", { cache: "no-store" })
+    void fetch(`/api/contracts/worldchain-sepolia?environment=${environment}`, { cache: "no-store" })
       .then(async (response) => {
         const data = (await response.json()) as RiskaTestnetConfigResponse;
         const address = data.deployment?.contracts.testnetTokenFaucet?.address;
@@ -68,7 +68,7 @@ export function TestnetTokenClaim() {
         setStatus("error");
         setMessage(error instanceof Error ? error.message : "No se pudo cargar el faucet de testnet.");
       });
-  }, []);
+  }, [environment]);
 
   async function claimTokens() {
     if (!faucetAddress) return;
@@ -118,20 +118,11 @@ export function TestnetTokenClaim() {
     <div className="riska-dark-surface flex min-h-screen flex-col bg-[#080b10] text-[#f5f7fb]">
       <Navbar />
       <main className="flex flex-1 items-center justify-center px-5 py-16 pb-28">
-        {environment === "production" ? (
-          <section className="w-full max-w-xl rounded-[28px] border border-[#315a48] bg-[#101d18] p-6">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#8fe1ae]">Producción</p>
-            <h1 className="mt-3 text-2xl font-semibold">El faucet solo existe en Testnet.</h1>
-            <button className="mt-5 rounded-xl bg-[#5868ea] px-4 py-2 text-sm font-semibold text-white" onClick={() => setEnvironment("testnet")} type="button">
-              Cambiar a TEST
-            </button>
-          </section>
-        ) : (
         <section className="w-full max-w-xl overflow-hidden rounded-[28px] border border-[#202936] bg-[#10151d] p-5 shadow-[0_22px_60px_rgba(8,11,16,0.28)] md:p-7">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#20295b] text-[#aeb8ff]">
             <Coins className="h-6 w-6" />
           </div>
-          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-[#aeb8ff]">World Chain Sepolia · testnet</p>
+          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-[#aeb8ff]">World Chain Sepolia · {environment === "prod-test" ? "prod test" : "test"}</p>
           <h1 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[#f5f7fb]">Claim test tokens</h1>
           <p className="mt-3 text-sm leading-6 text-[#9baac0]">Esta página no aparece en la navegación. El contrato solo permite una reclamación por wallet y solo existe en testnet.</p>
 
@@ -159,7 +150,6 @@ export function TestnetTokenClaim() {
             {status === "claimed" ? "Claim completed" : "Claim test tokens"}
           </button>
         </section>
-        )}
       </main>
       <Footer />
     </div>

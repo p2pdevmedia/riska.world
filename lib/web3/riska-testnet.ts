@@ -560,7 +560,10 @@ const yieldStrategyManagerAbi = [
 ] as const;
 
 export async function getRiskaTestnetDeployment(): Promise<RiskaTestnetDeployment> {
-  const response = await fetch("/api/contracts/worldchain-sepolia", {
+  const environment = typeof window !== "undefined" && window.localStorage.getItem("riska.network-environment") === "prod-test"
+    ? "prod-test"
+    : "testnet";
+  const response = await fetch(`/api/contracts/worldchain-sepolia?environment=${environment}`, {
     cache: "no-store"
   });
   const payload = (await response.json()) as RiskaTestnetConfigResponse;
