@@ -435,7 +435,6 @@ contract RiskaPolicyManager is Ownable, Pausable, ReentrancyGuard, EIP712 {
         Policy storage policy = policies[policyId];
         require(policy.holder == msg.sender, "ONLY_HOLDER");
         require(policy.status == PolicyStatus.Active || policy.status == PolicyStatus.PayoutActive, "POLICY_CLOSED");
-        require(_minimumCovered(policy), "MINIMUM_NOT_FUNDED");
         require(token != address(0), "INVALID_TOKEN");
         require(token != address(premiumVault.paymentToken()), "USE_USDC_DEPOSIT");
         require(amount > 0, "INVALID_AMOUNT");

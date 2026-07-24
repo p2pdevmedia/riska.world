@@ -14,13 +14,13 @@ Riska is a flexible USDC policy account for verified humans.
 - Identity rule: one policy per World ID verified human.
 - Entry rule: any verified human can open a policy; the product flow has no separate admin eligibility step.
 - Payment asset: USDC on World Chain as the policy accounting asset.
-- Auxiliary tokens: after the USDC minimum is covered, the holder may custody non-USDC ERC20 tokens in the policy. These tokens do not count toward USDC principal, do not change monthly payout, carry no Riska fee, and pass 100% to beneficiaries on death settlement.
+- Auxiliary tokens: while the policy is active, the holder may custody non-USDC ERC20 tokens in the policy. These tokens do not count toward USDC principal, do not change monthly payout, carry no Riska fee, and pass 100% to beneficiaries on death settlement.
 - Minimum policy principal: 10,800 USDC.
 - Minimum policy unit: 30 USDC.
 - Minimum model: `30 USDC * 360 = 10,800 USDC`.
 - Deposits: any holder deposit fills the minimum first; amounts above 10,800 USDC become extra principal.
 - Extra principal: increases future monthly payout, can be withdrawn in parts at any time while the policy is active or in payout, and is not fee-bearing.
-- Non-USDC token custody: holder can deposit and withdraw other ERC20 tokens after the USDC minimum is covered; beneficiaries receive those token balances 100% on death settlement.
+- Non-USDC token custody: holder can deposit and withdraw other ERC20 tokens while the policy is active; beneficiaries receive those token balances 100% on death settlement.
 - Holder payout: available once the minimum is fully funded.
 - Payout duration: 120 monthly payments.
 - Claim-all: holder can withdraw all remaining principal after the minimum is funded or once payout is active; Riska retains 20% only from remaining minimum principal, extra principal has no fee, and living holder depletion resets the same policy to active and reusable.
@@ -68,7 +68,7 @@ Canonical auxiliary token rule:
 - `activatePayout(policyId)`: allowed once the minimum principal is fully funded.
 - `claimMonthly(policyId)`: pays the next monthly amount with no fee.
 - `withdrawExtra(policyId, amount)`: lets the holder withdraw part of `remainingExtraPrincipal` with no fee; during payout it reschedules the remaining monthly amount.
-- `depositToken(policyId, token, amount)`: stores a non-USDC ERC20 token after the USDC minimum is covered; the token is custody-only, does not affect payout math, and passes 100% to beneficiaries on death settlement.
+- `depositToken(policyId, token, amount)`: stores a non-USDC ERC20 token while the policy is active; the token is custody-only, does not affect payout math, and passes 100% to beneficiaries on death settlement.
 - `withdrawToken(policyId, token, amount)`: withdraws part of a stored non-USDC token balance with no fee.
 - `claimAll(policyId)`: pays all remaining holder principal minus 20% of remaining minimum principal, leaves extra principal fee-free, and resets the same policy to an active zero-balance state.
 - `heartbeat(policyId)`: records holder interaction and cancels any pending death report.

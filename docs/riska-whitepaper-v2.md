@@ -23,7 +23,7 @@ Riska reframes the product around explicit state:
 - Any verified human can open one policy.
 - The minimum policy is 10,800 USDC.
 - Extra deposits increase future monthly payout and can be withdrawn in parts.
-- Other ERC20 tokens can be stored after the USDC minimum is covered; they stay separate from payout math, have no Riska fee, and pass 100% to beneficiaries on death settlement.
+- Other ERC20 tokens can be stored while the policy is active; they stay separate from payout math, have no Riska fee, and pass 100% to beneficiaries on death settlement.
 - Holder monthly claims, partial extra withdrawals, and auxiliary token withdrawals have no fee; claim-all retains 20% only from remaining minimum principal.
 - Beneficiary death claims require a 12-month notice window with no holder interaction.
 - Fees are charged only on death claims and only on remaining minimum principal.
@@ -40,7 +40,7 @@ Core product rule:
 2. Deposits fill the 10,800 USDC minimum first.
 3. Extra deposits above 10,800 USDC become extra principal.
 4. Once the minimum is funded, the holder can activate 120 monthly payments.
-5. After the USDC minimum is covered, the holder can store non-USDC ERC20 tokens as auxiliary token custody; those balances stay outside payout math and minimum-fee math.
+5. While the policy is active, the holder can store non-USDC ERC20 tokens as auxiliary token custody; those balances stay outside payout math and minimum-fee math.
 6. The holder can withdraw extra principal or auxiliary tokens in parts, claim monthly, claim all remaining USDC principal with the minimum-principal fee, or heartbeat.
 7. If the holder empties the policy while alive, the same policy resets to active and can be funded again.
 8. A beneficiary can report death after the policy is at least 12 months old.
@@ -70,7 +70,7 @@ The holder passes the World ID flow in the app, signs the terms hash, sets benef
 
 The holder deposits USDC before payout activation. Deposits fill `remainingMinimumPrincipal` until it reaches 10,800 USDC. Additional deposits increase `remainingExtraPrincipal`. Extra principal can be withdrawn in partial amounts with no fee.
 
-After the USDC minimum is covered, the holder can deposit non-USDC ERC20 tokens into the policy. These auxiliary tokens are tracked per token address, can be withdrawn in partial amounts by the holder, do not increase or reduce the USDC monthly payout, and pass 100% to beneficiaries on death settlement.
+While the policy is active, the holder can deposit non-USDC ERC20 tokens into the policy. These auxiliary tokens are tracked per token address, can be withdrawn in partial amounts by the holder, do not increase or reduce the USDC monthly payout, and pass 100% to beneficiaries on death settlement.
 
 ### Payout Active
 
@@ -120,7 +120,7 @@ The base model treats deposited USDC as policy principal. Yield and protocol eco
 | --- | --- | --- |
 | Minimum principal | Funds the base policy promise | Tracked per policy until paid out or death-settled |
 | Extra principal | Increases future holder payout and beneficiary death payout | Tracked separately and never fee-bearing |
-| Auxiliary ERC20 tokens | Lets the holder custody other token balances once the USDC minimum is covered | Tracked per token, excluded from USDC payout math, never fee-bearing, and paid 100% to beneficiaries on death settlement |
+| Auxiliary ERC20 tokens | Lets the holder custody other token balances while the policy is active | Tracked per token, excluded from USDC payout math, never fee-bearing, and paid 100% to beneficiaries on death settlement |
 | Protocol reserve | Receives retained claim-all and death fees from remaining minimum principal | Tracked separately in the vault |
 | Yield reserve | Receives 10% of positive realized opt-in yield | Separated from principal liabilities; withdrawable only from idle reserve liquidity |
 
@@ -246,7 +246,7 @@ Using policy funds in lending or yield protocols introduces smart-contract risk,
 
 Riska 30 narrows the original Riska vision into a product that is easier to explain, prototype, audit, and evaluate for grant funding.
 
-The promise is direct: any verified human can open a policy, fund the minimum over time, add or withdraw extra principal, custody other tokens after the USDC minimum is covered, and choose when to activate programmed income. If they empty the policy while alive, they can fund the same policy again. Beneficiaries have a transparent death-notice path that depends on time and holder interaction rather than a hidden manual process, and stored auxiliary tokens pass 100% to them on death settlement.
+The promise is direct: any verified human can open a policy, fund the minimum over time, add or withdraw extra principal, custody other tokens while the policy is active, and choose when to activate programmed income. If they empty the policy while alive, they can fund the same policy again. Beneficiaries have a transparent death-notice path that depends on time and holder interaction rather than a hidden manual process, and stored auxiliary tokens pass 100% to them on death settlement.
 
 The next milestone is a credible, verifiable demo: a working policy lifecycle, a clear user interface, a downloadable white paper, and a grant application grounded in measurable progress.
 

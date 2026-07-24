@@ -695,18 +695,20 @@ describe("RiskaPolicyManager", function () {
     expect((await ctx.manager.policies(policyId)).status).to.equal(STATUS.DeathSettled);
   });
 
-  it("stores auxiliary tokens only after the USDC minimum is covered", async function () {
+  it("stores auxiliary tokens while the policy is active, before or after the USDC minimum is covered", async function () {
     const ctx = await deployFixture();
     const policyId = await openPolicy(ctx);
     const altTokenAddress = await ctx.altToken.getAddress();
 
-    await expect(
-      ctx.manager.connect(ctx.holder).depositToken(policyId, altTokenAddress, usdc("250"))
-    ).to.be.revertedWith("MINIMUM_NOT_FUNDED");
+    await ctx.manager.connect(ctx.holder).depositToken(policyId, altTokenAddress, usdc("250"));
+
+    expect(await ctx.manager.auxiliaryTokenBalances(policyId, altTokenAddress)).to.equal(usdc("250"));
+    expect(await ctx.manager.auxiliaryTokenCount(policyId)).to.equal(1);
+    expect(await ctx.premiumVault.auxiliaryTokenLiability(altTokenAddress)).to.equal(usdc("250"));
 
     await expect(
       ctx.manager.connect(ctx.holder).depositToken(policyId, await ctx.token.getAddress(), usdc("250"))
-    ).to.be.revertedWith("MINIMUM_NOT_FUNDED");
+    ).to.be.revertedWith("USE_USDC_DEPOSIT");
 
     await fundMinimum(ctx, policyId);
 
@@ -716,10 +718,10 @@ describe("RiskaPolicyManager", function () {
 
     await ctx.manager.connect(ctx.holder).depositToken(policyId, altTokenAddress, usdc("250"));
 
-    expect(await ctx.manager.auxiliaryTokenBalances(policyId, altTokenAddress)).to.equal(usdc("250"));
+    expect(await ctx.manager.auxiliaryTokenBalances(policyId, altTokenAddress)).to.equal(usdc("500"));
     expect(await ctx.manager.auxiliaryTokenCount(policyId)).to.equal(1);
-    expect(await ctx.manager.auxiliaryTokenAt(policyId, 0)).to.deep.equal([altTokenAddress, usdc("250")]);
-    expect(await ctx.premiumVault.auxiliaryTokenLiability(altTokenAddress)).to.equal(usdc("250"));
+    expect(await ctx.manager.auxiliaryTokenAt(policyId, 0)).to.deep.equal([altTokenAddress, usdc("500")]);
+    expect(await ctx.premiumVault.auxiliaryTokenLiability(altTokenAddress)).to.equal(usdc("500"));
     expect(await ctx.premiumVault.totalPrincipalLiability()).to.equal(usdc("10800"));
     expect(await ctx.manager.monthlyPayoutEstimate(policyId)).to.equal(usdc("90"));
   });

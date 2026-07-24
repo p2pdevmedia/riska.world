@@ -580,7 +580,30 @@ export async function getRiskaTestnetDeployment(): Promise<RiskaTestnetDeploymen
   return deployment;
 }
 
-export async function getTestnetPolicy({
+export async function getTestnetPolicy(args: {
+  policyId: string;
+  viewer?: string | null;
+}): Promise<RiskaTestnetPolicyView> {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    try {
+      return await getTestnetPolicyOnce(args);
+    } catch (error) {
+      lastError = error;
+
+      if (!formatTestnetContractError(error).includes("POLICY_NOT_FOUND") || attempt === 11) {
+        throw error;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 750 + attempt * 250));
+    }
+  }
+
+  throw lastError instanceof Error ? lastError : new Error("The policy could not be synchronized yet.");
+}
+
+async function getTestnetPolicyOnce({
   policyId,
   viewer
 }: {

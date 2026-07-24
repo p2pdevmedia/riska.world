@@ -58,7 +58,7 @@ Current purpose:
 
 Review focus:
 
-- Copy must match the current flexible model: any verified human can open, minimum is 10,800 USDC, extra principal is not fee-bearing and can be withdrawn in parts, auxiliary tokens are allowed after the USDC minimum, auxiliary tokens are never fee-bearing and pass 100% to beneficiaries on death settlement, living holder depletion keeps the policy reusable, holder actions cancel death reports, and beneficiary payout waits 12 months after report.
+- Copy must match the current flexible model: any verified human can open, minimum is 10,800 USDC, extra principal is not fee-bearing and can be withdrawn in parts, auxiliary tokens are allowed while the policy is active, auxiliary tokens are never fee-bearing and pass 100% to beneficiaries on death settlement, living holder depletion keeps the policy reusable, holder actions cancel death reports, and beneficiary payout waits 12 months after report.
 - World ID uses app/backend verification; policy uniqueness and persistence are enforced by `RiskaPolicyManager` on-chain.
 - Testnet MockUSDC is not real USDC and has no production value; test wallets must be funded before the app can approve or deposit.
 - Real-money production still needs legal clearance, external audit, multisig/timelock, and monitoring.
@@ -140,7 +140,7 @@ Current capabilities:
 - Snapshots monthly payout as total principal divided by 120.
 - Pays monthly claims with final dust on the last claim.
 - Allows partial extra-principal withdrawals with no holder fee.
-- Allows auxiliary non-USDC ERC20 token deposits and withdrawals after the USDC minimum is covered.
+- Allows auxiliary non-USDC ERC20 token deposits and withdrawals while the policy is active.
 - Allows claim-all with a 20% retained fee only on remaining minimum principal and resets living holder depletion to an active reusable policy.
 - Allows heartbeat without withdrawing funds.
 - Allows holder beneficiary updates while active or in payout.
@@ -221,7 +221,7 @@ Base model:
 - Deposits before payout activation only.
 - Extra principal increases future monthly payout and is not fee-bearing.
 - Extra principal can be withdrawn in parts with no fee while the policy is active or in payout.
-- Auxiliary non-USDC ERC20 tokens can be deposited after the USDC minimum is covered.
+- Auxiliary non-USDC ERC20 tokens can be deposited while the policy is active.
 - Auxiliary tokens do not count toward USDC payout math and are never fee-bearing.
 - Auxiliary token balances pass 100% to beneficiaries on death settlement by the configured beneficiary shares.
 - Holder monthly payout has no fee.

@@ -194,7 +194,7 @@ const copy = {
         },
         {
           title: "Add extra principal or other tokens",
-          body: "Anything you deposit above the minimum becomes extra principal: it raises your future monthly payment and you can withdraw it in parts at any time, with no fee. Once the minimum is covered, you can also hold other ERC20 tokens for free — they stay separate and never change your payout."
+          body: "Anything you deposit above the minimum becomes extra principal: it raises your future monthly payment and you can withdraw it in parts at any time, with no fee. While the policy is active, you can also hold other ERC20 tokens for free — they stay separate and never change your payout."
         },
         {
           title: "Get paid as the holder",
@@ -368,7 +368,7 @@ const copy = {
           tokenVaultNote:
             "These tokens are separate from USDC payout math. The holder can withdraw them in parts with no fee, and if death settlement happens they pass 100% to beneficiaries.",
           tokenVaultClosed: "This policy is not active for token vault actions.",
-          tokenVaultLocked: (amount: string) => `Unlock the token vault by funding the remaining ${amount} USDC minimum.`,
+          tokenVaultLocked: (_amount: string) => "The token vault is available while the policy is active.",
           tokenVault: "Extra token vault",
           withdrawExtra: "Withdraw extra",
           withdrawExtraAmount: "Extra withdrawal amount",
@@ -444,7 +444,7 @@ const copy = {
         },
         {
           title: "Agrega principal extra u otros tokens",
-          body: "Todo lo que deposites por encima del mínimo se vuelve principal extra: aumenta tu pago mensual futuro y puedes retirarlo en partes cuando quieras, sin comisión. Una vez cubierto el mínimo, también puedes guardar otros tokens ERC20 sin costo; quedan separados y no cambian el cálculo de tus pagos."
+          body: "Todo lo que deposites por encima del mínimo se vuelve principal extra: aumenta tu pago mensual futuro y puedes retirarlo en partes cuando quieras, sin comisión. Mientras la póliza esté activa, también puedes guardar otros tokens ERC20 sin costo; quedan separados y no cambian el cálculo de tus pagos."
         },
         {
           title: "Cobra como titular",
@@ -618,7 +618,7 @@ const copy = {
           tokenVaultNote:
             "Estos tokens quedan separados del cálculo de pago en USDC. El titular puede retirarlos en partes sin comisión y, si hay liquidación por fallecimiento, pasan 100% a los beneficiarios.",
           tokenVaultClosed: "Esta póliza no está activa para acciones de bóveda.",
-          tokenVaultLocked: (amount: string) => `Para desbloquear la bóveda faltan ${amount} USDC del mínimo.`,
+          tokenVaultLocked: (_amount: string) => "La bóveda de tokens está disponible mientras la póliza esté activa.",
           tokenVault: "Bóveda de tokens extra",
           withdrawExtra: "Retirar extra",
           withdrawExtraAmount: "Monto de extra a retirar",
@@ -1759,7 +1759,7 @@ function PolicyControlPanel({
   const canDepositYield = policy
     ? yieldConfigured && availableYieldStrategies.length > 0 && status === 1 && policy.totalPrincipal > yieldAllocated
     : false;
-  const canUseTokenVault = policy ? canUseHolderAction && (minimumFunded || status === 2) : false;
+  const canUseTokenVault = policy ? canUseHolderAction : false;
   const hasTokenAddress = isWalletAddress(tokenAddress);
   const normalizedTokenAddress = tokenAddress.trim().toLowerCase();
   const selectedAuxiliaryToken = policy?.auxiliaryTokens.find(
