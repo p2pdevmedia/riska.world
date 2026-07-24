@@ -152,29 +152,11 @@ only inside `app/api/identity/rp-signature/route.ts`. `RISKA_SESSION_SECRET`
 signs the server-side Wallet Auth session that binds IDKit proofs to the
 authenticated wallet.
 
-World ID reservations require PostgreSQL in every environment, including
-production. Set a pooled, TLS-enabled connection string and apply the checked-in
-migration before serving World ID verification requests:
-
-```bash
-DATABASE_URL=postgresql://...
-npm run db:migrate:deploy
-```
-
-Before applying the migration that removes the unused legacy `Policy` table,
-export it (if it exists):
-
-```bash
-npm run db:export:orphan-policy
-npm run db:migrate:deploy
-```
-
-The `PolicyHumanReservation` table stores a one-way SHA-256 digest of each
-action/nullifier pair and has a database-enforced unique constraint. This makes
-the one-policy-per-human reservation safe across restarts, concurrent requests,
-and multiple application instances; if the database is unavailable, verification
-fails closed with HTTP 503 rather than falling back to memory. Reservations expire
-with their 30-day signed authorization and can then be verified again.
+World ID uniqueness is enforced on-chain by `RiskaPolicyManager`. The contract's
+`policyOfNullifierHash` mapping rejects a nullifier that has already opened a
+policy, including concurrent attempts from different wallets. The API performs
+an RPC preflight for a clear error before issuing the signed authorization, while
+the contract remains the final atomic source of truth.
 
 ```bash
 npm run dev
@@ -189,6 +171,16 @@ Run contract checks with:
 npm run contracts:compile
 npm run contracts:test
 ```
+
+### Network environments
+
+The app always keeps the environments isolated:
+
+- `TEST` reads the Sepolia deployment from `deployments/worldchain-sepolia/latest.json` and uses `WORLDCHAIN_SEPOLIA_RPC_URL` plus the `RISKA_WORLDCHAIN_SEPOLIA_*` contract variables.
+- `PROD` remains disabled until `deployments/worldchain/latest.json` exists with chain id `480`, or the mainnet variables are configured. It then uses `WORLDCHAIN_RPC_URL`, `RISKA_WORLDCHAIN_POLICY_MANAGER`, `RISKA_WORLDCHAIN_USDC`, and the corresponding mainnet contract variables.
+- The test token faucet is never exposed in `PROD`.
+
+The World ID server verifier follows the same split: TEST uses `WORLDCHAIN_SEPOLIA_POLICY_MANAGER`; PROD uses `RISKA_WORLDCHAIN_POLICY_MANAGER`. Do not reuse a Sepolia contract address in a mainnet variable.
 
 ### World Chain Sepolia Test Deployment
 
@@ -228,5 +220,5 @@ test funds during the user flow.
 - Tailwind CSS for styling.
 - World MiniKit for Mini App context and Wallet Auth.
 - viem for World Chain/browser wallet connectivity.
-- Prisma placeholder for future persistence.
+- On-chain persistence through the Riska Solidity contracts.
 - Solidity and Hardhat for the Riska policy lifecycle.

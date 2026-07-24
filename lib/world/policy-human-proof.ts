@@ -8,11 +8,10 @@ type PolicyHumanResponse = {
 
 type VerifiedPolicyHumanResult = {
   identifier?: string;
-  nullifier?: string;
   success?: boolean;
 };
 
-const POLICY_HUMAN_IDENTIFIERS = new Set(["proof_of_human", "orb"]);
+export type PolicyHumanIdentifier = "orb" | "proof_of_human";
 
 export function normalizeNullifier(nullifier: string) {
   return BigInt(nullifier).toString(10);
@@ -20,14 +19,15 @@ export function normalizeNullifier(nullifier: string) {
 
 export function selectPolicyHumanResponse(
   responses: readonly PolicyHumanResponse[],
-  expectedSignalHash: string
+  expectedSignalHash: string,
+  expectedIdentifier: PolicyHumanIdentifier
 ) {
   const normalizedSignalHash = expectedSignalHash.toLowerCase();
 
   return responses.find(
     (response) =>
       typeof response.identifier === "string" &&
-      POLICY_HUMAN_IDENTIFIERS.has(response.identifier.toLowerCase()) &&
+      response.identifier.toLowerCase() === expectedIdentifier &&
       typeof response.nullifier === "string" &&
       response.nullifier.length > 0 &&
       response.signal_hash?.toLowerCase() === normalizedSignalHash
@@ -43,17 +43,15 @@ export function derivePolicyNullifier({ action, nullifier }: { action: string; n
   };
 }
 
-export function selectVerifiedPolicyHumanNullifier(
+export function hasVerifiedPolicyHumanResult(
   results: readonly VerifiedPolicyHumanResult[],
   identifier: string
 ) {
   const normalizedIdentifier = identifier.toLowerCase();
 
-  return results.find(
+  return results.some(
     (result) =>
       result.success === true &&
-      result.identifier?.toLowerCase() === normalizedIdentifier &&
-      typeof result.nullifier === "string" &&
-      result.nullifier.length > 0
-  )?.nullifier;
+      result.identifier?.toLowerCase() === normalizedIdentifier
+  );
 }

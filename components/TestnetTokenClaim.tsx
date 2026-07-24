@@ -51,6 +51,13 @@ export function TestnetTokenClaim() {
   const [message, setMessage] = useState("Verificando faucet de World Chain Sepolia…");
 
   useEffect(() => {
+    if (environment !== "testnet") {
+      setFaucetAddress(null);
+      setStatus("error");
+      setMessage("El faucet solo está disponible en TEST sobre World Chain Sepolia.");
+      return;
+    }
+
     void fetch(`/api/contracts/worldchain-sepolia?environment=${environment}`, { cache: "no-store" })
       .then(async (response) => {
         const data = (await response.json()) as RiskaTestnetConfigResponse;

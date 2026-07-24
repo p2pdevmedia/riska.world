@@ -1,13 +1,12 @@
 "use client";
 
 import { createPublicClient, formatUnits, getAddress, http, isAddress, type Address, type Hash } from "viem";
-import { worldchainSepolia } from "viem/chains";
 
-import { WORLDCHAIN_SEPOLIA_RPC_URL } from "@/lib/riska-testnet";
+import { getWorldChainRpcUrl, WORLDCHAIN_SEPOLIA_RPC_URL } from "@/lib/riska-testnet";
 import { getRiskaTestnetDeployment } from "@/lib/web3/riska-testnet";
-import { createWorldchainSepoliaWalletClient, switchToWorldchainSepolia } from "@/lib/web3/metamask";
+import { createWorldchainSepoliaWalletClient, switchToSelectedWorldChain } from "@/lib/web3/metamask";
 
-const publicClient = createPublicClient({ chain: worldchainSepolia, transport: http(WORLDCHAIN_SEPOLIA_RPC_URL) });
+let publicClient = createPublicClient({ transport: http(WORLDCHAIN_SEPOLIA_RPC_URL) });
 
 const ownableAbi = [
   { inputs: [], name: "owner", outputs: [{ name: "", type: "address" }], stateMutability: "view", type: "function" },
@@ -53,9 +52,10 @@ export type AdminContractKey = keyof AdminOwners;
 
 async function deploymentContracts() {
   const deployment = await getRiskaTestnetDeployment();
+  publicClient = createPublicClient({ transport: http(getWorldChainRpcUrl(deployment.chainId, deployment.rpcUrl)) });
   const { beneficiaryRegistry, policyManager, premiumVault } = deployment.contracts;
   if (!beneficiaryRegistry?.address || !policyManager?.address || !premiumVault?.address) throw new Error("Faltan contratos base en el despliegue.");
-  return { beneficiaryRegistry: beneficiaryRegistry.address, policyManager: policyManager.address, premiumVault: premiumVault.address };
+  return { beneficiaryRegistry: beneficiaryRegistry.address, policyManager: policyManager.address, premiumVault: premiumVault.address, deployment };
 }
 
 export async function getAdminOverview(account?: string | null): Promise<AdminOverview> {
@@ -114,7 +114,7 @@ export async function getAdminPolicy(id: string): Promise<AdminPolicyDetail> {
 
 async function write(action: (account: Address) => Promise<Hash>, account: string) {
   if (!isAddress(account)) throw new Error("Conecta una wallet válida.");
-  await switchToWorldchainSepolia();
+  await switchToSelectedWorldChain();
   const hash = await action(getAddress(account));
   await publicClient.waitForTransactionReceipt({ hash });
   return hash;

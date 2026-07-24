@@ -3,10 +3,13 @@ import test from "node:test";
 
 import {
   derivePolicyNullifier,
-  selectPolicyHumanResponse,
-  selectVerifiedPolicyHumanNullifier
+  hasVerifiedPolicyHumanResult,
+  selectPolicyHumanResponse
 } from "../lib/world/policy-human-proof.ts";
-import { getWorldIdSimulatorIdentitySelectorUrl } from "../lib/world/idkit.ts";
+import {
+  getWorldIdEnvironmentForDeployment,
+  getWorldIdSimulatorIdentitySelectorUrl
+} from "../lib/world/idkit.ts";
 
 const signalHash = `0x${"ab".repeat(32)}`;
 
@@ -15,7 +18,7 @@ test("selects the proof_of_human response bound to the wallet instead of the fir
     { identifier: "passport", nullifier: "0x01", signal_hash: signalHash },
     { identifier: "proof_of_human", nullifier: "0x02", signal_hash: `0x${"cd".repeat(32)}` },
     { identifier: "proof_of_human", nullifier: "0x03", signal_hash: signalHash.toUpperCase() }
-  ], signalHash);
+  ], signalHash, "proof_of_human");
 
   assert.equal(selected?.nullifier, "0x03");
 });
@@ -23,24 +26,27 @@ test("selects the proof_of_human response bound to the wallet instead of the fir
 test("rejects a proof_of_human response that is not bound to the wallet", () => {
   const selected = selectPolicyHumanResponse([
     { identifier: "proof_of_human", nullifier: "0x01", signal_hash: `0x${"cd".repeat(32)}` }
-  ], signalHash);
+  ], signalHash, "proof_of_human");
 
   assert.equal(selected, undefined);
 });
 
-test("accepts a legacy v3 Orb response bound to the wallet", () => {
+test("selects a legacy Orb response only for the TEST credential", () => {
   const selected = selectPolicyHumanResponse([
     { identifier: "orb", nullifier: "0x04", signal_hash: signalHash }
-  ], signalHash);
+  ], signalHash, "orb");
 
   assert.equal(selected?.nullifier, "0x04");
+  assert.equal(selectPolicyHumanResponse([
+    { identifier: "orb", nullifier: "0x04", signal_hash: signalHash }
+  ], signalHash, "proof_of_human"), undefined);
 });
 
 test("does not accept other legacy credential levels as policy-human proof", () => {
   const selected = selectPolicyHumanResponse([
     { identifier: "device", nullifier: "0x05", signal_hash: signalHash },
     { identifier: "document", nullifier: "0x06", signal_hash: signalHash }
-  ], signalHash);
+  ], signalHash, "orb");
 
   assert.equal(selected, undefined);
 });
@@ -61,14 +67,22 @@ test("the same identity and action remain deterministic", () => {
   assert.deepEqual(first, second);
 });
 
-test("uses the canonical v4 nullifier returned by the World verifier", () => {
-  const nullifier = selectVerifiedPolicyHumanNullifier([
-    { identifier: "passport", nullifier: "0x01", success: true },
-    { identifier: "proof_of_human", nullifier: "0x02", success: false },
-    { identifier: "proof_of_human", nullifier: "0x03", success: true }
+test("requires the World verifier to validate the selected v4 response", () => {
+  const verified = hasVerifiedPolicyHumanResult([
+    { identifier: "passport", success: true },
+    { identifier: "proof_of_human", success: false },
+    { identifier: "proof_of_human", success: true }
   ], "proof_of_human");
 
-  assert.equal(nullifier, "0x03");
+  assert.equal(verified, true);
+});
+
+test("rejects the selected response when the World verifier did not validate it", () => {
+  const verified = hasVerifiedPolicyHumanResult([
+    { identifier: "proof_of_human", success: false }
+  ], "proof_of_human");
+
+  assert.equal(verified, false);
 });
 
 test("rewrites the staging simulator link to the explicit identity selector", () => {
@@ -83,4 +97,9 @@ test("rewrites the staging simulator link to the explicit identity selector", ()
 
 test("does not rewrite unrelated links as simulator identity selectors", () => {
   assert.equal(getWorldIdSimulatorIdentitySelectorUrl("https://world.org/verify"), null);
+});
+
+test("maps the TEST and PROD selectors to their matching World ID environments", () => {
+  assert.equal(getWorldIdEnvironmentForDeployment("testnet"), "staging");
+  assert.equal(getWorldIdEnvironmentForDeployment("prod-test"), "production");
 });

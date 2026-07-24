@@ -10,17 +10,18 @@ import {
   parseUnits,
   type Hash
 } from "viem";
-import { worldchainSepolia } from "viem/chains";
 
 import {
   RISKA_POLICY_TERMS_HASH,
+  getWorldChainForChainId,
+  getWorldChainRpcUrl,
   WORLDCHAIN_SEPOLIA_RPC_URL,
   type RiskaTestnetConfigResponse,
   type RiskaTestnetDeployment
 } from "@/lib/riska-testnet";
 import {
   createWorldchainSepoliaWalletClient,
-  switchToWorldchainSepolia
+  switchToSelectedWorldChain
 } from "@/lib/web3/metamask";
 
 export type TestnetBeneficiaryInput = {
@@ -137,8 +138,7 @@ type ContractAddresses = {
 const FIRST_PREMIUM = parseUnits("30", 6);
 export const MINIMUM_POLICY_PRINCIPAL = parseUnits("10800", 6);
 
-const publicClient = createPublicClient({
-  chain: worldchainSepolia,
+let publicClient = createPublicClient({
   transport: http(WORLDCHAIN_SEPOLIA_RPC_URL)
 });
 
@@ -563,7 +563,7 @@ export async function getRiskaTestnetDeployment(): Promise<RiskaTestnetDeploymen
   const environment = typeof window !== "undefined" && window.localStorage.getItem("riska.network-environment") === "prod-test"
     ? "prod-test"
     : "testnet";
-  const response = await fetch(`/api/contracts/worldchain-sepolia?environment=${environment}`, {
+  const response = await fetch(`/api/contracts/worldchain-sepolia?environment=${environment === "prod-test" ? "production" : "testnet"}`, {
     cache: "no-store"
   });
   const payload = (await response.json()) as RiskaTestnetConfigResponse;
@@ -572,7 +572,12 @@ export async function getRiskaTestnetDeployment(): Promise<RiskaTestnetDeploymen
     throw new Error(payload.error ?? "World Chain Sepolia contracts are not configured.");
   }
 
-  return payload.deployment;
+  const deployment = payload.deployment;
+  publicClient = createPublicClient({
+    chain: getWorldChainForChainId(deployment.chainId),
+    transport: http(getWorldChainRpcUrl(deployment.chainId, deployment.rpcUrl))
+  }) as unknown as typeof publicClient;
+  return deployment;
 }
 
 export async function getTestnetPolicy({
@@ -1340,7 +1345,7 @@ async function getConnectedAccount(
   onStatus?: (status: TestnetPolicyActionStatus) => void
 ): Promise<`0x${string}`> {
   onStatus?.("switching_network");
-  await switchToWorldchainSepolia();
+  await switchToSelectedWorldChain();
 
   const walletClient = await createWorldchainSepoliaWalletClient();
   const [connectedAccount] = await walletClient.requestAddresses();

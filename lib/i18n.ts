@@ -25,7 +25,8 @@ const worldIdErrorsEn = {
     "This World App account cannot create the required proof yet. Finish verification and try again.",
   world_id_4_not_available:
     "This World App account cannot create the required proof yet. Update World App or finish verification, then try again.",
-  world_id_4_required: "Riska requires a World ID 4 uniqueness proof to open a policy."
+  world_id_4_required: "Riska requires a World ID 4 uniqueness proof to open a policy.",
+  world_id_proof_required: "Use the World ID proof required by the selected TEST or PROD environment."
 };
 
 const worldIdErrorsEs = {
@@ -53,7 +54,8 @@ const worldIdErrorsEs = {
     "Esta cuenta de World App todavía no puede crear la prueba requerida. Completa la verificación e inténtalo de nuevo.",
   world_id_4_not_available:
     "Esta cuenta de World App todavía no puede crear la prueba requerida. Actualiza World App o completa la verificación, y vuelve a intentarlo.",
-  world_id_4_required: "Riska requiere una prueba de unicidad de World ID 4 para abrir una póliza."
+  world_id_4_required: "Riska requiere una prueba de unicidad de World ID 4 para abrir una póliza.",
+  world_id_proof_required: "Usa la prueba de World ID requerida por el entorno TEST o PROD seleccionado."
 };
 
 const contractDocsEn = {
@@ -492,7 +494,7 @@ export const dictionaries = {
     worldIdGate: {
       heading: "One human, one policy",
       description:
-        "Verify your identity with World ID before activating a policy. Riska records your verification so the same person cannot reserve a second policy.",
+        "Verify your identity with World ID before activating a policy. Riska's contract ensures the same person cannot open a second policy.",
       statusLabel: "World ID",
       statuses: {
         locked: "Connect a wallet first so the proof can be bound to that address.",
@@ -911,7 +913,7 @@ export const dictionaries = {
     worldIdGate: {
       heading: "Un humano, una póliza",
       description:
-        "Verifica tu identidad con World ID antes de activar una póliza. Riska registra tu verificación para que el mismo humano no pueda reservar una segunda póliza.",
+        "Verifica tu identidad con World ID antes de activar una póliza. El contrato de Riska garantiza que el mismo humano no pueda abrir una segunda póliza.",
       statusLabel: "World ID",
       statuses: {
         locked: "Primero conecta una wallet para vincular la prueba a esa dirección.",

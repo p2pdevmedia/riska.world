@@ -22,8 +22,7 @@ Core project files:
 - `components/RiskaEnrollmentHome.tsx`: main enrollment and testnet policy dashboard.
 - `components/WalletAuth.tsx`: Mini App Wallet Auth entry point with browser-wallet fallback.
 - `components/WorldIdGate.tsx`: IDKit proof-of-human gate for the one-policy-per-human flow.
-- `app/api/world-id/verify-policy-human/route.ts`: server-side World ID proof verification and nullifier reservation.
-- `lib/world/policy-human-registry.ts`: demo nullifier registry used before database persistence.
+- `app/api/identity/verify-policy-human/route.ts`: server-side World ID proof verification and on-chain nullifier preflight.
 
 Build command:
 
@@ -60,7 +59,7 @@ Current purpose:
 Review focus:
 
 - Copy must match the current flexible model: any verified human can open, minimum is 10,800 USDC, extra principal is not fee-bearing and can be withdrawn in parts, auxiliary tokens are allowed after the USDC minimum, auxiliary tokens are never fee-bearing and pass 100% to beneficiaries on death settlement, living holder depletion keeps the policy reusable, holder actions cancel death reports, and beneficiary payout waits 12 months after report.
-- World ID uses app/backend verification; current persistence remains demo/in-process until a database is added.
+- World ID uses app/backend verification; policy uniqueness and persistence are enforced by `RiskaPolicyManager` on-chain.
 - Testnet MockUSDC is not real USDC and has no production value; test wallets must be funded before the app can approve or deposit.
 - Real-money production still needs legal clearance, external audit, multisig/timelock, and monitoring.
 

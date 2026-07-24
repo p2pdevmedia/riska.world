@@ -2,6 +2,7 @@
 
 import {
   IDKitRequestWidget,
+  orbLegacy,
   proofOfHuman,
   type IDKitResult,
   type RpContext
@@ -13,8 +14,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useEnvironment } from "@/components/NetworkEnvironment";
 import {
-  RISKA_WORLD_ID_ENVIRONMENT,
   RISKA_WORLD_ID_POLICY_ACTION,
+  getWorldIdEnvironmentForDeployment,
   getWorldIdSimulatorIdentitySelectorUrl,
   getWorldAppId,
   normalizeWorldIdSignal
@@ -86,6 +87,11 @@ export function WorldIdGate({
 }) {
   const { language, t } = useLanguage();
   const { environment } = useEnvironment();
+  const worldIdEnvironment = getWorldIdEnvironmentForDeployment(environment);
+  const worldIdSignal = normalizeWorldIdSignal(walletAddress ?? "");
+  const worldIdPreset = environment === "testnet"
+    ? orbLegacy({ signal: worldIdSignal })
+    : proofOfHuman({ signal: worldIdSignal });
   const { isInstalled } = useMiniKit();
   const copy = t.worldIdGate;
   const worldAppId = getWorldAppId();
@@ -138,7 +144,7 @@ export function WorldIdGate({
   }, [onReservationChange, storedReservation, walletAddress]);
 
   useEffect(() => {
-    if (!isOpen || RISKA_WORLD_ID_ENVIRONMENT !== "staging") {
+    if (!isOpen || worldIdEnvironment !== "staging") {
       return;
     }
 
@@ -162,7 +168,7 @@ export function WorldIdGate({
     });
 
     return () => observer.disconnect();
-  }, [isOpen]);
+  }, [isOpen, worldIdEnvironment]);
 
   const resolveWorldIdError = useCallback(
     (errorCode?: string, fallback?: string) => {
@@ -361,9 +367,9 @@ export function WorldIdGate({
             app_id={worldAppId}
             action={RISKA_WORLD_ID_POLICY_ACTION}
             rp_context={rpContext}
-            allow_legacy_proofs={false}
-            preset={proofOfHuman({ signal: normalizeWorldIdSignal(walletAddress ?? "") })}
-            environment={RISKA_WORLD_ID_ENVIRONMENT}
+            allow_legacy_proofs={environment === "testnet"}
+            preset={worldIdPreset}
+            environment={worldIdEnvironment}
             handleVerify={handleVerify}
             onSuccess={handleSuccess}
             onError={handleError}
@@ -420,9 +426,9 @@ export function WorldIdGate({
           app_id={worldAppId}
           action={RISKA_WORLD_ID_POLICY_ACTION}
           rp_context={rpContext}
-          allow_legacy_proofs={false}
-          preset={proofOfHuman({ signal: normalizeWorldIdSignal(walletAddress ?? "") })}
-          environment={RISKA_WORLD_ID_ENVIRONMENT}
+          allow_legacy_proofs={environment === "testnet"}
+          preset={worldIdPreset}
+          environment={worldIdEnvironment}
           handleVerify={handleVerify}
           onSuccess={handleSuccess}
           onError={handleError}

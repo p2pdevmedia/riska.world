@@ -13,6 +13,7 @@ import {
   discoverBrowserWallets,
   disconnectWallet,
   onWalletChange,
+  getSelectedWorldChain,
   type BrowserWalletOption
 } from "@/lib/web3/metamask";
 
@@ -117,7 +118,7 @@ export function WalletAuth({
         const connection = await connectMiniAppWallet();
         setState({ status: "connected", method: "world-app", ...connection });
       } else {
-        const connection = await connectWallet(undefined, walletId);
+        const connection = await connectWallet(getSelectedWorldChain().chain, walletId);
         setState({ status: "connected", method: "browser", ...connection });
       }
       setMessage({ type: "welcome" });

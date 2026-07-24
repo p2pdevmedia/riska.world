@@ -4,13 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run verify:policy-human-verifier && prisma generate && next build",
+    "build": "npm run verify:policy-human-verifier && next build",
     "start": "next start",
     "lint": "next lint",
     "test:e2e": "playwright test",
-    "db:generate": "prisma generate",
-    "db:export:orphan-policy": "node scripts/export-orphan-policy-table.cjs",
-    "db:migrate:deploy": "prisma migrate deploy",
     "contracts:compile": "hardhat compile --config hardhat.config.cjs",
     "contracts:test": "hardhat test --config hardhat.config.cjs",
     "test:policy-human": "node --experimental-strip-types --test test/policy-human-proof.test.ts",
@@ -27,7 +24,6 @@
   },
   "dependencies": {
     "@metamask/sdk": "^0.34.0",
-    "@prisma/client": "5.13.0",
     "@worldcoin/idkit": "^4.1.6",
     "@worldcoin/minikit-js": "^2.0.3",
     "lucide-react": "^1.16.0",
@@ -48,7 +44,6 @@
     "eslint-config-next": "14.2.4",
     "hardhat": "^2.28.0",
     "postcss": "8.4.38",
-    "prisma": "5.13.0",
     "tailwindcss": "3.4.4",
     "typescript": "5.4.5"
   }

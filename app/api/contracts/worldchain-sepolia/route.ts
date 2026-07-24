@@ -7,6 +7,10 @@ import { getAddress, isAddress } from "viem";
 import {
   WORLDCHAIN_SEPOLIA_CHAIN_ID,
   WORLDCHAIN_SEPOLIA_EXPLORER_URL,
+  WORLDCHAIN_EXPLORER_URL,
+  WORLDCHAIN_RPC_URL,
+  WORLDCHAIN_SEPOLIA_RPC_URL,
+  WORLDCHAIN_CHAIN_ID,
   type RiskaTestnetConfigResponse,
   type RiskaTestnetAuxiliaryTokenRecord,
   type RiskaTestnetContractName,
@@ -27,7 +31,8 @@ const contractNames: RiskaTestnetContractName[] = [
 ];
 
 export async function GET(request: Request) {
-  const environment = new URL(request.url).searchParams.get("environment") === "prod-test" ? "prod-test" : "testnet";
+  const requestedEnvironment = new URL(request.url).searchParams.get("environment");
+  const environment = requestedEnvironment === "production" || requestedEnvironment === "prod-test" ? "production" : "testnet";
   const deployment = readDeploymentFile(environment) ?? readDeploymentEnv(environment);
   const response: RiskaTestnetConfigResponse = deployment
     ? { configured: true, deployment }
@@ -39,8 +44,8 @@ export async function GET(request: Request) {
   return NextResponse.json(response);
 }
 
-function readDeploymentFile(environment: "prod-test" | "testnet"): RiskaTestnetDeployment | null {
-  const deploymentPath = path.join(process.cwd(), "deployments", environment === "prod-test" ? "worldchain-sepolia-prod-test" : "worldchain-sepolia", "latest.json");
+function readDeploymentFile(environment: "production" | "testnet"): RiskaTestnetDeployment | null {
+  const deploymentPath = path.join(process.cwd(), "deployments", environment === "production" ? "worldchain" : "worldchain-sepolia", "latest.json");
   if (!fs.existsSync(deploymentPath)) {
     return null;
   }
@@ -62,6 +67,8 @@ function readDeploymentFile(environment: "prod-test" | "testnet"): RiskaTestnetD
       deployer: normalizeOptionalAddress(parsed.deployer),
       explorerBaseUrl: parsed.explorerBaseUrl ?? WORLDCHAIN_SEPOLIA_EXPLORER_URL,
       network: parsed.network ?? "worldchainSepolia",
+      environment,
+      rpcUrl: parsed.rpcUrl ?? (environment === "production" ? WORLDCHAIN_RPC_URL : WORLDCHAIN_SEPOLIA_RPC_URL),
       policyHumanVerifier: normalizeOptionalAddress(parsed.policyHumanVerifier ?? parsed.verifier),
       ...(Object.keys(testAuxiliaryTokens).length > 0 ? { testAuxiliaryTokens } : {}),
       verifier: normalizeOptionalAddress(parsed.verifier)
@@ -71,15 +78,17 @@ function readDeploymentFile(environment: "prod-test" | "testnet"): RiskaTestnetD
   }
 }
 
-function readDeploymentEnv(environment: "prod-test" | "testnet"): RiskaTestnetDeployment | null {
-  const suffix = environment === "prod-test" ? "_PROD_TEST" : "";
+function readDeploymentEnv(environment: "production" | "testnet"): RiskaTestnetDeployment | null {
+  const isProduction = environment === "production";
+  const suffix = "";
+  const prefix = isProduction ? "RISKA_WORLDCHAIN" : "RISKA_WORLDCHAIN_SEPOLIA";
   const contracts = normalizeContracts({
-    mockUsdc: { address: process.env[`RISKA_WORLDCHAIN_SEPOLIA_MOCK_USDC${suffix}`] },
-    beneficiaryRegistry: { address: process.env[`RISKA_WORLDCHAIN_SEPOLIA_BENEFICIARY_REGISTRY${suffix}`] },
-    premiumVault: { address: process.env[`RISKA_WORLDCHAIN_SEPOLIA_PREMIUM_VAULT${suffix}`] },
-    policyManager: { address: process.env[`RISKA_WORLDCHAIN_SEPOLIA_POLICY_MANAGER${suffix}`] },
-    yieldStrategyManager: { address: process.env[`RISKA_WORLDCHAIN_SEPOLIA_YIELD_STRATEGY_MANAGER${suffix}`] },
-    testnetTokenFaucet: { address: process.env[`RISKA_WORLDCHAIN_SEPOLIA_TESTNET_TOKEN_FAUCET${suffix}`] }
+    mockUsdc: { address: process.env[`${prefix}_${isProduction ? "USDC" : "MOCK_USDC"}${suffix}`] },
+    beneficiaryRegistry: { address: process.env[`${prefix}_BENEFICIARY_REGISTRY${suffix}`] },
+    premiumVault: { address: process.env[`${prefix}_PREMIUM_VAULT${suffix}`] },
+    policyManager: { address: process.env[`${prefix}_POLICY_MANAGER${suffix}`] },
+    yieldStrategyManager: { address: process.env[`${prefix}_YIELD_STRATEGY_MANAGER${suffix}`] },
+    testnetTokenFaucet: { address: isProduction ? undefined : process.env[`${prefix}_TESTNET_TOKEN_FAUCET${suffix}`] }
   });
 
   if (!hasRequiredContracts(contracts)) {
@@ -87,10 +96,12 @@ function readDeploymentEnv(environment: "prod-test" | "testnet"): RiskaTestnetDe
   }
 
   return {
-    chainId: String(WORLDCHAIN_SEPOLIA_CHAIN_ID),
+    environment,
+    chainId: String(isProduction ? WORLDCHAIN_CHAIN_ID : WORLDCHAIN_SEPOLIA_CHAIN_ID),
     contracts,
-    explorerBaseUrl: WORLDCHAIN_SEPOLIA_EXPLORER_URL,
-    network: "worldchainSepolia"
+    explorerBaseUrl: isProduction ? WORLDCHAIN_EXPLORER_URL : WORLDCHAIN_SEPOLIA_EXPLORER_URL,
+    network: isProduction ? "worldchain" : "worldchainSepolia",
+    rpcUrl: isProduction ? WORLDCHAIN_RPC_URL : WORLDCHAIN_SEPOLIA_RPC_URL
   };
 }
 

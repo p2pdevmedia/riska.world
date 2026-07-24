@@ -1,11 +1,10 @@
 "use client";
 
 import { createWalletClient, custom, getAddress, type Chain } from "viem";
-import { worldchain } from "viem/chains";
+import { worldchain, worldchainSepolia } from "viem/chains";
 
 import {
-  WORLDCHAIN_SEPOLIA_CHAIN_ID_HEX,
-  WORLDCHAIN_SEPOLIA_EXPLORER_URL,
+  WORLDCHAIN_RPC_URL,
   WORLDCHAIN_SEPOLIA_RPC_URL
 } from "@/lib/riska-testnet";
 import { createTransactionWalletClient } from "@/lib/web3/wallet-client";
@@ -290,12 +289,30 @@ export async function connectWallet(chain: Chain = worldchain, walletId?: string
 }
 
 export async function switchToWorldchainSepolia(): Promise<void> {
+  return switchToWorldchainNetwork(worldchainSepolia, WORLDCHAIN_SEPOLIA_RPC_URL);
+}
+
+export function getSelectedWorldChain() {
+  if (typeof window !== "undefined" && window.localStorage.getItem("riska.network-environment") === "prod-test") {
+    return { chain: worldchain, rpcUrl: WORLDCHAIN_RPC_URL };
+  }
+
+  return { chain: worldchainSepolia, rpcUrl: WORLDCHAIN_SEPOLIA_RPC_URL };
+}
+
+export async function switchToSelectedWorldChain(): Promise<void> {
+  const selected = getSelectedWorldChain();
+  return switchToWorldchainNetwork(selected.chain, selected.rpcUrl);
+}
+
+export async function switchToWorldchainNetwork(chain: Chain, rpcUrl?: string): Promise<void> {
   const ethereum = await getBrowserEthereumProvider();
+  const chainId = `0x${chain.id.toString(16)}`;
 
   try {
     await ethereum.request({
       method: "wallet_switchEthereumChain",
-      params: [{ chainId: WORLDCHAIN_SEPOLIA_CHAIN_ID_HEX }]
+      params: [{ chainId }]
     });
   } catch (error) {
     if (!isUnknownChainError(error)) {
@@ -306,15 +323,15 @@ export async function switchToWorldchainSepolia(): Promise<void> {
       method: "wallet_addEthereumChain",
       params: [
         {
-          blockExplorerUrls: [WORLDCHAIN_SEPOLIA_EXPLORER_URL.replace(/\/address\/$/, "")],
-          chainId: WORLDCHAIN_SEPOLIA_CHAIN_ID_HEX,
-          chainName: "World Chain Sepolia",
+          blockExplorerUrls: [chain.blockExplorers?.default.url ?? "https://worldchain.explorer.alchemy.com"],
+          chainId,
+          chainName: chain.id === 480 ? "World Chain" : "World Chain Sepolia",
           nativeCurrency: {
             decimals: 18,
             name: "Ether",
             symbol: "ETH"
           },
-          rpcUrls: [WORLDCHAIN_SEPOLIA_RPC_URL]
+          rpcUrls: [rpcUrl ?? chain.rpcUrls.default.http[0]]
         }
       ]
     });

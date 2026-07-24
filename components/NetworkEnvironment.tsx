@@ -7,6 +7,7 @@ export type RiskaEnvironment = "prod-test" | "testnet";
 
 type EnvironmentContextValue = {
   environment: RiskaEnvironment;
+  productionAvailable: boolean;
   setEnvironment: (environment: RiskaEnvironment) => void;
 };
 
@@ -15,21 +16,39 @@ const EnvironmentContext = createContext<EnvironmentContextValue | null>(null);
 
 export function EnvironmentProvider({ children }: { children: React.ReactNode }) {
   const [environment, setEnvironment] = useState<RiskaEnvironment>("testnet");
+  const [productionAvailable, setProductionAvailable] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
+    void fetch("/api/contracts/worldchain-sepolia?environment=production", { cache: "no-store" })
+      .then(async (response) => {
+        const payload = (await response.json()) as { configured?: boolean; deployment?: { chainId?: string } };
+        if (!cancelled && response.ok && payload.configured && payload.deployment?.chainId === "480") {
+          setProductionAvailable(true);
+          if (window.localStorage.getItem(storageKey) === "prod-test") setEnvironment("prod-test");
+        } else if (window.localStorage.getItem(storageKey) === "prod-test") {
+          window.localStorage.removeItem(storageKey);
+          setEnvironment("testnet");
+        }
+      })
+      .catch(() => undefined);
+
     const stored = window.localStorage.getItem(storageKey);
-    if (stored === "prod-test" || stored === "testnet") setEnvironment(stored);
+    if (stored === "testnet") setEnvironment(stored);
+    return () => { cancelled = true; };
   }, []);
 
   const value = useMemo(
     () => ({
       environment,
+      productionAvailable,
       setEnvironment: (nextEnvironment: RiskaEnvironment) => {
+        if (nextEnvironment === "prod-test" && !productionAvailable) return;
         window.localStorage.setItem(storageKey, nextEnvironment);
         setEnvironment(nextEnvironment);
       }
     }),
-    [environment]
+    [environment, productionAvailable]
   );
 
   return <EnvironmentContext.Provider value={value}>{children}</EnvironmentContext.Provider>;
@@ -42,7 +61,7 @@ export function useEnvironment() {
 }
 
 export function EnvironmentSwitcher() {
-  const { environment, setEnvironment } = useEnvironment();
+  const { environment, productionAvailable, setEnvironment } = useEnvironment();
   const isTestnet = environment === "testnet";
 
   return (
@@ -53,10 +72,12 @@ export function EnvironmentSwitcher() {
           !isTestnet ? "bg-[#174a38] text-[#b8f5d4]" : "text-[#8190a6] hover:text-[#f5f7fb]"
         }`}
         onClick={() => setEnvironment("prod-test")}
+        disabled={!productionAvailable}
+        title={productionAvailable ? "World Chain mainnet" : "PROD estará disponible cuando exista el despliegue mainnet"}
         type="button"
       >
         <ShieldCheck className="h-3.5 w-3.5" />
-        PROD TEST
+        PROD
       </button>
       <button
         aria-pressed={isTestnet}
