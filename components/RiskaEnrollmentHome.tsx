@@ -114,6 +114,8 @@ type ExistingPolicyLookupState =
 type AssetOperation = "dashboard" | "deposit" | "withdraw" | "yield";
 type PolicyConfirmationAction = "activatePayout" | "claimAll";
 
+const customTokenOption = "__custom__";
+
 const storageKey = "riska.enrollment.v2";
 const pendingWalletStorageKey = "riska.pending-wallet-session";
 const beneficiaryColors = ["bg-rose-500", "bg-amber-500", "bg-emerald-500", "bg-cyan-500", "bg-violet-500"];
@@ -300,7 +302,7 @@ const copy = {
           claimMonthly: "Claim monthly",
           claimableAt: "Claimable after",
           commonTokens: "Common test tokens",
-          customToken: "Custom 0x",
+          customToken: "Custom token",
           deathNotice: "Death report",
           lastActivity: "Last activity",
           logout: "Logout",
@@ -550,7 +552,7 @@ const copy = {
           claimMonthly: "Cobrar mes",
           claimableAt: "Cobrable desde",
           commonTokens: "Tokens de prueba comunes",
-          customToken: "0x custom",
+          customToken: "Token personalizado",
           deathNotice: "Reporte de fallecimiento",
           lastActivity: "Última actividad",
           logout: "Cerrar sesión",
@@ -1629,6 +1631,8 @@ function PolicyControlPanel({
   const [yieldAmount, setYieldAmount] = useState("100");
   const [yieldStrategyId, setYieldStrategyId] = useState("");
   const [tokenAddress, setTokenAddress] = useState("");
+  const [customTokenAddress, setCustomTokenAddress] = useState("");
+  const [customTokenSelected, setCustomTokenSelected] = useState(false);
   const [tokenAmount, setTokenAmount] = useState("1");
   const [assetOperation, setAssetOperation] = useState<AssetOperation>("dashboard");
   const [pendingConfirmation, setPendingConfirmation] = useState<PolicyConfirmationAction | null>(null);
@@ -1644,6 +1648,11 @@ function PolicyControlPanel({
     const nextPolicy = await getTestnetPolicy({ policyId, viewer: walletAddress });
     setPolicy(nextPolicy);
   }, [policyId, walletAddress]);
+
+  const refreshCashflow = useCallback(async () => {
+    const nextCashflow = await getTestnetPolicyCashflow(policyId);
+    setCashflow(nextCashflow);
+  }, [policyId]);
 
   useEffect(() => {
     let mounted = true;
@@ -1690,7 +1699,7 @@ function PolicyControlPanel({
     return () => {
       mounted = false;
     };
-  }, [policyId]);
+  }, [policyId, refreshCashflow]);
 
   async function runAction(action: TestnetPolicyAction, options?: { amount?: string; strategyId?: number }) {
     setWorkingAction(action);
@@ -1722,11 +1731,14 @@ function PolicyControlPanel({
         tokenAddress: action === "depositToken" || action === "withdrawToken" ? tokenAddress : undefined
       });
       await refreshPolicy();
+      await refreshCashflow();
       setStatusMessage(text.actionComplete);
       setStatusTone("text-emerald-700");
+      setAssetOperation("dashboard");
     } catch (error) {
       setStatusMessage(`${text.actionError}: ${formatTestnetContractError(error)}`);
       setStatusTone("text-red-700");
+      setAssetOperation("dashboard");
     } finally {
       setWorkingAction(null);
     }
@@ -1753,6 +1765,21 @@ function PolicyControlPanel({
   const selectedAuxiliaryToken = policy?.auxiliaryTokens.find(
     (token) => token.address.toLowerCase() === normalizedTokenAddress
   );
+  const availableTokenOptions = [
+    ...(deployment?.testAuxiliaryTokens
+      ? Object.values(deployment.testAuxiliaryTokens).map((token) => ({
+          address: token.address,
+          symbol: token.symbol
+        }))
+      : []),
+    ...(policy?.auxiliaryTokens.map((token) => ({
+      address: token.address,
+      symbol: token.symbol
+    })) ?? [])
+  ].filter((token, index, tokens) => tokens.findIndex((item) => item.address.toLowerCase() === token.address.toLowerCase()) === index);
+  const selectedTokenOption = availableTokenOptions.find(
+    (token) => token.address.toLowerCase() === normalizedTokenAddress
+  );
   const canWithdrawToken = Boolean(hasTokenAddress && canUseHolderAction && selectedAuxiliaryToken && selectedAuxiliaryToken.balance > 0n);
   const canActivate = policy ? status === 1 && minimumFunded : false;
   const canClaimMonthly = policy ? status === 2 : false;
@@ -1765,10 +1792,21 @@ function PolicyControlPanel({
     : false;
 
   function chooseAsset(address: string) {
+    if (address === customTokenOption) {
+      setCustomTokenSelected(true);
+      setCustomTokenAddress("");
+      setTokenAddress("");
+      return;
+    }
+
+    setCustomTokenSelected(false);
+    setCustomTokenAddress("");
     setTokenAddress(address);
   }
 
   function openAssetOperation(operation: Exclude<AssetOperation, "dashboard">, address = "", allowSelection = false) {
+    setCustomTokenSelected(false);
+    setCustomTokenAddress("");
     chooseAsset(address);
     setCanChooseAsset(allowSelection);
     if (operation === "yield" && address === "" && availableYieldStrategies.length === 1) {
@@ -1776,6 +1814,8 @@ function PolicyControlPanel({
     }
     setAssetOperation(operation);
   }
+
+  const tokenSelectionValue = customTokenSelected ? customTokenOption : tokenAddress;
 
   const withdrawableBalance = tokenAddress
     ? selectedAuxiliaryToken?.balance ?? 0n
@@ -2080,19 +2120,40 @@ function PolicyControlPanel({
                       aria-label={text.chooseAsset}
                       className="h-9 rounded-full border border-[#3a4656] bg-[#0b1018] px-3 text-sm font-semibold text-[#aeb8ff] outline-none focus:border-[#5868ea]"
                       onChange={(event) => chooseAsset(event.target.value)}
-                      value={tokenAddress}
+                      value={tokenSelectionValue}
                     >
                       <option value="">USDC</option>
-                      {policy.auxiliaryTokens.map((token) => (
+                      {availableTokenOptions.map((token) => (
                         <option key={token.address} value={token.address}>{token.symbol}</option>
                       ))}
+                      {assetOperation === "deposit" && <option value={customTokenOption}>{text.customToken}</option>}
                     </select>
                   ) : (
                     <span className="rounded-full border border-[#3a4656] bg-[#0b1018] px-3 py-1 text-sm font-semibold text-[#aeb8ff]">
-                      {tokenAddress ? selectedAuxiliaryToken?.symbol ?? "ERC20" : "USDC"}
+                      {customTokenSelected ? text.customToken : tokenAddress ? selectedAuxiliaryToken?.symbol ?? selectedTokenOption?.symbol ?? "ERC20" : "USDC"}
                     </span>
                   )}
                 </div>
+                {assetOperation === "deposit" && customTokenSelected && (
+                  <label className="mt-5 block text-xs font-semibold uppercase tracking-[0.14em] text-[#8d9bb0]">
+                    {text.tokenAddress}
+                    <input
+                      aria-label={text.tokenAddress}
+                      autoComplete="off"
+                      className="mt-2 min-h-12 w-full rounded-lg border border-[#334052] bg-[#0b1018] px-3 text-sm font-semibold text-[#f5f7fb] outline-none focus:border-[#5868ea]"
+                      onChange={(event) => {
+                        const address = event.target.value;
+                        setCustomTokenAddress(address);
+                        setTokenAddress(address);
+                      }}
+                      placeholder="0x…"
+                      value={customTokenAddress}
+                    />
+                    {customTokenAddress !== "" && !isWalletAddress(customTokenAddress) && (
+                      <span className="mt-2 block text-xs normal-case tracking-normal text-red-300">{text.tokenAddressInvalid}</span>
+                    )}
+                  </label>
+                )}
                 {assetOperation === "yield" && tokenAddress === "" && (
                   <label className="mt-5 block text-xs font-semibold uppercase tracking-[0.14em] text-[#8d9bb0]">
                     {text.yieldStrategy}
